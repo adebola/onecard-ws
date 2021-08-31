@@ -1,9 +1,10 @@
-package io.factorialsystems.testws;
+package io.factorialsystems.msscvoucher;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-class TestwsApplicationTests {
+@SpringBootTest
+class MsVoucherApplicationTests {
 
     @Test
     void contextLoads() {

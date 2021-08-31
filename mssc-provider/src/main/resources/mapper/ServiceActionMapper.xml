@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscprovider.dao.ServiceActionMapper">
+    <resultMap id="serviceResultMap" type="io.factorialsystems.msscprovider.domain.ServiceAction">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="service_name" property="serviceName" jdbcType="VARCHAR" />
+        <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
+        <result column="provider_id" property="providerId" jdbcType="INTEGER"/>
+        <result column="provider_name" property="providerName" jdbcType="VARCHAR"/>
+        <result column="provider_code" property="providerCode" jdbcType="VARCHAR"/>
+        <result column="activated" property="activated" jdbcType="BOOLEAN"/>
+        <result column="createdAt" property="createdDate" jdbcType="TIMESTAMP"/>
+        <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Column_List">
+        s.id, s.service_name, s.service_cost, s.provider_id, p.name as provider_name, p.code as provider_code, s.activated, s.createdAt, s.createdBy
+    </sql>
+
+    <select id="findByProviderCode" parameterType="java.lang.String" resultMap="serviceResultMap">
+        select
+        <include refid="Column_List"/>
+        from provider_services s, providers p
+        where s.provider_id = p.id
+        and p.code = #{code}
+    </select>
+
+    <select id="findById" parameterType="java.lang.Integer" resultMap="serviceResultMap">
+        select
+        <include refid="Column_List"/>
+        from provider_services s, providers p
+        where s.id = #{id}
+        and   s.provider_id = p.id
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.ServiceAction">
+        insert into provider_services(provider_id, service_name, service_cost, createdBy)
+        values (#{providerId}, #{serviceName}, #{serviceCost}, #{createdBy})
+
+        <selectKey resultType="int" keyProperty="id" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="update" parameterType="io.factorialsystems.msscprovider.domain.ServiceAction">
+        update provider_services
+        <set>
+            <if test="providerId != null">provider_id=#{providerId},</if>
+            <if test="serviceName != null">service_name=#{serviceName},</if>
+            <if test="serviceCost != null">service_cost=#{serviceCost},</if>
+            <if test="createdBy != null">createdBy=#{createdBy},</if>
+            <if test="activated != null">activated=#{activated}</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

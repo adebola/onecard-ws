@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscvoucher.dao.VoucherMapper">
+    <resultMap id="voucherResultMap" type="io.factorialsystems.msscvoucher.domain.Voucher">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="denomination" property="denomination" jdbcType="DECIMAL"/>
+        <result column="batch_id" property="batchId" jdbcType="VARCHAR" />
+        <result column="expiry_date" property="expiryDate" jdbcType="TIMESTAMP" />
+    </resultMap>
+
+    <sql id="Column_List">
+        id, code, denomination, batch_id, expiry_date
+    </sql>
+
+    <select id="findAllVouchers" resultMap="voucherResultMap">
+        select
+        <include refid="Column_List"/>
+        from voucher
+    </select>
+
+    <select id="findVouchersByBatchId" resultMap="voucherResultMap" parameterType="String">
+        select
+        <include refid="Column_List"/>
+        from voucher
+        where batch_id = #{id}
+    </select>
+
+    <select id="findVoucherById" resultMap="voucherResultMap" parameterType="Integer">
+        select
+        <include refid="Column_List"/>
+        from voucher
+        where id = #{id}
+    </select>
+
+    <insert id="generateVouchersForBatch" parameterType="java.util.List">
+        insert into voucher(code, denomination, batch_id, expiry_date) values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.hashedCode, jdbcType=VARCHAR}, #{item.denomination, jdbcType=DECIMAL}, #{item.batchId, jdbcType=VARCHAR}, #{item.expiryDate, jdbcType=TIMESTAMP})
+        </foreach>
+    </insert>
+
+    <select id="checkVoucherExistsAndNotUsed" parameterType="java.lang.Integer" resultType="Integer">
+        select count(*) from voucher where id = #{id} and tx_code is NULL
+    </select>
+
+    <update id="deleteVoucher" parameterType="java.lang.Integer">
+        update voucher set deleted = true where id = #{id}
+    </update>
+
+    <update id="changeVoucherDenomination" parameterType="java.util.Map">
+        update voucher set denomination = #{denomination} where id = #{id}
+    </update>
+
+    <update id="changeVoucherExpiry" parameterType="java.util.Map">
+        update voucher set expiry_date = #{date} where id = #{id}
+    </update>
+
+    <update id="activateVoucher" parameterType="java.lang.Integer">
+        update voucher set activated = true where id = #{id}
+    </update>
+
+    <update id="deActivateVoucher" parameterType="java.util.Map">
+        update voucher set activated = false where id = #{id}
+    </update>
+</mapper>

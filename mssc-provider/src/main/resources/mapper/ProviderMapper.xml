@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscprovider.dao.ProviderMapper">
+    <resultMap id="providerResultMap" type="io.factorialsystems.msscprovider.domain.Provider">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="category" property="category" jdbcType="VARCHAR" />
+        <result column="category_id" property="categoryId" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="activated" property="activated" jdbcType="BOOLEAN"/>
+        <result column="createdAt" property="createdDate" jdbcType="TIMESTAMP"/>
+        <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="activationDate" property="activationDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Column_List">
+        p.id, c.category_name as category, p.category_id, p.name, p.code, p.status, p.activated, p.createdAt, p.createdBy, p.activation_date
+    </sql>
+
+    <select id="findAll" resultMap="providerResultMap">
+        select
+        <include refid="Column_List"/>
+        from providers p, provider_categories c
+        where p.category_id = c.id
+    </select>
+
+    <select id="findById" parameterType="java.lang.Integer" resultMap="providerResultMap">
+        select
+        <include refid="Column_List"/>
+        from providers p, provider_categories c
+        where p.category_id = c.id
+        and p.id = #{id}
+    </select>
+
+    <select id="findByCode" parameterType="java.lang.String" resultMap="providerResultMap">
+        select
+        <include refid="Column_List"/>
+        from providers p, provider_categories c
+        where p.category_id = c.id
+        and p.code = #{code}
+    </select>
+
+    <select id="Search" parameterType="java.lang.String" resultMap="providerResultMap">
+        select
+        <include refid="Column_List"/>
+        from providers p, provider_categories c
+        where p.name like CONCAT(#{search}, '%')
+        and p.category_id = c.id
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.Provider">
+        insert into providers(category_id, name, code,  createdBy)
+        values (#{categoryId}, #{name}, #{code}, #{createdBy})
+
+        <selectKey resultType="int" keyProperty="id" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="update" parameterType="io.factorialsystems.msscprovider.domain.Provider">
+        update providers
+        <set>
+            <if test="categoryId != null">category_id=#{categoryId},</if>
+            <if test="name != null">name=#{name},</if>
+            <if test="activated != null">activated=#{activated},</if>
+            <if test="code != null">code=#{code},</if>
+            <if test="status != null">status=#{status}</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscvoucher.dao.BatchMapper">
+    <resultMap id="batchResultMap" type="io.factorialsystems.msscvoucher.domain.Batch">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="createdAt" property="createdAt" jdbcType="TIMESTAMP" />
+        <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="denomination" property="denomination" jdbcType="DECIMAL"/>
+        <result column="voucher_count" property="count" jdbcType="INTEGER"/>
+        <result column="activated" property="activated" jdbcType="BOOLEAN"/>
+        <result column="activation_date" property="activationDate" jdbcType="TIMESTAMP"/>
+        <result column="expiry_date" property="expiryDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Column_List">
+        id, createdAt, createdBy, denomination, voucher_count, activated, activation_date, expiry_date
+    </sql>
+
+    <select id="findAllBatches" resultMap="batchResultMap">
+        select
+        <include refid="Column_List"/>
+        from batch
+    </select>
+
+    <select id="findBatch" parameterType="java.lang.String" resultMap="batchResultMap">
+        select
+        <include refid="Column_List"/>
+        from batch where id = #{id}
+    </select>
+
+    <select id="Search" parameterType="java.lang.String" resultMap="batchResultMap">
+        select
+        <include refid="Column_List"/>
+        from batch where id like CONCAT(#{search}, '%')
+    </select>
+
+    <insert id="generateBatch" parameterType="java.util.Map">
+        insert into batch(id, createdBy, denomination, voucher_count, expiry_date) values(#{id}, #{createdBy}, #{amount}, #{count}, #{date})
+    </insert>
+
+    <select id="checkBatchExists" parameterType="java.lang.String" resultType="Integer">
+        select count(*) from batch where id = #{id}
+    </select>
+
+    <select id="checkBatchUsed" parameterType="java.lang.String" resultType="Integer">
+        select count(*) from voucher where batch_id = #{id}
+        and tx_code is NOT NULL
+    </select>
+
+    <update id="deleteBatch" parameterType="java.lang.String">
+        update voucher set deleted = true where batch_id = #{id}
+    </update>
+
+    <update id="changeDenomination" parameterType="java.util.Map">
+        update voucher set denomination = #{denomination} where batch_id = #{id}
+    </update>
+
+    <update id="changeExpiry" parameterType="java.util.Map">
+        update voucher set expiry_date = #{date} where batch_id = #{id}
+    </update>
+
+    <update id="activateBatch" parameterType="java.lang.String">
+        update voucher set activated = true where batch_id = #{id}
+    </update>
+
+    <update id="deActivateBatch" parameterType="java.lang.String">
+        update voucher set activated = false where batch_id = #{id}
+    </update>
+</mapper>

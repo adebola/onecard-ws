@@ -10,8 +10,8 @@
     </parent>
 
     <groupId>io.factorialsystems</groupId>
-    <artifactId>testws</artifactId>
+    <artifactId>mssc-voucher</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>testws</name>
-    <description>testws</description>
+    <name>mssc-voucher</name>
+    <description>Voucher Management Service</description>
 </project>
