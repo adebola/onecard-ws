@@ -17,6 +17,25 @@
         <java.version>11</java.version>
         <spring-cloud.version>2020.0.3</spring-cloud.version>
     </properties>
+
+    <licenses>
+        <license>
+            <name>GNU General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/gpl.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Factorial Systems!</name>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Adebola Omoboya</name>
+            <organization>Factorial Systems!</organization>
+        </developer>
+    </developers>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
