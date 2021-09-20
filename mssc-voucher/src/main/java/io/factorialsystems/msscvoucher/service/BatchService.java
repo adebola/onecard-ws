@@ -8,18 +8,22 @@ import io.factorialsystems.msscvoucher.domain.Batch;
 import io.factorialsystems.msscvoucher.domain.Voucher;
 import io.factorialsystems.msscvoucher.dto.in.VoucherChangeRequest;
 import io.factorialsystems.msscvoucher.dto.internal.VoucherChangeRequestInternal;
+import io.factorialsystems.msscvoucher.helper.ExcelHelper;
 import io.factorialsystems.msscvoucher.utils.K;
 import io.factorialsystems.msscvoucher.utils.VoucherGenerationDetails;
 import io.factorialsystems.msscvoucher.web.mapper.BatchMapstructMapper;
 import io.factorialsystems.msscvoucher.web.mapper.VoucherChangeRequestMapper;
+import io.factorialsystems.msscvoucher.web.mapper.VoucherMapstructMapper;
 import io.factorialsystems.msscvoucher.web.model.BatchDto;
 import io.factorialsystems.msscvoucher.web.model.PagedDto;
+import io.factorialsystems.msscvoucher.web.model.VoucherDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -32,6 +36,7 @@ public class BatchService {
     private final VoucherMapper voucherMapper;
     private final VoucherChangeRequestMapper requestMapper;
     private final BatchMapstructMapper batchMapstructMapper;
+    private final VoucherMapstructMapper voucherMapstructMapper;
 
     public PagedDto<BatchDto> getAllBatches(Integer pageNumber, Integer pageSize) {
 
@@ -54,18 +59,29 @@ public class BatchService {
         return batchMapstructMapper.batchToBatchDto(batch);
     }
 
-    public Page<Voucher> getBatchVouchers(String id, Integer pageNumber, Integer pageSize) {
+    public PagedDto<VoucherDto> getBatchVouchers(String id, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
-        return voucherMapper.findVouchersByBatchId(id);
+        return createVoucherDto(voucherMapper.findVouchersByBatchId(id));
     }
 
     private PagedDto<BatchDto> createDto(Page<Batch> batches) {
         PagedDto<BatchDto> pagedDto = new PagedDto<>();
         pagedDto.setPages(batches.getPages());
-        pagedDto.setTotalSize(Integer.valueOf((int) batches.getTotal()));
+        pagedDto.setTotalSize((int) batches.getTotal());
         pagedDto.setPageNumber(batches.getPageNum());
         pagedDto.setPageSize(batches.getPageSize());
         pagedDto.setList(batchMapstructMapper.listBatchToBatchDto(batches.getResult()));
+
+        return pagedDto;
+    }
+
+    private PagedDto<VoucherDto> createVoucherDto(Page<Voucher> vouchers) {
+        PagedDto<VoucherDto> pagedDto = new PagedDto<>();
+        pagedDto.setPages(vouchers.getPages());
+        pagedDto.setTotalSize((int) vouchers.getTotal());
+        pagedDto.setPageNumber(vouchers.getPageNum());
+        pagedDto.setPageSize(vouchers.getPageSize());
+        pagedDto.setList(voucherMapstructMapper.listVoucherToVoucherDto(vouchers.getResult()));
 
         return pagedDto;
     }
@@ -96,6 +112,7 @@ public class BatchService {
                             .batchId(batchId)
                             .expiryDate(expiryDate)
                             .hashedCode(encodedString)
+                            .serialNumber(String.valueOf(K.generateRandomNumber(16)))
                             .denomination(batchDto.getDenomination())
                             .build()
             );
@@ -104,6 +121,11 @@ public class BatchService {
         voucherMapper.generateVouchersForBatch(voucherGenerationDetails);
 
         return batchMapstructMapper.batchToBatchDto(batchMapper.findBatch(batchId));
+    }
+
+    public ByteArrayInputStream generateExcelFile(String id) {
+        List<Voucher> vouchers = voucherMapper.findVouchersByBatchId(id);
+        return ExcelHelper.vouchersToExcel(vouchers);
     }
 
     public BatchDto updateBatch(String id, BatchDto batchDto) {

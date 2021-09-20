@@ -13,6 +13,7 @@ import java.util.Date;
 public class VoucherGenerationDetails {
     private String batchId;
     private String hashedCode;
+    private String serialNumber;
     private BigDecimal denomination;
     private Date expiryDate;
 }

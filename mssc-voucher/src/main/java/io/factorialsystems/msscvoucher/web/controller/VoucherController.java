@@ -3,12 +3,15 @@ package io.factorialsystems.msscvoucher.web.controller;
 import io.factorialsystems.msscvoucher.dto.in.VoucherChangeRequest;
 import io.factorialsystems.msscvoucher.service.VoucherService;
 import io.factorialsystems.msscvoucher.utils.K;
+import io.factorialsystems.msscvoucher.web.model.VoucherDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 import static io.factorialsystems.msscvoucher.utils.K.DEFAULT_PAGE_SIZE;
 import static io.factorialsystems.msscvoucher.utils.K.DEFAULT_PAGE_NUMBER;
@@ -44,6 +47,22 @@ public class VoucherController {
         return new ResponseEntity<>(voucherService.findAllVouchers(pageNumber, pageSize), HttpStatus.OK);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<?> searchVouchers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                            @RequestParam(value = "pageSize", required = false) Integer pageSize,
+                                            @RequestParam(value = "searchString") String searchString) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(voucherService.searchVouchers(pageNumber, pageSize, searchString), HttpStatus.OK);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getVoucherById(@PathVariable("id") Integer id) {
         return new ResponseEntity<>(voucherService.findVoucherById(id), HttpStatus.OK);
@@ -52,6 +71,11 @@ public class VoucherController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteVoucher(@PathVariable("id") Integer id) {
         return new ResponseEntity<>(voucherService.deleteVoucher(id), HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateVoucher(@PathVariable("id") Integer id, @Valid @RequestBody VoucherDto dto) {
+        return new ResponseEntity<>(voucherService.updateVoucher(id, dto), HttpStatus.OK);
     }
 
     @PutMapping("/{id}/denomination")

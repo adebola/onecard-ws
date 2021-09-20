@@ -51,6 +51,7 @@ public class ProviderCategoryService {
     public Integer saveProviderCategory(String userName, ProviderCategoryDto dto) {
 
         ProviderCategory providerCategory = categoryMapstructMapper.fromProviderCategory(dto);
+        providerCategory.setCreatedBy(userName);
 
         categoryMapper.save(providerCategory);
 

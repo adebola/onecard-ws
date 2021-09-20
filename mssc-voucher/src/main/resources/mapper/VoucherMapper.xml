@@ -5,45 +5,76 @@
     <resultMap id="voucherResultMap" type="io.factorialsystems.msscvoucher.domain.Voucher">
         <id column="id" property="id" jdbcType="INTEGER" />
         <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="serial_number" property="serialNumber" jdbcType="VARCHAR"/>
         <result column="denomination" property="denomination" jdbcType="DECIMAL"/>
         <result column="batch_id" property="batchId" jdbcType="VARCHAR" />
         <result column="expiry_date" property="expiryDate" jdbcType="TIMESTAMP" />
+        <result column="activated" property="activated" jdbcType="BOOLEAN"/>
     </resultMap>
 
     <sql id="Column_List">
-        id, code, denomination, batch_id, expiry_date
+        v.id, v.code, v.serial_number, v.denomination, v.batch_id, v.expiry_date, v.activated, b.createdBy, b.createdAt
     </sql>
 
     <select id="findAllVouchers" resultMap="voucherResultMap">
         select
         <include refid="Column_List"/>
-        from voucher
+        from voucher v, batch b
+        where v.batch_id = b.id
     </select>
 
     <select id="findVouchersByBatchId" resultMap="voucherResultMap" parameterType="String">
         select
         <include refid="Column_List"/>
-        from voucher
+        from voucher v, batch b
         where batch_id = #{id}
+        and v.batch_id = b.id
     </select>
 
     <select id="findVoucherById" resultMap="voucherResultMap" parameterType="Integer">
         select
         <include refid="Column_List"/>
-        from voucher
-        where id = #{id}
+        from voucher v, batch b
+        where v.id = #{id}
+        and v.batch_id = b.id
+    </select>
+
+    <select id="findVoucherBySerialNumber" resultMap="voucherResultMap" parameterType="String">
+        select
+        <include refid="Column_List"/>
+        from voucher v, batch b
+        where v.serial_number = #{serial}
+        and v.batch_id = b.id
+    </select>
+
+    <select id="Search" parameterType="java.lang.String" resultMap="voucherResultMap">
+        select
+        <include refid="Column_List"/>
+        from voucher v, batch b
+        where v.serial_number like CONCAT(#{search}, '%')
+        and v.batch_id = b.id
     </select>
 
     <insert id="generateVouchersForBatch" parameterType="java.util.List">
-        insert into voucher(code, denomination, batch_id, expiry_date) values
+        insert into voucher(code, serial_number, denomination, batch_id, expiry_date) values
         <foreach collection="list" item="item" index="index" separator=",">
-            (#{item.hashedCode, jdbcType=VARCHAR}, #{item.denomination, jdbcType=DECIMAL}, #{item.batchId, jdbcType=VARCHAR}, #{item.expiryDate, jdbcType=TIMESTAMP})
+            (#{item.hashedCode, jdbcType=VARCHAR}, #{item.serialNumber, jdbcType=VARCHAR}, #{item.denomination, jdbcType=DECIMAL}, #{item.batchId, jdbcType=VARCHAR}, #{item.expiryDate, jdbcType=TIMESTAMP})
         </foreach>
     </insert>
 
     <select id="checkVoucherExistsAndNotUsed" parameterType="java.lang.Integer" resultType="Integer">
         select count(*) from voucher where id = #{id} and tx_code is NULL
     </select>
+
+    <update id="updateVoucher" parameterType="io.factorialsystems.msscvoucher.domain.Voucher">
+        update voucher
+        <set>
+            <if test="denomination != null">denomination=#{denomination},</if>
+            <if test="expiryDate != null">expiry_date=#{expiryDate},</if>
+            <if test="activated != null">activated=#{activated},</if>
+        </set>
+        where id = #{id}
+    </update>
 
     <update id="deleteVoucher" parameterType="java.lang.Integer">
         update voucher set deleted = true where id = #{id}

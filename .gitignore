@@ -139,3 +139,7 @@ Desktop.ini
 ######################
 .eslintcache
 /.idea/
+
+### VS Code ###
+.vscode/
+/mssc-provider/src/main/docker/local/

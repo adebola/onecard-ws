@@ -79,7 +79,7 @@ class ProviderServiceTest {
     public void providerDtoToProvider() {
         ProviderDto dto = new ProviderDto();
         dto.setStatus("UNAPPROVED");
-        dto.setCategory("Mobile");
+        dto.setCategory("Wrong-Category");
         dto.setCode("AIRT");
         dto.setName("Airtel");
         dto.setCreatedBy("Adebola");
@@ -87,16 +87,12 @@ class ProviderServiceTest {
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
             Provider provider = providerMapstructMapper.providerDtoToProvider(dto);
-
         });
 
         String expectedMessage = "Invalid Provider Category:";
         String actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));
         log.info(actualMessage);
-
-
-
     }
 
     @Test

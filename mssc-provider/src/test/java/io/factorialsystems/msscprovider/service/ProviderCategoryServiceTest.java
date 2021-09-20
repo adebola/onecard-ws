@@ -72,17 +72,17 @@ class ProviderCategoryServiceTest {
         log.info(result);
     }
 
-    @Test
-    void saveDuplicateProviderCategory() {
-
-        Exception exception = assertThrows(DuplicateKeyException.class, () -> {
-            ProviderCategoryDto dto = ProviderCategoryDto.builder()
-                    .categoryName("Mobile")
-                    .build();
-
-            Integer result = service.saveProviderCategory("adebola" , dto);
-        });
-    }
+//    @Test
+//    void saveDuplicateProviderCategory() {
+//
+//        Exception exception = assertThrows(DuplicateKeyException.class, () -> {
+//            ProviderCategoryDto dto = ProviderCategoryDto.builder()
+//                    .categoryName("Mobile")
+//                    .build();
+//
+//            Integer result = service.saveProviderCategory("foluke" , dto);
+//        });
+//    }
 
     @Test
     void updateProviderCategory() {

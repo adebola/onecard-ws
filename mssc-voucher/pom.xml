@@ -14,4 +14,12 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>mssc-voucher</name>
     <description>Voucher Management Service</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.0.0</version>
+        </dependency>
+    </dependencies>
 </project>

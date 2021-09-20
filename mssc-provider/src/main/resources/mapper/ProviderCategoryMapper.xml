@@ -42,8 +42,8 @@
 
 
     <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.ProviderCategory">
-        insert into provider_categories(category_name)
-        values (#{categoryName})
+        insert into provider_categories(category_name, createdBy)
+        values (#{categoryName}, #{createdBy})
 
         <selectKey resultType="int" keyProperty="id" order="AFTER">
             select LAST_INSERT_ID()

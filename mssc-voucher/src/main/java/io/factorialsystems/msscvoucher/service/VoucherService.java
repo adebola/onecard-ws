@@ -7,6 +7,9 @@ import io.factorialsystems.msscvoucher.domain.Voucher;
 import io.factorialsystems.msscvoucher.dto.in.VoucherChangeRequest;
 import io.factorialsystems.msscvoucher.dto.internal.VoucherChangeRequestInternal;
 import io.factorialsystems.msscvoucher.web.mapper.VoucherChangeRequestMapper;
+import io.factorialsystems.msscvoucher.web.mapper.VoucherMapstructMapper;
+import io.factorialsystems.msscvoucher.web.model.PagedDto;
+import io.factorialsystems.msscvoucher.web.model.VoucherDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,16 +22,27 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class VoucherService {
     private final VoucherMapper mapper;
+    private final VoucherMapstructMapper voucherMapstructMapper;
     private final VoucherChangeRequestMapper voucherChangeRequestMapper;
 
-    public Page<Voucher> findAllVouchers( Integer pageNumber, Integer pageSize) {
+    public PagedDto<VoucherDto> findAllVouchers( Integer pageNumber, Integer pageSize) {
 
-        PageHelper.startPage(pageNumber,pageSize);
-        return mapper.findAllVouchers();
+        PageHelper.startPage(pageNumber, pageSize);
+        return createDto(mapper.findAllVouchers());
     }
 
-    public Voucher findVoucherById(Integer id) {
-        return mapper.findVoucherById(id);
+    public PagedDto<VoucherDto>searchVouchers(Integer pageNumber, Integer pageSize, String searchString) {
+
+        PageHelper.startPage(pageNumber, pageSize);
+        return createDto(mapper.Search(searchString));
+    }
+
+    public VoucherDto findVoucherById(Integer id) {
+        return voucherMapstructMapper.voucherToVoucherDto(mapper.findVoucherById(id));
+    }
+
+    public VoucherDto findVoucherBySerialNumber(String serial) {
+        return voucherMapstructMapper.voucherToVoucherDto(mapper.findVoucherBySerialNumber(serial));
     }
 
     public String deleteVoucher(Integer id) {
@@ -122,5 +136,25 @@ public class VoucherService {
         final String s = String.format("Unable to De-Activate Voucher %d it has either been used or does not exist", id);
         log.info(s);
         return s;
+    }
+
+    public Boolean updateVoucher(Integer id, VoucherDto dto) {
+
+        Voucher voucher = voucherMapstructMapper.voucherDtoToVoucher(dto);
+        voucher.setId(id);
+        mapper.updateVoucher(voucher);
+
+        return true;
+    }
+
+    private PagedDto<VoucherDto> createDto(Page<Voucher> vouchers) {
+        PagedDto<VoucherDto> pagedDto = new PagedDto<>();
+        pagedDto.setPages(vouchers.getPages());
+        pagedDto.setTotalSize((int) vouchers.getTotal());
+        pagedDto.setPageNumber(vouchers.getPageNum());
+        pagedDto.setPageSize(vouchers.getPageSize());
+        pagedDto.setList(voucherMapstructMapper.listVoucherToVoucherDto(vouchers.getResult()));
+
+        return pagedDto;
     }
 }
