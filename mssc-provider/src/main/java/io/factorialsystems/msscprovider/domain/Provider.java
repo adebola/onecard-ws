@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.sql.Timestamp;
 
 @Data
 @NoArgsConstructor
@@ -16,8 +16,9 @@ public class Provider {
     private String name;
     private String code;
     private Boolean activated;
-    private ProviderStatusEnum status;
+    private String activatedBy;
     private String createdBy;
-    private Date createdDate;
-    private Date activationDate;
+    private Boolean suspended;
+    private Timestamp createdDate;
+    private Timestamp activationDate;
 }

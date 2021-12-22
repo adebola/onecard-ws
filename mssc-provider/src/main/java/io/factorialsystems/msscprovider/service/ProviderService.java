@@ -2,24 +2,30 @@ package io.factorialsystems.msscprovider.service;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import io.factorialsystems.msscprovider.dao.ProviderCategoryMapper;
 import io.factorialsystems.msscprovider.dao.ProviderMapper;
 import io.factorialsystems.msscprovider.domain.Provider;
-import io.factorialsystems.msscprovider.web.mapper.provider.ProviderMapstructMapper;
-import io.factorialsystems.msscprovider.web.model.PagedDto;
-import io.factorialsystems.msscprovider.web.model.ProviderDto;
+import io.factorialsystems.msscprovider.dto.PagedDto;
+import io.factorialsystems.msscprovider.dto.ProviderDto;
+import io.factorialsystems.msscprovider.mapper.provider.ProviderMapstructMapper;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
+import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProviderService {
 
+    private final AuditService auditService;
     private final ProviderMapper providerMapper;
-    private final ProviderCategoryMapper providerCategoryMapper;
     private final ProviderMapstructMapper providerMapstructMapper;
+
+    private static final String CREATE_PROVIDER="Create Provider";
+    private static final String UPDATE_PROVIDER="Update Provider";
 
     public PagedDto<ProviderDto> findProviders(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
@@ -30,19 +36,17 @@ public class ProviderService {
 
     public PagedDto<ProviderDto> searchProviders(Integer pageNumber, Integer pageSize, String searchString) {
         PageHelper.startPage(pageNumber, pageSize);
-        Page<Provider> providers = providerMapper.Search(searchString);
+        Page<Provider> providers = providerMapper.search(searchString);
 
         return createDto(providers);
     }
 
     public ProviderDto findProviderById(Integer id) {
-        Provider provider = providerMapper.findById(id);
+        return providerMapstructMapper.providerToProviderDto(providerMapper.findById(id));
+    }
 
-        if (provider != null) {
-            return providerMapstructMapper.providerToProviderDto(provider);
-        }
-
-        return null;
+    public List<ProviderDto> findByCategory(String category) {
+        return providerMapstructMapper.listProviderToProviderDto(providerMapper.findByCategory(category));
     }
 
     public Integer saveProvider(String userName, ProviderDto providerDto) {
@@ -55,6 +59,9 @@ public class ProviderService {
         provider.setCreatedBy(userName);
         providerMapper.save(provider);
 
+        String message = String.format("Created Provider %s", provider.getName());
+        auditService.auditEvent(message,CREATE_PROVIDER);
+
         return provider.getId();
     }
 
@@ -62,7 +69,52 @@ public class ProviderService {
         Provider provider = providerMapstructMapper.providerDtoToProvider(dto);
         provider.setId(id);
 
+        String message = String.format("Updated Provider %s", provider.getName());
+        auditService.auditEvent(message, UPDATE_PROVIDER);
+
         providerMapper.update(provider);
+    }
+
+    public ProviderDto activateProvider(Integer id) {
+        Provider provider = providerMapper.findById(id);
+
+        if (provider != null) {
+            provider.setActivated(true);
+            provider.setActivationDate(new Timestamp(System.currentTimeMillis()));
+            provider.setActivatedBy(K.getUserName());
+
+            providerMapper.update(provider);
+
+            return providerMapstructMapper.providerToProviderDto(provider);
+        }
+
+        return null;
+    }
+
+    public ProviderDto suspendProvider(Integer id) {
+        Provider provider = providerMapper.findById(id);
+
+        if (provider != null) {
+            provider.setSuspended(true);
+            providerMapper.update(provider);
+
+            return providerMapstructMapper.providerToProviderDto(provider);
+        }
+
+        return null;
+    }
+
+    public ProviderDto unsuspendProvider(Integer id) {
+        Provider provider = providerMapper.findById(id);
+
+        if (provider != null) {
+            provider.setSuspended(false);
+            providerMapper.update(provider);
+
+            return providerMapstructMapper.providerToProviderDto(provider);
+        }
+
+        return null;
     }
 
     private PagedDto<ProviderDto> createDto(Page<Provider> providers) {

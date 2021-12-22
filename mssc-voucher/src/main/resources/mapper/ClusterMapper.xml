@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscvoucher.dao.ClusterMapper">
+    <resultMap id="clusterResultMap" type="io.factorialsystems.msscvoucher.domain.Cluster">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="createdAt" property="createdDate" jdbcType="TIMESTAMP" />
+        <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="amount" property="amount" jdbcType="DECIMAL"/>
+        <result column="balance" property="balance" jdbcType="DECIMAL"/>
+        <result column="activated" property="activated" jdbcType="BOOLEAN"/>
+        <result column="suspended" property="suspended" jdbcType="BOOLEAN"/>
+        <result column="activation_date" property="activationDate" jdbcType="TIMESTAMP" />
+        <result column="activatedBy" property="activatedBy" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Column_List">
+        id, createdAt, createdBy, amount, balance, activated, activatedBy, activation_date, name, description, suspended
+    </sql>
+
+    <select id="findAll" resultMap="clusterResultMap">
+        select
+        <include refid="Column_List"/>
+        from cluster
+    </select>
+
+    <select id="findValid" resultMap="clusterResultMap">
+        select
+        <include refid="Column_List"/>
+        from cluster
+        where suspended = false
+        and activated = true
+        and balance > 0
+    </select>
+
+
+    <select id="Search" parameterType="java.lang.String" resultMap="clusterResultMap">
+        select
+        <include refid="Column_List"/>
+        from cluster where name like CONCAT(#{search}, '%')
+    </select>
+
+    <select id="findById" parameterType="java.lang.String" resultMap="clusterResultMap">
+        select
+        <include refid="Column_List"/>
+        from cluster
+        where id = #{id}
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscvoucher.domain.Cluster">
+        insert into cluster(createdBy, amount, balance, name, description)
+        values(#{createdBy}, #{amount}, #{amount}, #{name}, #{description})
+    </insert>
+
+    <update id="update" parameterType="io.factorialsystems.msscvoucher.domain.Cluster">
+        update cluster
+        <set>
+            <if test="amount != null">amount=#{amount},</if>
+            <if test="activated != null">activated=#{activated},</if>
+            <if test="name != null">name=#{name},</if>
+            <if test="description != null">description=#{description},</if>
+            <if test="activationDate != null">activation_date=#{activationDate},</if>
+            <if test="activatedBy != null">activatedBy=#{activatedBy},</if>
+            <if test="balance != null">balance=#{balance},</if>
+            <if test="suspended != null">suspended=#{suspended},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="suspend" parameterType="java.lang.String">
+        {call sp_suspend_cluster(#{id, jdbcType = VARCHAR, mode = IN})}
+    </update>
+
+    <update id="unsuspend" parameterType="java.lang.String">
+        {call sp_unsuspend_cluster(#{id, jdbcType = VARCHAR, mode = IN})}
+    </update>
+
+    <update id="adjustBalance" parameterType="java.util.Map">
+        update cluster set balance = balance - #{balance} where id = #{id}
+    </update>
+</mapper>

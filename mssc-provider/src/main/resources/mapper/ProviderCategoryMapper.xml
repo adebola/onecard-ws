@@ -33,7 +33,7 @@
         where category_name=#{name}
     </select>
 
-    <select id="Search" parameterType="java.lang.String" resultMap="categoryResultMap">
+    <select id="search" parameterType="java.lang.String" resultMap="categoryResultMap">
         select
         <include refid="Column_List"></include>
         from provider_categories

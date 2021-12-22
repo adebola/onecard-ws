@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscprovider.dao.RechargeProviderMapper">
+    <resultMap id="rechargeProviderResultMap" type="io.factorialsystems.msscprovider.domain.RechargeProvider">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="wallet_id" property="walletId" jdbcType="VARCHAR"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="activated" property="activated" jdbcType="BOOLEAN"/>
+        <result column="activation_date" property="activationDate" jdbcType="TIMESTAMP"/>
+        <result column="activatedBy" property="activatedBy" jdbcType="VARCHAR"/>
+        <result column="createdAt" property="createdDate" jdbcType="TIMESTAMP"/>
+        <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="suspended" property="suspended" jdbcType="BOOLEAN"/>
+    </resultMap>
+
+    <sql id="column_list">
+       id, name, wallet_id, code, createdAt, createdBy, activated, activatedBy, activation_date, suspended
+    </sql>
+
+    <select id="findAll" resultMap="rechargeProviderResultMap">
+        select
+        <include refid="column_list"/>
+        from recharge_providers
+    </select>
+
+    <select id="findById" parameterType="java.lang.Integer" resultMap="rechargeProviderResultMap">
+        select
+        <include refid="column_list"/>
+        from recharge_providers where id = #{id}
+    </select>
+
+    <select id="findByServiceId" parameterType="java.lang.Integer" resultMap="rechargeProviderResultMap">
+        select  rp.id, rp.name, rp.wallet_id, rp.code, rp.createdAt, rp.createdBy, rp.activated, rp.activatedBy, rp.activation_date, rp.suspended
+        from recharge_providers rp, provider_services_recharge_providers psrp
+        where psrp.provider_service_id= #{id}
+        and psrp.recharge_provider_id = rp.id;
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.RechargeProvider">
+        insert into recharge_providers(name, code, createdBy)
+        values(#{name}, #{createdBy}, #{code})
+    </insert>
+
+    <update id="update" parameterType="io.factorialsystems.msscprovider.domain.RechargeProvider">
+        update recharge_providers
+        <set>
+            <if test="name != null">name=#{name},</if>
+            <if test="walletId != null">wallet_id=#{walletId},</if>
+            <if test="activated != null">activated=#{activated},</if>
+            <if test="activatedBy != null">activatedBy=#{activatedBy},</if>
+            <if test="activationDate != null">activation_date=#{activationDate},</if>
+            <if test="code != null">code=#{code},</if>
+            <if test="suspended != null">suspended=#{suspended},</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

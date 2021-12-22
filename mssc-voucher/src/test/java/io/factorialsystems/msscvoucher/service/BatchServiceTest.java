@@ -1,20 +1,25 @@
 package io.factorialsystems.msscvoucher.service;
 
-import io.factorialsystems.msscvoucher.dto.in.VoucherChangeRequest;
+import io.factorialsystems.msscvoucher.dao.BatchMapper;
+import io.factorialsystems.msscvoucher.dao.VoucherMapper;
+import io.factorialsystems.msscvoucher.domain.Batch;
+import io.factorialsystems.msscvoucher.domain.Voucher;
 import io.factorialsystems.msscvoucher.web.model.BatchDto;
 import io.factorialsystems.msscvoucher.web.model.PagedDto;
-import io.factorialsystems.msscvoucher.web.model.VoucherDto;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @CommonsLog
 @SpringBootTest
@@ -23,94 +28,89 @@ class BatchServiceTest {
     @Autowired
     BatchService batchService;
 
+    @Autowired
+    BatchMapper batchMapper;
+
+    @Autowired
+    VoucherMapper voucherMapper;
+
     @Test
     public void testGetAllBatches() {
-        PagedDto<BatchDto> dto = batchService.getAllBatches(1,2);
+        PagedDto<BatchDto> dto = batchService.getAllBatches(1, 2);
         log.info(dto);
-        log.info(batchService.getAllBatches(5,2));
-
-
-//        Page<Batch> batches = batchService.getAllBatches(1,2);
-//        assert(batches.getTotal() > 0);
-//        log.info(batches.get(0));
+        log.info(batchService.getAllBatches(5, 2));
+        assertNotNull(dto);
+        assert (dto.getPageSize() > 0);
     }
 
-    @Test
-    public void testGetBatchVouchers() {
-        PagedDto<VoucherDto> vouchers = batchService.getBatchVouchers("244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b", 1, 2);
-//        assertEquals(vouchers.getTotal(), 5);
-//        assertEquals(vouchers.getPages(), 3);
-        assertEquals(vouchers.getList().get(0).getBatchId(), "244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b");
-    }
-
-    @Test
-    public void testNoGetBatchVouchers() {
-        PagedDto<VoucherDto> vouchers = batchService.getBatchVouchers("wrong-string", 1, 2);
-        assertEquals(vouchers.getTotalSize(), 0);
-        assertEquals(vouchers.getPages(), 0);
-    }
 
     @Test
     public void generateVoucherBatchTest() {
-        int count = 2;
+        int count = 5;
         String batchId;
+        String id = UUID.randomUUID().toString();
         BatchDto dto = BatchDto.builder()
-                .count(count)
-                .denomination(BigDecimal.valueOf(1000))
-                .expiryDate(new Date())
+                .id(id)
+                .clusterId("0d7d07b2-43a8-11ec-8b30-35fc519e26e2")
+                .voucherCount(count)
+                .denomination(BigDecimal.valueOf(1500))
                 .createdBy("adebola")
                 .build();
 
         BatchDto batchDto = batchService.generateBatch("adebola", dto);
         batchId = batchDto.getId();
-        PagedDto<VoucherDto> vouchers = batchService.getBatchVouchers(batchId, 1, 2);
-        assertEquals(vouchers.getTotalSize(), count);
-        assertEquals(vouchers.getList().get(0).getBatchId(), batchId);
-    }
 
-    @Test
-    void deleteVoucher() {
-        String message = batchService.deleteVoucherBatch("244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b");
-        assertEquals(message, "Batch: 244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b has been deleted successfully");
-    }
+        List<Voucher> vouchers = voucherMapper.findVouchersByBatchId(batchId);
+        assertNotNull(vouchers);
+        assertEquals(count, vouchers.size());
+        vouchers.stream().forEach(voucher -> assertEquals(batchId, voucher.getBatchId()));
 
-    @Test
-    void changeVoucherBatchDenomination() {
-        String message = batchService.changeVoucherBatchDenomination("244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b", 5000.0);
-        assertEquals(message, "Batch: 244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b has has successfully changed it denomination to 5000.00");
-    }
-
-    @Test
-    void changeVoucherBatchExpiry() {
-        OffsetDateTime now = OffsetDateTime.now();
-        VoucherChangeRequest vcr = new VoucherChangeRequest( 1000.0, now);
-        String message = batchService.changeVoucherBatchExpiry("244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b", vcr);
-        assert(StringUtils.contains(message, "Batch 244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b has successfully changed Expiry Date to"));
+        log.info(vouchers);
     }
 
     @Test
     void activateVoucherBatch() {
-        String message = batchService.activateVoucherBatch("244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b");
-        assertEquals(message, "Batch 244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b activated successfully");
+
+        String id = "047e97cb-5cb6-48c0-9db3-24f4410863f2";
+
+        batchService.activateVoucherBatch(id);
+        Batch batch = batchMapper.findById(id);
+
+        assertNotNull(batch);
+        assertEquals(id, batch.getId());
+
+        List<Voucher> vouchers = voucherMapper.findVouchersByBatchId(id);
+
+        vouchers.stream().forEach(v -> assertEquals(true, v.getActivated()));
+        log.info(vouchers);
     }
 
     @Test
-    void DeActivateVoucherBatch() {
-        String message = batchService.deActivateVoucherBatch("244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b");
-        assertEquals(message, "Batch 244bdc2b-0cae-4e01-a3f9-d1b0310aeb0b De-Activated successfully");
+    void update() throws ParseException {
+        String id = "047e97cb-5cb6-48c0-9db3-24f4410863f2";
+        String dateString = "2030-12-01";
+        Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateString);
+        BigDecimal decimal = new BigDecimal(1255);
+
+        BatchDto batchDto = BatchDto.builder()
+                .id(id)
+                .clusterId("0d7d07b2-43a8-11ec-8b30-35fc519e26e2")
+                .expiryDate(date)
+                .denomination(decimal)
+                .build();
+
+        BatchDto dto = batchService.update(id, batchDto);
+        BatchDto compareDto = batchService.getBatch(id);
+
+        assertNotNull(dto);
+        assertNotNull(compareDto);
+
+        assertEquals(dto.getId(), compareDto.getId());
     }
 
     @Test
-    void getBatchVouchers() {
-    }
-
-    @Test
-    void generateBatch() {
-    }
-
-    @Test
-    void deleteVoucherBatch() {
-        String s = batchService.deleteVoucherBatch("d205ee54-3e1c-4bb4-a286-222eaaa9563d");
-        log.info(s);
+    void suspend() {
+        String id = "047e97cb-5cb6-48c0-9db3-24f4410863f2";
+        batchService.suspend(id);
     }
 }

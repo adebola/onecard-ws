@@ -1,6 +1,6 @@
 package io.factorialsystems.msscvoucher.web.controller;
 
-import io.factorialsystems.msscvoucher.dto.in.VoucherChangeRequest;
+import io.factorialsystems.msscvoucher.dto.out.MessageDto;
 import io.factorialsystems.msscvoucher.service.VoucherService;
 import io.factorialsystems.msscvoucher.utils.K;
 import io.factorialsystems.msscvoucher.web.model.VoucherDto;
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-import static io.factorialsystems.msscvoucher.utils.K.DEFAULT_PAGE_SIZE;
 import static io.factorialsystems.msscvoucher.utils.K.DEFAULT_PAGE_NUMBER;
+import static io.factorialsystems.msscvoucher.utils.K.DEFAULT_PAGE_SIZE;
 
 @Slf4j
 @RestController
@@ -33,7 +33,7 @@ public class VoucherController {
         return status;
     }
 
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<?> getAllVouchers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                             @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
@@ -63,48 +63,52 @@ public class VoucherController {
         return new ResponseEntity<>(voucherService.searchVouchers(pageNumber, pageSize, searchString), HttpStatus.OK);
     }
 
+    @GetMapping("/{id}/batch")
+    public ResponseEntity<?> getVoucherByBatchId(@PathVariable("id") String id,
+                                                 @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                 @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(voucherService.getBatchVouchers(id, pageNumber, pageSize), HttpStatus.OK);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getVoucherById(@PathVariable("id") Integer id) {
         return new ResponseEntity<>(voucherService.findVoucherById(id), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteVoucher(@PathVariable("id") Integer id) {
-        return new ResponseEntity<>(voucherService.deleteVoucher(id), HttpStatus.OK);
-    }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateVoucher(@PathVariable("id") Integer id, @Valid @RequestBody VoucherDto dto) {
         return new ResponseEntity<>(voucherService.updateVoucher(id, dto), HttpStatus.OK);
     }
 
-    @PutMapping("/{id}/denomination")
-    public ResponseEntity<String> changeVoucherDenomination(@PathVariable("id") Integer id, @RequestBody VoucherChangeRequest request) {
+    @GetMapping("/{id}/suspend")
+    public ResponseEntity<?> suspendVoucher(@PathVariable("id") Integer id) {
+        VoucherDto dto = voucherService.suspendVoucher(id);
 
-        if (request != null || request.getDenomination() != null && request.getDenomination() > 0.0) {
-            return new ResponseEntity<>(voucherService.changeVoucherDenomination(id, request), HttpStatus.OK);
+        if (dto == null) {
+            return new ResponseEntity<>(new MessageDto(String.format("Error suspending Voucher %d maybe does not exist", id)), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>("Bad Arguments Denomination must be submitted", HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
-    @PutMapping("/{id}/expiry")
-    public ResponseEntity<String> changeVoucherExpiry(@PathVariable("id") Integer id, @RequestBody VoucherChangeRequest request) {
+    @GetMapping("/{id}/unsuspend")
+    public ResponseEntity<?> unsuspendVoucher(@PathVariable("id") Integer id) {
+        VoucherDto dto = voucherService.unsuspendVoucher(id);
 
-        if (request != null || request.getExpiryDate() != null) {
-            return new ResponseEntity<>(voucherService.changeVoucherExpiry(id, request), HttpStatus.OK);
+        if (dto == null) {
+            return new ResponseEntity<>(new MessageDto(String.format("Error Un-suspending Voucher %d maybe does not exist", id)), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>("Bad Arguments Expiry Date must be submitted", HttpStatus.BAD_REQUEST);
-    }
-
-    @PutMapping("/{id}/activate")
-    public ResponseEntity<String> activateVoucher(@PathVariable("id") Integer id) {
-        return new ResponseEntity<>(voucherService.activateVoucher(id), HttpStatus.OK);
-    }
-
-    @PutMapping("/{id}/deactivate")
-    public ResponseEntity<?> deActivateVoucher(@PathVariable("id") Integer id) {
-        return new ResponseEntity<>(voucherService.deActivateVoucher(id), HttpStatus.OK);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 }

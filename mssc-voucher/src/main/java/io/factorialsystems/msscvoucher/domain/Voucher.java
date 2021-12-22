@@ -5,9 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Null;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.sql.Timestamp;
 
 @Data
 @NoArgsConstructor
@@ -18,8 +17,11 @@ public class Voucher {
     private String serialNumber;
     private String batchId;
     private BigDecimal denomination;
-    private Date expiryDate;
-    private Date createdAt;
+    private Timestamp expiryDate;
+    private Timestamp createdAt;
     private String createdBy;
     private Boolean activated;
+    private Boolean suspended;
+    private Timestamp activationDate;
+    private String activatedBy;
 }

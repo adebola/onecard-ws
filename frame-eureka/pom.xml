@@ -12,7 +12,8 @@
     <artifactId>frame-eureka</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>frame-eureka</name>
-    <description>frame-eureka</description>
+    <description>Onecard Eureka Framework Service</description>
+
     <properties>
         <java.version>11</java.version>
         <spring-cloud.version>2020.0.3</spring-cloud.version>

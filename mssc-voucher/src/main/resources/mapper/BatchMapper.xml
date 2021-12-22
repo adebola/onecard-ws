@@ -4,39 +4,49 @@
 <mapper namespace="io.factorialsystems.msscvoucher.dao.BatchMapper">
     <resultMap id="batchResultMap" type="io.factorialsystems.msscvoucher.domain.Batch">
         <id column="id" property="id" jdbcType="VARCHAR" />
-        <result column="createdAt" property="createdAt" jdbcType="TIMESTAMP" />
+        <result column="cluster_id" property="clusterId" jdbcType="VARCHAR" />
+        <result column="createdAt" property="createdDate" jdbcType="TIMESTAMP" />
         <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
         <result column="denomination" property="denomination" jdbcType="DECIMAL"/>
-        <result column="voucher_count" property="count" jdbcType="INTEGER"/>
+        <result column="voucher_count" property="voucherCount" jdbcType="INTEGER"/>
         <result column="activated" property="activated" jdbcType="BOOLEAN"/>
         <result column="activation_date" property="activationDate" jdbcType="TIMESTAMP"/>
+        <result column="activatedBy" property="activatedBy" jdbcType="VARCHAR"/>
         <result column="expiry_date" property="expiryDate" jdbcType="TIMESTAMP"/>
+        <result column="suspended" property="suspended" jdbcType="BOOLEAN"/>
     </resultMap>
 
     <sql id="Column_List">
-        id, createdAt, createdBy, denomination, voucher_count, activated, activation_date, expiry_date
+        id, cluster_id, createdAt, createdBy, denomination, voucher_count, activated, activation_date, activatedBy, expiry_date, suspended
     </sql>
 
-    <select id="findAllBatches" resultMap="batchResultMap">
+    <select id="findAll" resultMap="batchResultMap">
         select
         <include refid="Column_List"/>
         from batch
     </select>
 
-    <select id="findBatch" parameterType="java.lang.String" resultMap="batchResultMap">
+    <select id="findById" parameterType="java.lang.String" resultMap="batchResultMap">
         select
         <include refid="Column_List"/>
         from batch where id = #{id}
     </select>
 
-    <select id="Search" parameterType="java.lang.String" resultMap="batchResultMap">
+    <select id="search" parameterType="java.lang.String" resultMap="batchResultMap">
         select
         <include refid="Column_List"/>
         from batch where id like CONCAT(#{search}, '%')
     </select>
 
-    <insert id="generateBatch" parameterType="java.util.Map">
-        insert into batch(id, createdBy, denomination, voucher_count, expiry_date) values(#{id}, #{createdBy}, #{amount}, #{count}, #{date})
+    <select id="findByClusterId" parameterType="java.lang.String" resultMap="batchResultMap">
+        select
+        <include refid="Column_List"/>
+        from batch where cluster_id = #{id}
+    </select>
+
+    <insert id="generateBatch" parameterType="io.factorialsystems.msscvoucher.domain.Batch">
+        insert into batch(id, cluster_id, createdBy, denomination, voucher_count, expiry_date)
+        values(#{id}, #{clusterId}, #{createdBy}, #{denomination}, #{voucherCount}, #{expiryDate})
     </insert>
 
     <select id="checkBatchExists" parameterType="java.lang.String" resultType="Integer">
@@ -47,10 +57,6 @@
         select count(*) from voucher where batch_id = #{id}
         and tx_code is NOT NULL
     </select>
-
-    <update id="deleteBatch" parameterType="java.lang.String">
-        update voucher set deleted = true where batch_id = #{id}
-    </update>
 
     <update id="changeDenomination" parameterType="java.util.Map">
         update voucher set denomination = #{denomination} where batch_id = #{id}
@@ -64,7 +70,39 @@
         update voucher set activated = true where batch_id = #{id}
     </update>
 
-    <update id="deActivateBatch" parameterType="java.lang.String">
-        update voucher set activated = false where batch_id = #{id}
+    <update id="suspend" parameterType="java.lang.String">
+            update batch set suspended = true where id = #{id};
+            update voucher set suspended = true where batch_id = #{id};
+    </update>
+
+    <update id="unsuspend" parameterType="java.lang.String">
+        update batch set suspended = false where id = #{id};
+        update voucher set suspended = false where batch_id = #{id};
+    </update>
+
+    <update id="activate" parameterType="java.util.Map">
+        update batch set activated = true, activation_date = NOW(), activatedBy = #{activatedBy} where id = #{id};
+        update voucher set activated = true, activation_date = NOW(), activatedBy = #{activatedBy} where batch_id = #{id}
+    </update>
+
+    <update id="update" parameterType="io.factorialsystems.msscvoucher.domain.Batch">
+        update batch
+        <set>
+            <if test="expiryDate != null">expiry_date=#{expiryDate},</if>
+            <if test="denomination != null">denomination=#{denomination},</if>
+            <if test="activated != null">activated=#{activated},</if>
+            <if test="activationDate != null">activation_date=#{activationDate},</if>
+            <if test="activatedBy != null">activatedBy=#{activatedBy},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="adjustBalances" parameterType="java.util.Map">
+        update cluster set balance = balance + #{balance} where id = (select cluster_id from batch where id = #{id});
+        update voucher set denomination = #{denomination} where batch_id = #{id};
+    </update>
+
+    <update id="changeVoucherExpiry" parameterType="java.util.Map">
+        update voucher set expiry_date = #{expiryDate} where batch_id = #{id}
     </update>
 </mapper>

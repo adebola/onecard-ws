@@ -8,15 +8,21 @@ import java.util.Map;
 
 @Mapper
 public interface BatchMapper {
-    Page<Batch> findAllBatches();
-    Page<Batch> Search(String search);
-    Batch findBatch(String id);
-    void generateBatch(Map<String, Object> args);
-    Integer checkBatchUsed(String id);
-    Integer checkBatchExists(String id);
-    void deleteBatch(String id);
-    void changeDenomination(Map<String, Object> args);
-    void changeExpiry(Map<String, Object> args);
-    void activateBatch(String id);
-    void deActivateBatch(String id);
+    Page<Batch> findAll();
+    Page<Batch> search(String search);
+    Page<Batch> findByClusterId(String id);
+    void suspend(String id);
+    void unsuspend(String id);
+    void activate(Map<String, Object> map);
+    void update(Batch batch);
+    Batch findById(String id);
+    void generateBatch(Batch batch);
+    void adjustBalances(Map<String, Object> map);
+    void changeVoucherExpiry(Map<String, Object> map);
+
+//    Integer checkBatchUsed(String id);
+//    Integer checkBatchExists(String id);
+//    void changeDenomination(Map<String, Object> args);
+//    void changeExpiry(Map<String, Object> args);
+//    void activateBatch(String id);
 }

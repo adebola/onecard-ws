@@ -5,19 +5,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.sql.Timestamp;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Batch {
     private String id;
-    private Date createdAt;
+    private String clusterId;
+    private Timestamp createdDate;
     private String createdBy;
     private BigDecimal denomination;
-    private Integer count;
+    private Integer voucherCount;
     private Boolean activated;
-    private Date activationDate;
-    private Date expiryDate;
+    private Timestamp activationDate;
+    private String activatedBy;
+    private Timestamp expiryDate;
+    private Boolean suspended;
 }
 

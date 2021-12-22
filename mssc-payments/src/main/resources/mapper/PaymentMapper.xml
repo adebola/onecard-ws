@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscpayments.dao.PaymentMapper">
+    <resultMap id="paymentResultMap" type="io.factorialsystems.msscpayments.domain.PaymentRequest">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="amount" property="amount" jdbcType="DECIMAL"/>
+        <result column="status" property="status" jdbcType="BOOLEAN"/>
+        <result column="message" property="message" jdbcType="VARCHAR"/>
+        <result column="authorization_url" property="authorizationUrl" jdbcType="VARCHAR"/>
+        <result column="redirect_url" property="redirectUrl" jdbcType="VARCHAR"/>
+        <result column="access_code" property="accessCode" jdbcType="VARCHAR"/>
+        <result column="reference" property="reference" jdbcType="VARCHAR"/>
+        <result column="verified" property="verified" jdbcType="BOOLEAN"/>
+        <result column="payment_created" property="paymentCreated" jdbcType="TIMESTAMP" />
+        <result column="payment_verified" property="paymentVerified" jdbcType="TIMESTAMP" />
+    </resultMap>
+
+    <sql id="Column_List">
+        id, amount, status, message, authorization_url, redirect_url, access_code, reference, verified, payment_created, payment_verified
+    </sql>
+
+    <select id="findAll" resultMap="paymentResultMap">
+        select
+        <include refid="Column_List"/>
+        from payment
+    </select>
+
+    <select id="search" parameterType="java.lang.String" resultMap="paymentResultMap">
+        select
+        <include refid="Column_List"/>
+        from cluster where name like CONCAT(#{search}, '%')
+    </select>
+
+    <select id="findById" parameterType="java.lang.String" resultMap="paymentResultMap">
+        select
+        <include refid="Column_List"/>
+        from payment
+        where id = #{id}
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscpayments.domain.PaymentRequest">
+        insert into payment(id, amount, status, message, authorization_url, redirect_url, access_code, reference)
+        values(#{id}, #{amount}, #{status}, #{message}, #{authorizationUrl}, #{redirectUrl}, #{accessCode}, #{reference})
+    </insert>
+
+    <update id="verifyByReference" parameterType="java.lang.String">
+        update payment set verified = true, payment_verified = NOW()
+        where reference = #{reference}
+    </update>
+
+    <update id="verifyById" parameterType="java.lang.String">
+        update payment set verified = true, payment_verified = NOW()
+        where id = #{id}
+    </update>
+</mapper>

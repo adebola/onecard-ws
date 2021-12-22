@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Null;
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Data
@@ -30,7 +29,7 @@ public class VoucherDto {
 
     @Null(message = "created Date cannot be set it will be automatically be generated")
     @JsonFormat(pattern = "yyyy-MM-dd", shape = JsonFormat.Shape.STRING)
-    private OffsetDateTime createdDate;
+    private Date createdDate;
 
     @Null (message = "createdBy cannot be set")
     private String createdBy;
@@ -41,4 +40,12 @@ public class VoucherDto {
     @JsonFormat(pattern = "yyyy-MM-dd", shape = JsonFormat.Shape.STRING)
     private Date expiryDate;
     private Boolean activated;
+
+    @Null(message = "Activation date cannot be set")
+    private Date activationDate;
+
+    @Null(message = "ActivatedBy cannot be set")
+    private String activatedBy;
+
+    private Boolean suspended;
 }

@@ -9,11 +9,17 @@
         <result column="denomination" property="denomination" jdbcType="DECIMAL"/>
         <result column="batch_id" property="batchId" jdbcType="VARCHAR" />
         <result column="expiry_date" property="expiryDate" jdbcType="TIMESTAMP" />
+        <result column="createdAt" property="createdAt" jdbcType="TIMESTAMP" />
+        <result column="createdBy" property="createdBy" jdbcType="VARCHAR" />
         <result column="activated" property="activated" jdbcType="BOOLEAN"/>
+        <result column="activation_date" property="activationDate" jdbcType="TIMESTAMP" />
+        <result column="activatedBy" property="activatedBy" jdbcType="VARCHAR" />
+        <result column="suspended" property="suspended" jdbcType="BOOLEAN"/>
     </resultMap>
 
     <sql id="Column_List">
-        v.id, v.code, v.serial_number, v.denomination, v.batch_id, v.expiry_date, v.activated, b.createdBy, b.createdAt
+        v.id, v.code, v.serial_number, v.denomination, v.batch_id, v.expiry_date,
+        v.activated, b.createdBy, b.createdAt, v.activation_date, v.activatedBy, v.suspended
     </sql>
 
     <select id="findAllVouchers" resultMap="voucherResultMap">
@@ -23,7 +29,7 @@
         where v.batch_id = b.id
     </select>
 
-    <select id="findVouchersByBatchId" resultMap="voucherResultMap" parameterType="String">
+    <select id="findVouchersByBatchId" resultMap="voucherResultMap" parameterType="java.lang.String">
         select
         <include refid="Column_List"/>
         from voucher v, batch b
@@ -31,7 +37,7 @@
         and v.batch_id = b.id
     </select>
 
-    <select id="findVoucherById" resultMap="voucherResultMap" parameterType="Integer">
+    <select id="findVoucherById" resultMap="voucherResultMap" parameterType="java.lang.Integer">
         select
         <include refid="Column_List"/>
         from voucher v, batch b
@@ -39,7 +45,7 @@
         and v.batch_id = b.id
     </select>
 
-    <select id="findVoucherBySerialNumber" resultMap="voucherResultMap" parameterType="String">
+    <select id="findVoucherBySerialNumber" resultMap="voucherResultMap" parameterType="java.lang.String">
         select
         <include refid="Column_List"/>
         from voucher v, batch b
@@ -62,7 +68,7 @@
         </foreach>
     </insert>
 
-    <select id="checkVoucherExistsAndNotUsed" parameterType="java.lang.Integer" resultType="Integer">
+    <select id="checkVoucherExistsAndNotUsed" parameterType="java.lang.Integer" resultType="java.lang.Integer">
         select count(*) from voucher where id = #{id} and tx_code is NULL
     </select>
 
@@ -76,23 +82,11 @@
         where id = #{id}
     </update>
 
-    <update id="deleteVoucher" parameterType="java.lang.Integer">
-        update voucher set deleted = true where id = #{id}
+    <update id="suspend" parameterType="java.lang.Integer">
+        update voucher set suspended = true where id = #{id}
     </update>
 
-    <update id="changeVoucherDenomination" parameterType="java.util.Map">
-        update voucher set denomination = #{denomination} where id = #{id}
-    </update>
-
-    <update id="changeVoucherExpiry" parameterType="java.util.Map">
-        update voucher set expiry_date = #{date} where id = #{id}
-    </update>
-
-    <update id="activateVoucher" parameterType="java.lang.Integer">
-        update voucher set activated = true where id = #{id}
-    </update>
-
-    <update id="deActivateVoucher" parameterType="java.util.Map">
-        update voucher set activated = false where id = #{id}
+    <update id="unsuspend" parameterType="java.lang.Integer">
+        update voucher set suspended = false where id = #{id}
     </update>
 </mapper>

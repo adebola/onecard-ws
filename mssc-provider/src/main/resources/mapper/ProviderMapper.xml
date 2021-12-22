@@ -8,15 +8,16 @@
         <result column="category_id" property="categoryId" jdbcType="INTEGER"/>
         <result column="name" property="name" jdbcType="VARCHAR"/>
         <result column="code" property="code" jdbcType="VARCHAR"/>
-        <result column="status" property="status" jdbcType="VARCHAR"/>
         <result column="activated" property="activated" jdbcType="BOOLEAN"/>
+        <result column="activation_date" property="activationDate" jdbcType="TIMESTAMP"/>
+        <result column="activatedBy" property="activatedBy" jdbcType="VARCHAR"/>
         <result column="createdAt" property="createdDate" jdbcType="TIMESTAMP"/>
         <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
-        <result column="activationDate" property="activationDate" jdbcType="TIMESTAMP"/>
+        <result column="suspended" property="suspended" jdbcType="BOOLEAN"/>
     </resultMap>
 
     <sql id="Column_List">
-        p.id, c.category_name as category, p.category_id, p.name, p.code, p.status, p.activated, p.createdAt, p.createdBy, p.activation_date
+        p.id, c.category_name as category, p.category_id, p.name, p.code, p.activated, p.activatedBy, p.createdAt, p.createdBy, p.activation_date, p.suspended
     </sql>
 
     <select id="findAll" resultMap="providerResultMap">
@@ -42,7 +43,14 @@
         and p.code = #{code}
     </select>
 
-    <select id="Search" parameterType="java.lang.String" resultMap="providerResultMap">
+    <select id="findByCategory" parameterType="java.lang.String" resultMap="providerResultMap">
+        select
+        <include refid="Column_List"/>
+        from providers p, provider_categories c
+        where c.category_name = #{name}
+    </select>
+
+    <select id="search" parameterType="java.lang.String" resultMap="providerResultMap">
         select
         <include refid="Column_List"/>
         from providers p, provider_categories c
@@ -65,8 +73,10 @@
             <if test="categoryId != null">category_id=#{categoryId},</if>
             <if test="name != null">name=#{name},</if>
             <if test="activated != null">activated=#{activated},</if>
+            <if test="activatedBy != null">activatedBy=#{activatedBy},</if>
+            <if test="activationDate != null">activation_date=#{activationDate},</if>
             <if test="code != null">code=#{code},</if>
-            <if test="status != null">status=#{status}</if>
+            <if test="suspended != null">suspended=#{suspended},</if>
         </set>
         where id = #{id}
     </update>

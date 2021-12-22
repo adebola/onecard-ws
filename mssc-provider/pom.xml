@@ -10,10 +10,74 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>io.factorialsystems.io</groupId>
+    <groupId>io.factorialsystems</groupId>
     <artifactId>mssc-provider</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>mssc-provider</name>
-    <description>Service Provider mManagement Service</description>
+    <description>Service Provider Management Service</description>
 
+    <profiles>
+        <profile>
+            <id>java11</id>
+            <activation>
+                <jdk>[11,)</jdk>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.glassfish.jaxb</groupId>
+                    <artifactId>jaxb-runtime</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web-services</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- tag::wsdl[] -->
+            <plugin>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+                <version>0.14.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <schemaLanguage>WSDL</schemaLanguage>
+                    <generatePackage>io.factorialsystems.msscprovider.wsdl</generatePackage>
+                    <generateDirectory>${project.basedir}/src/main/java</generateDirectory>
+<!--                    <schemaDirectory>${project.basedir}/src/main/resources/wsdl</schemaDirectory>-->
+<!--                    <schemaIncludes>-->
+<!--                        <include>*.wsdl</include>-->
+<!--                    </schemaIncludes>-->
+                    <schemas>
+                        <schema>
+                            <url>https://ucgcore-staging.convergenceondemand.net/TMP/Partners?wsdl</url>
+                        </schema>
+                    </schemas>
+                </configuration>
+            </plugin>
+            <!-- end::wsdl[] -->
+        </plugins>
+    </build>
 </project>

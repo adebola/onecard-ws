@@ -13,7 +13,7 @@
     <artifactId>mssc-voucher</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>mssc-voucher</name>
-    <description>Voucher Management Service</description>
+    <description>Onecard Voucher Management Service</description>
 
     <dependencies>
         <dependency>

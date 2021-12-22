@@ -142,4 +142,3 @@ Desktop.ini
 
 ### VS Code ###
 .vscode/
-/mssc-provider/src/main/docker/local/

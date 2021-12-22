@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscwallet.dao.TransactionMapper">
+    <resultMap id="transactionResultMap" type="io.factorialsystems.msscwallet.domain.Transaction">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="account_id" property="accountId" jdbcType="VARCHAR"/>
+        <result column="counterparty_id" property="counterpartyId" jdbcType="VARCHAR"/>
+        <result column="counterparty_name" property="counterpartyName" jdbcType="VARCHAR"/>
+        <result column="service_name" property="serviceName" jdbcType="VARCHAR"/>
+        <result column="tx_datetime" property="txDate" jdbcType="TIMESTAMP"/>
+        <result column="tx_amount" property="txAmount"  jdbcType="DECIMAL"/>
+        <result column="tx_status" property="txStatus" jdbcType="VARCHAR"/>
+        <result column="tx_narrative" property="txNarrative"  jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Column_List">
+        t.id, t.account_id, t.counterparty_id, b.name as counterparty_name, t.service_name, t.tx_datetime, t.tx_amount, t.tx_status, t.tx_narrative
+    </sql>
+
+    <select id="findUserTransactions" parameterType="java.lang.String" resultMap="transactionResultMap">
+        select
+        <include refid="Column_List"/>
+        from transactions t, accounts a, accounts b
+        where a.user_id = #{id}
+        and t.account_id = a.id
+        and t.counterparty_id = b.id
+    </select>
+
+    <select id="findTransaction" parameterType="java.lang.String" resultMap="transactionResultMap">
+        select
+        <include refid="Column_List"/>
+        from transactions t, accounts b
+        where t.id = #{id}
+        and t.counterparty_id = b.id
+    </select>
+</mapper>

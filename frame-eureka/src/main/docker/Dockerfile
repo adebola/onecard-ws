@@ -14,4 +14,4 @@ COPY --from=builder application/dependencies/ ./
 COPY --from=builder application/spring-boot-loader/ ./
 COPY --from=builder application/snapshot-dependencies/ ./
 COPY --from=builder application/application/ ./
-ENTRYPOINT ["java", "-Djava.security.edg=file:/dev/./urandom", "-Dspring.profiles.active=production", "org.springframework.boot.loader.JarLauncher"]
+ENTRYPOINT ["java", "-Djava.io.factorialsystems.msscusers.security.edg=file:/dev/./urandom", "-Dspring.profiles.active=production", "org.springframework.boot.loader.JarLauncher"]
