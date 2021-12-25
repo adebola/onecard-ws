@@ -70,7 +70,6 @@ public class RechargeService {
         }
 
         if (dto.getServiceCost() == null) { // Service with Fixed Cost
-            // For Now the ServiceAction is irrelevant, to be addressed later
             DataEnquiry enquiry = factory.getPlans(serviceAction);
             DataPlanDto planDto = enquiry.getPlan(request.getProductId());
             BigDecimal cost = new BigDecimal(planDto.getPrice());

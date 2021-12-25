@@ -70,11 +70,11 @@
 <!--                    <schemaIncludes>-->
 <!--                        <include>*.wsdl</include>-->
 <!--                    </schemaIncludes>-->
-                    <schemas>
-                        <schema>
-                            <url>https://ucgcore-staging.convergenceondemand.net/TMP/Partners?wsdl</url>
-                        </schema>
-                    </schemas>
+<!--                    <schemas>-->
+<!--                        <schema>-->
+<!--                            <url>https://ucgcore-staging.convergenceondemand.net/TMP/Partners?wsdl</url>-->
+<!--                        </schema>-->
+<!--                    </schemas>-->
                 </configuration>
             </plugin>
             <!-- end::wsdl[] -->

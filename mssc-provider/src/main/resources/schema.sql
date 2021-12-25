@@ -1,4 +1,5 @@
 drop procedure sp_factory;
+drop procedure sp_addRechargeProvider;
 drop table provider_services_recharge_providers;
 drop table recharge_requests;
 drop table provider_services;
@@ -90,9 +91,10 @@ create table recharge_requests (
     service_cost decimal(10,2) NOT NULL,
     recipient varchar(64) NOT NULL,
     telephone varchar(64),
-    product_id varchar(64) NOT NULL,
+    product_id varchar(64),
     payment_id varchar(64),
     authorization_url varchar(64),
+    redirect_url varchar(64),
     closed boolean NOT NULL DEFAULT FALSE,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (service_id) REFERENCES provider_services(id),
@@ -104,7 +106,7 @@ create table ringo_data_plans (
     network varchar(32) NOT NULL,
     category varchar(32) NOT NULL,
     price decimal(8,2) NOT NULL,
-    allowance varchar(32) NOT NULL,
+    code varchar(32) NOT NULL,
     validity varchar(32) NOT NULL,
     PRIMARY KEY (product_id)
 );
