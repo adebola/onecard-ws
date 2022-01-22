@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  database:
+    image: mysql
+    container_name: mssc-providers-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: providers
+      MYSQL_USER: providers
+      MYSQL_PASSWORD: providers
+    volumes:
+      - provider-data:/var/lib/mysql
+    ports:
+      - "6677:3306"
+    networks:
+      - msscproviders-network
+
+volumes:
+  provider-data:
+    driver: local
+  log_volume:
+
+networks:
+  msscproviders-network:
+    name: mssc_providers
+    driver: bridge
