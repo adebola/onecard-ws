@@ -21,6 +21,7 @@
         select
         <include refid="Column_List"/>
         from accounts
+        where anonymous = false
     </select>
 
     <select id="findAccountById" parameterType="java.lang.String" resultMap="accountResultMap">
@@ -35,6 +36,14 @@
         from accounts
         where user_id = #{id} and account_type = 1
     </select>
+
+    <select id="findAnonymousAccount"  resultMap="accountResultMap">
+        select
+        <include refid="Column_List"/>
+        from accounts
+        where anonymous = true
+    </select>
+
 
     <select id="findAccountByCorporateId" parameterType="java.lang.String" resultMap="accountResultMap">
         select

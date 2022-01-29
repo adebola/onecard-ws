@@ -20,6 +20,9 @@ public class PaymentRequestDto {
     @NotNull(message = "Amount must be specified")
     BigDecimal amount;
 
+    private Integer status;
+    private String message;
+
     @Null(message = "callback_url cannot be set")
     private String authorizationUrl;
 
@@ -27,4 +30,6 @@ public class PaymentRequestDto {
 
     @Null(message = "Verified cannot be set")
     private Boolean verified;
+
+    private String paymentMode;
 }

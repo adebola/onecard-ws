@@ -1,7 +1,7 @@
 package io.factorialsystems.msscpayments.controller;
 
 import io.factorialsystems.msscpayments.dto.PaymentRequestDto;
-import io.factorialsystems.msscpayments.service.PaystackService;
+import io.factorialsystems.msscpayments.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,11 +15,11 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/pay")
 public class PayController {
-    private final PaystackService service;
+    private final PaymentService paymentService;
 
     @PostMapping
     ResponseEntity<PaymentRequestDto> initializePayment(@Valid @RequestBody PaymentRequestDto dto) {
-        return new ResponseEntity<>(service.initializePayment(dto), HttpStatus.OK);
+        return new ResponseEntity<>(paymentService.initializePayment(dto), HttpStatus.OK);
     }
 
     @GetMapping
@@ -27,18 +27,21 @@ public class PayController {
     public void verifyPayment(@RequestParam(value = "trxref") String trxref,
                               @RequestParam(value = "reference") String reference) {
 
-        service.verifyPayment(reference);
+        paymentService.verifyPayment(reference);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<PaymentRequestDto> checkPayment(@PathVariable("id") String id) {
-        return new ResponseEntity<>(service.checkPaymentValidity(id), HttpStatus.OK);
-    }
 
-    @GetMapping("/test")
-    @ResponseStatus(HttpStatus.OK)
-    public void test(@RequestParam(value = "trxref") String trxref,
-                     @RequestParam(value = "reference") String reference) {
-       log.info(String.format("Txref %s and Referebce %s", trxref, reference));
+       PaymentRequestDto dto = paymentService.checkPaymentValidity(id);
+
+       if (dto == null)
+       {
+           final String message = String.format("Payment not consumated, pending id (%s)", id);
+           log.error(message);
+           throw new RuntimeException(message);
+       }
+
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 }

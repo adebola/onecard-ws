@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscprovider.dao.ScheduledRechargeMapper">
+    <resultMap id="scheduledRechargeResultMap" type="io.factorialsystems.msscprovider.domain.ScheduledRechargeRequest">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="request_id" property="requestId" jdbcType="VARCHAR" />
+        <result column="request_type" property="requestType" jdbcType="INTEGER" />
+        <result column="request_scheduled_date" property="scheduledDate" jdbcType="TIMESTAMP" />
+        <result column="service_id" property="serviceId" jdbcType="INTEGER" />
+        <result column="service_code" property="serviceCode" jdbcType="VARCHAR" />
+        <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
+        <result column="request_created_on" property="createdOn" jdbcType="TIMESTAMP" />
+        <result column="request_ran_on" property="ranOn" jdbcType="TIMESTAMP" />
+        <result column="group_id" property="groupId" jdbcType="INTEGER" />
+        <result column="recipient" property="recipient" jdbcType="VARCHAR" />
+        <result column="product_id" property="productId" jdbcType="VARCHAR"/>
+        <result column="telephone" property="telephone" jdbcType="VARCHAR"/>
+        <result column="redirect_url" property="redirectUrl" jdbcType="VARCHAR"/>
+        <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
+        <result column="closed" property="closed" jdbcType="BOOLEAN"/>
+    </resultMap>
+
+    <sql id="column_list">
+        r.id,
+        r.request_id,
+        r.request_type,
+        r.request_scheduled_date,
+        r.service_id,
+        p.service_code,
+        r.service_cost,
+        r.request_created_on,
+        r.request_ran_on,
+        r.group_id,
+        r.recipient,
+        r.product_id,
+        r.telephone,
+        r.redirect_url,
+        r.payment_mode
+        r.closed
+    </sql>
+
+    <select id="findById" parameterType="java.lang.String" resultMap="scheduledRechargeResultMap">
+        select
+        <include refid="column_list"/>
+        from scheduled_recharge r, provider_services p
+        where r.id = #{id}
+        and   r.service_id = p.id
+    </select>
+
+
+    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.BulkRechargeRequest" >
+        insert into scheduled_recharge(id, request_id, request_scheduled_date, service_id, group_id, recipient, product_id, telephone, service_cost, redirect_url, payment_mode)
+        values(#{id}, #{requestId}, #{scheduledDate}, #{serviceId}, #{groupId}, #{recipient}, #{productId}, #{telephone}, #{serviceCost}, #{redirectUrl}, #{paymentMode})
+    </insert>
+
+    <update id="closeRequest" parameterType="java.lang.String">
+        update scheduled_recharge set closed = true, request_ran_on = NOW() where id = #{id}
+    </update>
+</mapper>

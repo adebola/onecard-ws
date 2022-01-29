@@ -1,6 +1,8 @@
 package io.factorialsystems.msscusers.controller;
 
 import io.factorialsystems.msscusers.dto.BeneficiaryDto;
+import io.factorialsystems.msscusers.dto.BeneficiaryGroupDto;
+import io.factorialsystems.msscusers.service.BeneficiaryGroupService;
 import io.factorialsystems.msscusers.service.BeneficiaryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import java.util.List;
 @RequestMapping("/api/v1/beneficiary")
 public class BeneficiaryController {
     private final BeneficiaryService beneficiaryService;
+    private final BeneficiaryGroupService beneficiaryGroupService;
 
     @GetMapping
     public ResponseEntity<List<BeneficiaryDto>> getBeneficiaries() {
@@ -24,7 +27,7 @@ public class BeneficiaryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BeneficiaryDto> getBeneficiary(@PathVariable Integer id) {
+    public ResponseEntity<BeneficiaryDto> getBeneficiary(@PathVariable("id") Integer id) {
         return new ResponseEntity<>(beneficiaryService.getBeneficiary(id), HttpStatus.OK);
     }
 
@@ -50,5 +53,20 @@ public class BeneficiaryController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteBeneficiary(@PathVariable("id") Integer id) {
         beneficiaryService.removeBeneficiary(id);
+    }
+
+    @GetMapping("/length/{id}")
+    public ResponseEntity<Integer> getGroupLength(@PathVariable("id") Integer id) {
+        return new ResponseEntity<>(beneficiaryGroupService.findGroupLength(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/group/{id}")
+    public ResponseEntity<BeneficiaryGroupDto> getGroup(@PathVariable("id") Integer id) {
+        return new ResponseEntity<>(beneficiaryGroupService.findById(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/beneficiary/{id}")
+    public ResponseEntity<List<BeneficiaryDto>> getGroupBeneficiaries(@PathVariable("id") Integer id) {
+        return new ResponseEntity<>(beneficiaryGroupService.findBeneficiaries(id), HttpStatus.OK);
     }
 }

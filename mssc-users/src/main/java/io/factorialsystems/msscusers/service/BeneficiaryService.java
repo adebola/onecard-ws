@@ -34,7 +34,7 @@ public class BeneficiaryService {
     public void removeBeneficiary(Integer id) {
         Beneficiary beneficiary = beneficiaryMapper.findById(id);
 
-        if (beneficiary != null && beneficiary.getUserName().equals(K.getPreferredUserName())) {
+        if (beneficiary != null && beneficiary.getUserId().equals(K.getUserId())) {
             beneficiaryMapper.delete(id);
             return;
         }
@@ -47,9 +47,8 @@ public class BeneficiaryService {
     public void updateBeneficiary(Integer id, BeneficiaryDto beneficiaryDto) {
         beneficiaryDto.setId(id);
         Beneficiary beneficiary = mapstructMapper.dtoToBeneficiary(beneficiaryDto);
-        Beneficiary checkBeneficiary = beneficiaryMapper.findById(id);
 
-        if (checkBeneficiary != null && checkBeneficiary.getUserName().equals(K.getPreferredUserName())) {
+        if (beneficiary.getUserId().equals(K.getUserId())) {
             beneficiaryMapper.update(beneficiary);
             return;
         }
@@ -62,7 +61,7 @@ public class BeneficiaryService {
     public BeneficiaryDto getBeneficiary(Integer id) {
         Beneficiary beneficiary = beneficiaryMapper.findById(id);
 
-        if (beneficiary.getUserName().equals(K.getPreferredUserName())) {
+        if (beneficiary.getUserId().equals(K.getUserId())) {
             return mapstructMapper.beneficiaryToDto(beneficiary);
         }
 

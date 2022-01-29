@@ -15,11 +15,9 @@ import java.util.Date;
 public class Transaction {
     private Integer id;
     private String accountId;
-    private String counterpartyId;
-    private String counterpartyName;
+    private Integer serviceId;
     private String serviceName;
-    private Date  txDate;
+    private String requestId;
+    private Date txDate;
     private BigDecimal txAmount;
-    private String txNarrative;
-    private String txStatus;
 }

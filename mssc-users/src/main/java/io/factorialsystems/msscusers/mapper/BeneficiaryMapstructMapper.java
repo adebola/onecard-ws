@@ -15,7 +15,8 @@ public interface BeneficiaryMapstructMapper {
 
     @Mappings({
             @Mapping(target = "createdOn", ignore = true),
-            @Mapping(target = "userId", ignore = true)
+            @Mapping(target = "userId", ignore = true),
+            @Mapping(target = "userName", ignore = true)
     })
     Beneficiary dtoToBeneficiary(BeneficiaryDto dto);
     BeneficiaryDto beneficiaryToDto(Beneficiary beneficiary);

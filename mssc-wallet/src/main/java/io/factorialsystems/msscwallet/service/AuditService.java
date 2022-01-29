@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscwallet.config.JMSConfig;
 import io.factorialsystems.msscwallet.utils.K;
-import io.factorialsystems.msscwallet.web.model.AuditMessageDto;
+import io.factorialsystems.msscwallet.dto.AuditMessageDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

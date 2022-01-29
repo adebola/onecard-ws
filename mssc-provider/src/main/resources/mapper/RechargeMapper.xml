@@ -2,8 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 
 <mapper namespace="io.factorialsystems.msscprovider.dao.RechargeMapper">
-    <resultMap id="rechargeResultMap" type="io.factorialsystems.msscprovider.domain.RechargeRequest">
-        <id column="id" property="id" jdbcType="INTEGER" />
+    <resultMap id="rechargeResultMap" type="io.factorialsystems.msscprovider.domain.SingleRechargeRequest">
+        <id column="id" property="id" jdbcType="VARCHAR" />
         <result column="service_id" property="serviceId" jdbcType="INTEGER" />
         <result column="service_code" property="serviceCode" jdbcType="VARCHAR" />
         <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
@@ -13,6 +13,9 @@
         <result column="authorization_url" property="authorizationUrl" jdbcType="VARCHAR"/>
         <result column="telephone" property="telephone" jdbcType="VARCHAR"/>
         <result column="product_id" property="productId" jdbcType="VARCHAR"/>
+        <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="message" property="message" jdbcType="VARCHAR"/>
     </resultMap>
 
     <resultMap id="factoryResultMap" type="io.factorialsystems.msscprovider.domain.RechargeFactoryParameters">
@@ -22,10 +25,10 @@
     </resultMap>
 
     <sql id="Column_List">
-       r.id, r.service_id, p.service_code, r.service_cost, r.payment_id, r.recipient, r.closed, r.authorization_url, r.telephone, r.product_id
+       r.id, r.service_id, p.service_code, r.service_cost, r.payment_id, r.recipient, r.closed, r.authorization_url, r.telephone, r.product_id, r.payment_mode, r.message, r.status
     </sql>
 
-    <select id="findById" parameterType="java.lang.Integer" resultMap="rechargeResultMap">
+    <select id="findById" parameterType="java.lang.String" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
         from recharge_requests r, provider_services p
@@ -37,15 +40,12 @@
         {call sp_factory(#{id, jdbcType = INTEGER, mode = IN})}
     </select>
 
-    <update id="closeRequest" parameterType="java.lang.Integer">
+    <update id="closeRequest" parameterType="java.lang.String">
         update recharge_requests set closed = true where id = #{id}
     </update>
 
-    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.RechargeRequest" >
-        insert into recharge_requests(service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url, redirect_url)
-        values(#{serviceId}, #{serviceCost}, #{recipient}, #{paymentId}, #{telephone}, #{productId}, #{authorizationUrl}, #{redirectUrl})
-        <selectKey resultType="int" keyProperty="id" order="AFTER">
-            select LAST_INSERT_ID()
-        </selectKey>
+    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.SingleRechargeRequest" >
+        insert into recharge_requests(id, service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url, redirect_url, payment_mode, status, message)
+        values(#{id}, #{serviceId}, #{serviceCost}, #{recipient}, #{paymentId}, #{telephone}, #{productId}, #{authorizationUrl}, #{redirectUrl}, #{paymentMode}, #{status}, #{message})
     </insert>
 </mapper>

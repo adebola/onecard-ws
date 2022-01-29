@@ -4,21 +4,20 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscwallet.dao.AccountMapper;
 import io.factorialsystems.msscwallet.domain.Account;
+import io.factorialsystems.msscwallet.dto.*;
+import io.factorialsystems.msscwallet.mapper.AccountMapstructMapper;
 import io.factorialsystems.msscwallet.utils.K;
-import io.factorialsystems.msscwallet.web.mapper.AccountMapstructMapper;
-import io.factorialsystems.msscwallet.web.model.AccountDto;
-import io.factorialsystems.msscwallet.web.model.PagedDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountService {
-
     private final AuditService auditService;
     private final AccountMapper accountMapper;
     private final AccountMapstructMapper accountMapstructMapper;
@@ -35,45 +34,38 @@ public class AccountService {
         return createDto(accounts);
     }
 
-    public AccountDto findAccountById(String id) {
+    public BalanceDto findAccountBalance() {
+        String userId = K.getUserId();
 
-        Account account = accountMapper.findAccountById(id);
-
-        if (account != null) {
-            return accountMapstructMapper.accountToAccountDto(account);
+        if (userId == null) {
+            throw new RuntimeException("User must be Logged In to retrieve Account Balance");
         }
 
-        return null;
-    }
-
-    public AccountDto findAccountByUserId(String userId) {
         Account account = accountMapper.findAccountByUserId(userId);
 
         if (account == null) {
-            return accountMapstructMapper.accountToAccountDto(createUserAccount(userId));
+            throw new RuntimeException(String.format("Unable Load Account for (%s), Account not found please contact support", userId));
         }
 
-        return null;
+        return BalanceDto.builder()
+                .balance(account.getBalance())
+                .build();
+    }
+
+    public AccountDto findAccountById(String id) {
+        return accountMapstructMapper.accountToAccountDto(accountMapper.findAccountById(id));
+    }
+
+    public AccountDto findAccountByUserId(String userId) {
+        return accountMapstructMapper.accountToAccountDto(accountMapper.findAccountByUserId(userId));
     }
 
     public AccountDto findAccountByCorporateId(String userId) {
-        Account account = accountMapper.findAccountByCorporateId(userId);
-
-        if (account == null) {
-            return accountMapstructMapper.accountToAccountDto(createCorporateAccount(userId));
-        }
-
-        return null;
+        return accountMapstructMapper.accountToAccountDto(accountMapper.findAccountByCorporateId(userId));
     }
 
     public AccountDto findAccountByProviderId(String providerId) {
-        Account account = accountMapper.findAccountByProviderId(providerId);
-
-        if (account == null) {
-            return accountMapstructMapper.accountToAccountDto(createProviderAccount(providerId));
-        }
-
-        return accountMapstructMapper.accountToAccountDto(account);
+        return  accountMapstructMapper.accountToAccountDto(accountMapper.findAccountByProviderId(providerId));
     }
 
 
@@ -88,20 +80,51 @@ public class AccountService {
         }
     }
 
-    public void updateAccountBalance(String id, AccountDto accountDto) {
+    public void updateAccountBalance(String id, BalanceDto dto) {
 
-        if (id != null && accountDto != null && accountDto.getBalance() != null) {
+        Account account = accountMapper.findAccountByUserId(id);
 
-            Account account = Account.builder()
-                    .id(id)
-                    .balance(accountDto.getBalance())
-                    .build();
+        if (account == null) {
+            throw new RuntimeException(String.format("Unable Load Account for (%s), Account not found please contact support", id));
+        }
 
+        account.setBalance(dto.getBalance());
+        accountMapper.update(account);
+
+        String auditMessage = String.format("Account (%s / %s) Balance updated updated to %.2f by (%s)",account.getId(), account.getName(), account.getBalance().doubleValue(), K.getUserName());
+        log.info(auditMessage);
+        auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_UPDATED);
+    }
+
+    public WalletResponseDto chargeAccount(WalletRequestDto dto) {
+        String userId = K.getUserId();
+
+        if (userId == null) {
+            throw new RuntimeException("User must be logged to charge Wallet");
+        }
+
+        Account account = accountMapper.findAccountByUserId(userId);
+
+        if (account == null) {
+            throw new RuntimeException(String.format("Unable to retrieve Account for (%s) for the Database, please contact support", userId));
+        }
+
+        if (account.getBalance().compareTo(dto.getAmount()) >= 0)  {
+            BigDecimal newValue = account.getBalance().subtract(dto.getAmount());
+            account.setBalance(newValue);
             accountMapper.update(account);
 
-            String auditMessage = String.format("Account %s Balance updated updated to %.2f", accountDto.getId(), accountDto.getBalance().doubleValue());
-            auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_UPDATED);
+
+            return WalletResponseDto.builder()
+                    .message("Successful")
+                    .status(200)
+                    .build();
         }
+
+        return WalletResponseDto.builder()
+                .message("Insufficient Balance")
+                .status(300)
+                .build();
     }
 
     private Account createAccount(String id, Integer accountType) {

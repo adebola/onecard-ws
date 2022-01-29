@@ -28,6 +28,8 @@ public class RingoRechargeFactory extends AbstractFactory {
         codeMapper.put("AIRTEL-DATA", "airtel");
         codeMapper.put("GLO-DATA", "glo");
         codeMapper.put("9MOBILE-DATA", "9mobile");
+        codeMapper.put("EKEDP", "EKEDC");
+        codeMapper.put("JED", "JEDC");
     }
 
     @Override

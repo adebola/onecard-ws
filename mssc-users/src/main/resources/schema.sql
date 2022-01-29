@@ -23,4 +23,21 @@ create table beneficiary (
     UNIQUE idx_user_id_telephone(user_id, telephone),
     PRIMARY KEY (id),
     FOREIGN KEY (user_id) REFERENCES users (id)
-)
+);
+
+create table beneficiary_group (
+    id int AUTO_INCREMENT NOT NULL,
+    group_name VARCHAR(64) NOT NULL,
+    group_owner VARCHAR(64) NOT NULL,
+    created_on timestamp DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (group_owner) REFERENCES users (id),
+    PRIMARY KEY (id)
+);
+
+create table beneficiary_group_users (
+    beneficiary_id int NOT NULL,
+    beneficiary_group_id int NOT NULL,
+    FOREIGN KEY (beneficiary_id) REFERENCES beneficiary (id),
+    FOREIGN KEY (beneficiary_group_id) REFERENCES beneficiary_group (id),
+    UNIQUE idx_id_group_id(beneficiary_id, beneficiary_group_id)
+);

@@ -42,4 +42,9 @@ public class ServiceProviderController {
 
         return new ResponseEntity<>(actionService.getProviderActions(code, pageNumber, pageSize), HttpStatus.OK);
     }
+
+    @GetMapping("/service/{id}")
+    public ResponseEntity<?> getService(@PathVariable("id") Integer id) {
+        return new ResponseEntity<>(actionService.getProviderAction(id), HttpStatus.OK);
+    }
 }

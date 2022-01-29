@@ -4,31 +4,42 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscwallet.config.JMSConfig;
 import io.factorialsystems.msscwallet.dao.AccountMapper;
+import io.factorialsystems.msscwallet.dao.TransactionMapper;
 import io.factorialsystems.msscwallet.domain.Account;
+import io.factorialsystems.msscwallet.domain.Transaction;
 import io.factorialsystems.msscwallet.domain.User;
 import io.factorialsystems.msscwallet.domain.UserWallet;
+import io.factorialsystems.msscwallet.dto.RequestTransactionDto;
+import io.factorialsystems.msscwallet.dto.ServiceActionDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class WalletServiceJMSListener {
+    private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
-    private final ApplicationContext applicationContext;
+    private final RestTemplate restTemplate;
+    private final AccountMapper accountMapper;
+    private final TransactionMapper transactionMapper;
+
+    @Value("${api.host.baseurl}")
+    private String baseUrl;
 
     @JmsListener(destination = JMSConfig.NEW_USER_WALLET_QUEUE)
     public void listenForNewUser(String jsonData)  {
 
         try {
             User user = objectMapper.readValue(jsonData, User.class);
-            AccountMapper accountMapper = applicationContext.getBean(AccountMapper.class);
 
             Account account = Account.builder()
                     .id(UUID.randomUUID().toString())
@@ -45,12 +56,66 @@ public class WalletServiceJMSListener {
                     .walletId(account.getId())
                     .build();
 
-            JmsTemplate jmsTemplate = applicationContext.getBean(JmsTemplate.class);
             jmsTemplate.convertAndSend(JMSConfig.UPDATE_USER_WALLET_QUEUE, objectMapper.writeValueAsString(userWallet));
 
             log.info(String.format("Creating Wallet for User (%s)/(%s)", user.getId(), user.getUsername()));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
+    }
+
+
+    @JmsListener(destination = JMSConfig.NEW_TRANSACTION_QUEUE)
+    public void listenForTransaction (String jsonData) {
+
+        try {
+            RequestTransactionDto dto = objectMapper.readValue(jsonData, RequestTransactionDto.class);
+
+            log.info("Received Transaction For Service {}", dto.getServiceId());
+
+            Account account =
+                    dto.getUserId() == null ? accountMapper.findAnonymousAccount() : accountMapper.findAccountByUserId(dto.getUserId());
+
+            if (account == null) {
+                final String message = String.format("Error saving New Transaction, Unable to find Account for User (%s)", dto.getUserId());
+                log.error(message);
+                throw new RuntimeException(message);
+            }
+
+            log.info("Retrieved Account for Transaction {}", account.getId());
+
+            Optional<ServiceActionDto> actionDto
+                    = Optional.ofNullable(restTemplate.getForObject(baseUrl + "api/v1/serviceprovider/service/" + dto.getServiceId(), ServiceActionDto.class));
+
+
+            if (actionDto.isEmpty()) {
+                final String message = "Error Retrieving Service Action for Service Id " + dto.getServiceId();
+                log.error(message);
+                throw new RuntimeException(message);
+            }
+
+            log.info("Retrieved ServiceAction for Transaction {}", account.getId());
+
+            Transaction transaction = Transaction.builder()
+                    .serviceId(dto.getServiceId())
+                    .serviceName(actionDto.get().getServiceName())
+                    .accountId(account.getId())
+                    .txAmount(dto.getServiceCost())
+                    .requestId(dto.getRequestId())
+                    .build();
+
+            transactionMapper.save(transaction);
+
+            log.info("Transaction Saved Successfully {}", transaction.getId());
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @JmsListener(destination = JMSConfig.NEW_RECHARGE_PROVIDER_WALLET_QUEUE)
+    public void listenForNewRechargeProvider(String jsonData) {
+
     }
 }

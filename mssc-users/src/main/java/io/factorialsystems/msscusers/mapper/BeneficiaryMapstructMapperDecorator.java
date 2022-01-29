@@ -1,8 +1,6 @@
 package io.factorialsystems.msscusers.mapper;
 
-import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.domain.Beneficiary;
-import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.dto.BeneficiaryDto;
 import io.factorialsystems.msscusers.utils.K;
 import lombok.extern.slf4j.Slf4j;
@@ -12,13 +10,7 @@ import java.util.List;
 
 @Slf4j
 public class BeneficiaryMapstructMapperDecorator implements BeneficiaryMapstructMapper {
-    private UserMapper userMapper;
     private BeneficiaryMapstructMapper mapstructMapper;
-
-    @Autowired
-    public void setUserMapper(UserMapper userMapper) {
-        this.userMapper = userMapper;
-    }
 
     @Autowired
     public void setMapstructMapper(BeneficiaryMapstructMapper mapstructMapper) {
@@ -32,16 +24,15 @@ public class BeneficiaryMapstructMapperDecorator implements BeneficiaryMapstruct
 
     @Override
     public Beneficiary dtoToBeneficiary(BeneficiaryDto dto) {
-        String userName = K.getPreferredUserName();
-        User user = userMapper.findByName(userName);
+        String userId = K.getUserId();
 
-        if (user == null) {
-            throw new RuntimeException(String.format("Unknown User (%s)", userName));
+        if (userId == null) {
+            throw new RuntimeException("User Not found in Token (dtoToBeneficiary), please LogIn to carry out this operation");
         }
 
         Beneficiary beneficiary = mapstructMapper.dtoToBeneficiary(dto);
-        beneficiary.setUserId(user.getId());
-        beneficiary.setUserName(user.getUsername());
+        beneficiary.setUserId(userId);
+        beneficiary.setUserName(K.getPreferredUserName());
 
         return beneficiary;
     }
@@ -58,18 +49,18 @@ public class BeneficiaryMapstructMapperDecorator implements BeneficiaryMapstruct
             return null;
         }
 
-        String userName = K.getPreferredUserName();
-        User user = userMapper.findByName(userName);
+        String userId = K.getUserId();
 
-        if (user == null) {
-            throw new RuntimeException(String.format("Unknown User (%s)", userName));
+        if (userId == null) {
+            throw new RuntimeException("User Not found in Token (listDtoToBeneficiary), please LogIn to carry out this operation");
         }
 
         List<Beneficiary> beneficiaries = mapstructMapper.listDtoToBeneficiary(dtos);
+        String userName = K.getPreferredUserName();
 
         beneficiaries.forEach(beneficiary -> {
-            beneficiary.setUserId(user.getId());
-            beneficiary.setUserName(user.getUsername());
+            beneficiary.setUserId(userId);
+            beneficiary.setUserName(userName);
         });
 
         return beneficiaries;

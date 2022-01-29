@@ -63,10 +63,21 @@
 <!--            <artifactId>jboss-jms-api_2.0_spec</artifactId>-->
 <!--            <version>2.0.0.Final</version>-->
 <!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.activemq</groupId>-->
+<!--            <artifactId>artemis-jms-client</artifactId>-->
+<!--            <version>2.18.0</version>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>org.apache.activemq</groupId>
-            <artifactId>artemis-jms-client</artifactId>
-            <version>2.18.0</version>
+            <artifactId>activemq-client</artifactId>
+            <version>5.16.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-pool</artifactId>
+            <version>5.16.3</version>
         </dependency>
     </dependencies>
 

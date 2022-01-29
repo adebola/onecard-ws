@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscprovider.dao.BulkRechargeMapper">
+    <resultMap id="bulkRechargeResultMap" type="io.factorialsystems.msscprovider.domain.BulkRechargeRequest">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="service_id" property="serviceId" jdbcType="INTEGER" />
+        <result column="service_code" property="serviceCode" jdbcType="VARCHAR" />
+        <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
+        <result column="total_service_cost" property="totalServiceCost" jdbcType="DECIMAL"/>
+        <result column="group_id" property="groupId" jdbcType="INTEGER" />
+        <result column="payment_id" property="paymentId" jdbcType="VARCHAR"/>
+        <result column="closed" property="closed" jdbcType="BOOLEAN"/>
+        <result column="authorization_url" property="authorizationUrl" jdbcType="VARCHAR"/>
+        <result column="product_id" property="productId" jdbcType="VARCHAR"/>
+        <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="recipientResultMap" type="io.factorialsystems.msscprovider.domain.Telephone">
+        <result column = "msisdn" property="msisdn" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="column_list">
+        r.id, r.service_id, p.service_code, r.service_cost, r.total_service_cost, r.group_id, r.payment_id, r.closed, r.authorization_url, r.product_id, r.payment_mode
+    </sql>
+
+    <select id="findById" parameterType="java.lang.String" resultMap="bulkRechargeResultMap">
+        select
+        <include refid="column_list"/>
+        from bulk_recharge_requests r, provider_services p
+        where r.id = #{id}
+        and   r.service_id = p.id
+    </select>
+
+    <select id="findRecipients" parameterType="java.lang.String" resultMap="recipientResultMap">
+        select msisdn from recharge_request_recipients where bulk_recharge_request_id = #{id}
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.BulkRechargeRequest" >
+        insert into bulk_recharge_requests(id, service_id, service_cost, total_service_cost, group_id, payment_id, product_id, payment_mode, authorization_url, redirect_url)
+        values(#{id}, #{serviceId}, #{serviceCost}, #{totalServiceCost}, #{groupId}, #{paymentId}, #{productId}, #{paymentMode}, #{authorizationUrl}, #{redirectUrl})
+    </insert>
+
+    <update id="closeRequest" parameterType="java.lang.String">
+        update bulk_recharge_requests set closed = true where id = #{id}
+    </update>
+
+    <insert id="saveRecipients" parameterType="java.util.List">
+        insert into recharge_request_recipients(bulk_recharge_request_id, msisdn) values
+        <foreach item="item" index="index" collection="list"  separator=",">
+            (#{item.bulkRequestId, jdbcType=INTEGER}, #{item.msisdn, jdbcType=VARCHAR} )
+        </foreach>
+    </insert>
+</mapper>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscusers.dao.BeneficiaryGroupMapper">
+
+    <resultMap id="beneficiaryGroupResultMap" type="io.factorialsystems.msscusers.domain.BeneficiaryGroup">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="group_name" property="groupName" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="beneficiaryResultMap" type="io.factorialsystems.msscusers.domain.Beneficiary">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="first_name" property="firstName" jdbcType="VARCHAR"/>
+        <result column="last_name" property="lastName" jdbcType="VARCHAR"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="telephone" property="telephone" jdbcType="VARCHAR"/>
+        <result column="created_on" property="createdOn" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="group_column_list">
+        bg.id, bg.group_name, bg.group_owner as user_id, u.user_name
+    </sql>
+
+    <sql id="beneficiary_column_list">
+        b.id, b.user_id, u.user_name, b.first_name, b.last_name, b.email, b.telephone, b.created_on
+    </sql>
+
+    <select id="findById" parameterType="java.lang.Integer" resultMap="beneficiaryGroupResultMap">
+        select
+        <include refid="group_column_list"/>
+        from beneficiary_group bg, users u
+        where bg.id = #{id}
+        and   bg.group_owner = u.id
+    </select>
+
+    <select id="findByUserId" parameterType="java.lang.String" resultMap="beneficiaryGroupResultMap">
+        select
+        <include refid="group_column_list"/>
+        from beneficiary_group bg, users u
+        where bg.group_owner = #{id}
+        and bg.group_owner = u.id
+    </select>
+
+    <select id="findBeneficiaries" parameterType="java.lang.Integer" resultMap="beneficiaryResultMap">
+        select
+        <include refid="beneficiary_column_list"/>
+        from beneficiary b, users u, beneficiary_group_users bg
+        where bg.beneficiary_group_id = #{id}
+        and   bg.beneficiary_id = b.id
+        and   b.user_id = u.id
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscusers.domain.BeneficiaryGroup">
+        insert into beneficiary_group(group_name, group_owner)
+        values(#{groupName}, #{userId})
+
+        <selectKey resultType="int" keyProperty="id" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="update" parameterType="io.factorialsystems.msscusers.domain.BeneficiaryGroup">
+        update beneficiary_group
+        <set>
+            <if test="groupName != null">group_name=#{groupName},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="java.lang.Integer">
+        delete from beneficiary_group where id = #{id}
+    </delete>
+
+    <delete id="removeBeneficiary" parameterType="io.factorialsystems.msscusers.dto.BeneficiaryRequestDto">
+        delete from beneficiary_group_users where beneficiary_id = #{beneficiaryId} and  beneficiary_group_id = #{groupId}
+    </delete>
+
+    <insert id="addBeneficiary"  parameterType="io.factorialsystems.msscusers.dto.BeneficiaryRequestDto">
+        insert into beneficiary_group_users (beneficiary_id, beneficiary_group_id)
+        values(#{beneficiaryId}, #{groupId})
+    </insert>
+
+    <select id="length" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+        select count(*) from beneficiary_group where id = #{id}
+    </select>
+</mapper>

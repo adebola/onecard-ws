@@ -3,7 +3,7 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.dao.RingoDataPlanMapper;
-import io.factorialsystems.msscprovider.domain.RechargeRequest;
+import io.factorialsystems.msscprovider.domain.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.domain.RingoDataPlan;
 import io.factorialsystems.msscprovider.dto.DataPlanDto;
 import io.factorialsystems.msscprovider.dto.FetchDataDto;
@@ -37,11 +37,11 @@ public class RingoDataRecharge implements Recharge, DataEnquiry, ParameterCheck 
     private final RingoDataPlanMapper ringoDataPlanMapper;
 
     @Override
-    public RechargeStatus recharge(RechargeRequest request) {
+    public RechargeStatus recharge(SingleRechargeRequest request) {
 
         HttpHeaders headers = getHeaders();
         RingoDataRequest dataRequest =  RingoDataRequest.builder()
-                .request_id(ringoProperties.getDataRequestId())
+                .request_id(request.getId())
                 .msisdn(request.getRecipient())
                 .product_id(request.getProductId())
                 .serviceCode(ringoProperties.getDataServiceCode())
@@ -52,12 +52,16 @@ public class RingoDataRecharge implements Recharge, DataEnquiry, ParameterCheck 
             RingoDataResponse response =
                     restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoDataResponse.class);
 
+
             if (response != null && response.getMessage() != null && response.getMessage().equalsIgnoreCase("Successful")) {
+                log.info(String.format("Ringo data Recharge for (%s) Successful Plan (%s)", request.getRecipient(), request.getRecipient()));
                 return RechargeStatus.builder()
                         .status(HttpStatus.OK)
                         .message("Ringo Data Recharge Successful")
                         .build();
             }
+
+            log.info(String.format("Ringo data Recharge for (%s) failure Plan (%s)", request.getRecipient(), request.getProductId()));
 
             return RechargeStatus.builder()
                     .status(HttpStatus.BAD_REQUEST)
@@ -89,6 +93,8 @@ public class RingoDataRecharge implements Recharge, DataEnquiry, ParameterCheck 
             DataPlanDto[] response =
                     restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, DataPlanDto[].class);
 
+            log.info(String.format("Retrieving Data Plan for Network %s", network));
+
             return List.of(response != null ? response : new DataPlanDto[0]);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e.getMessage());
@@ -115,7 +121,7 @@ public class RingoDataRecharge implements Recharge, DataEnquiry, ParameterCheck 
     }
 
     @Override
-    public Boolean check(RechargeRequest request) {
+    public Boolean check(SingleRechargeRequest request) {
         return request != null && request.getProductId() != null && request.getRecipient() != null;
     }
 }

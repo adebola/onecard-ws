@@ -2,7 +2,7 @@ package io.factorialsystems.msscprovider.recharge.jed;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.factorialsystems.msscprovider.domain.RechargeRequest;
+import io.factorialsystems.msscprovider.domain.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.factory.JedRechargeFactory;
@@ -24,7 +24,7 @@ public class JedElectricRecharge implements Recharge {
     private final ObjectMapper objectMapper;
 
     @Override
-    public RechargeStatus recharge(RechargeRequest request) {
+    public RechargeStatus recharge(SingleRechargeRequest request) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

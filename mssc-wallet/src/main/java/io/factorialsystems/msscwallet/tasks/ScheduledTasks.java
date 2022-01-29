@@ -3,7 +3,7 @@ package io.factorialsystems.msscwallet.tasks;
 import io.factorialsystems.msscwallet.dao.AccountMapper;
 import io.factorialsystems.msscwallet.domain.Account;
 import io.factorialsystems.msscwallet.security.RestTemplateInterceptor;
-import io.factorialsystems.msscwallet.web.model.LowThresholdNotificationDto;
+import io.factorialsystems.msscwallet.dto.LowThresholdNotificationDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

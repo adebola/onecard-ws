@@ -44,7 +44,9 @@ public class RoleController {
     @GetMapping("/user/{id}")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public ResponseEntity<List<KeycloakRoleDto>> getUserRoles(@PathVariable("id") String id) {
-        return new ResponseEntity<>(userService.getUserRoles(id), HttpStatus.OK);
+        List<KeycloakRoleDto> roles = userService.getUserRoles(id);
+
+        return new ResponseEntity<>(roles, HttpStatus.OK);
     }
 
     @PutMapping("/add/{id}")

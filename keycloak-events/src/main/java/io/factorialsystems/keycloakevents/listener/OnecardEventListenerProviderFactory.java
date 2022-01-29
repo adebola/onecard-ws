@@ -32,6 +32,8 @@ public class OnecardEventListenerProviderFactory implements EventListenerProvide
         if (jmsUrl == null || jmsUser == null || jmsPassword == null) {
             throw new RuntimeException("Environment Variables JMS_USER, JMS_PASSWORD & JMS_URL must be set, please set and restart the server");
         }
+
+        LOG.infov("JMS_URL {0}, JMS_USER {1}, JMS_PASSWORD {2}",jmsUrl, jmsUser, jmsPassword);
     }
 
     @Override

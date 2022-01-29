@@ -22,7 +22,7 @@ public class UserControllerAdvice {
     @ExceptionHandler(DuplicateKeyException.class)
     public ResponseEntity<MessageDto> handleDuplicate(DuplicateKeyException exception) {
         log.error(exception.getMessage(), exception);
-        return new ResponseEntity<>(new MessageDto("Duplicate Exception The Beneficiary or Beneficiaries added may already exist please check especially the phone Number(s)"), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new MessageDto("Duplicate Exception The Beneficiary / Beneficiaries or Group added may already exist please check especially the phone Number(s)"), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NoPermissionException.class)

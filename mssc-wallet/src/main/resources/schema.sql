@@ -7,6 +7,7 @@ create table accounts (
     activated BOOLEAN DEFAULT FALSE,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     createdBy varchar(64) NOT NULL,
+    anonymous BOOLEAN DEFAULT FALSE,
     threshold_level decimal(8, 2) NOT NULL DEFAULT 0,
     UNIQUE idx_user_id(user_id),
     PRIMARY KEY (id)
@@ -14,16 +15,13 @@ create table accounts (
 
 create table transactions (
     id int AUTO_INCREMENT NOT NULL,
-    account_id VARCHAR(64) NOT NULL,
-    counterparty_id VARCHAR(64) NOT NULL,
-    service_id VARCHAR(32) NOT NULL,
+    account_id VARCHAR(64),
+    service_id INT NOT NULL,
+    service_name VARCHAR(64) NOT NULL,
     tx_datetime timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    tx_amount DECIMAL(8,2) NOT NULL ,
-    tx_narrative VARCHAR(256),
-    tx_status VARCHAR(16) NOT NULL,
-    threshold_level DECIMAL(8,2),
+    tx_amount DECIMAL(8,2) NOT NULL,
+    recharge_request_id VARCHAR(64) NOT NULL,
     FOREIGN KEY (account_id) REFERENCES accounts(id),
-    FOREIGN KEY (counterparty_id) REFERENCES accounts(id),
     PRIMARY KEY (id)
 );
 

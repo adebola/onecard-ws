@@ -148,9 +148,8 @@ public class UserService {
                     .getAll()
                     .getRealmMappings();
 
-            roles.removeIf(r -> !(r.getName().startsWith("Onecard")));
-
-           return roles;
+            return roles.stream()
+                    .filter(r -> r.getName().startsWith("Onecard")).collect(Collectors.toList());
         }
 
         return null;

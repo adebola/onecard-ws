@@ -5,19 +5,20 @@
     <resultMap id="paymentResultMap" type="io.factorialsystems.msscpayments.domain.PaymentRequest">
         <id column="id" property="id" jdbcType="VARCHAR" />
         <result column="amount" property="amount" jdbcType="DECIMAL"/>
-        <result column="status" property="status" jdbcType="BOOLEAN"/>
-        <result column="message" property="message" jdbcType="VARCHAR"/>
         <result column="authorization_url" property="authorizationUrl" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="message" property="message" jdbcType="VARCHAR"/>
         <result column="redirect_url" property="redirectUrl" jdbcType="VARCHAR"/>
         <result column="access_code" property="accessCode" jdbcType="VARCHAR"/>
         <result column="reference" property="reference" jdbcType="VARCHAR"/>
         <result column="verified" property="verified" jdbcType="BOOLEAN"/>
         <result column="payment_created" property="paymentCreated" jdbcType="TIMESTAMP" />
         <result column="payment_verified" property="paymentVerified" jdbcType="TIMESTAMP" />
+        <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Column_List">
-        id, amount, status, message, authorization_url, redirect_url, access_code, reference, verified, payment_created, payment_verified
+        id, amount, authorization_url, redirect_url, access_code, reference, verified, status, message, payment_created, payment_verified, payment_mode
     </sql>
 
     <select id="findAll" resultMap="paymentResultMap">
@@ -40,8 +41,8 @@
     </select>
 
     <insert id="save" parameterType="io.factorialsystems.msscpayments.domain.PaymentRequest">
-        insert into payment(id, amount, status, message, authorization_url, redirect_url, access_code, reference)
-        values(#{id}, #{amount}, #{status}, #{message}, #{authorizationUrl}, #{redirectUrl}, #{accessCode}, #{reference})
+        insert into payment(id, amount, authorization_url, redirect_url, status, message, access_code, reference, payment_mode)
+        values(#{id}, #{amount}, #{authorizationUrl}, #{redirectUrl}, #{status}, #{message}, #{accessCode}, #{reference}, #{paymentMode})
     </insert>
 
     <update id="verifyByReference" parameterType="java.lang.String">
@@ -51,6 +52,17 @@
 
     <update id="verifyById" parameterType="java.lang.String">
         update payment set verified = true, payment_verified = NOW()
+        where id = #{id}
+    </update>
+
+    <update id="update" parameterType="io.factorialsystems.msscpayments.domain.PaymentRequest">
+        update payment
+        <set>
+            <if test="status != null">status=#{status},</if>
+            <if test="message != null">message=#{message},</if>
+            <if test="verified != null">verified=#{verified},</if>
+            <if test="verified != null">payment_verified=NOW(),</if>
+        </set>
         where id = #{id}
     </update>
 </mapper>

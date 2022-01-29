@@ -11,4 +11,5 @@ public interface PaymentMapper {
     void save(PaymentRequest paymentRequest);
     void verifyByReference(String reference);
     void verifyById(String id);
+    void update(PaymentRequest request);
 }

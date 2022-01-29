@@ -8,4 +8,5 @@ import org.apache.ibatis.annotations.Mapper;
 public interface TransactionMapper {
     Page<Transaction> findUserTransactions(String id);
     Transaction findTransaction(String id);
+    void save(Transaction transaction);
 }

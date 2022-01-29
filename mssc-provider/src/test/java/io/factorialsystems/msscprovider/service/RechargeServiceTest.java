@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class RechargeServiceTest {
 
     @Autowired
-    private RechargeService rechargeService;
+    private SingleRechargeService rechargeService;
 
     @Test
     void findRequest() {

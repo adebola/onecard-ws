@@ -13,13 +13,21 @@ public class K {
     private static final String SYSTEM_NAME = "_debug";
     private static final String SYSTEM_PREFERRED_NAME = "adeomoboya@googlemail.com";
 
-    public static String getUserName() {
+    private static Map<String, Object> getClaims () {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null) {
             Jwt jwt = (Jwt) authentication.getPrincipal();
-            Map<String, Object> claims = jwt.getClaims();
+            return jwt.getClaims();
+        }
 
+        return null;
+    }
+
+    public static String getUserName() {
+        Map<String, Object> claims = K.getClaims();
+
+        if (claims != null) {
             return (String) claims.get("name");
         }
 
@@ -28,15 +36,23 @@ public class K {
 
     public static String getPreferredUserName() {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Map<String, Object> claims = K.getClaims();
 
-        if (authentication != null) {
-            Jwt jwt = (Jwt) authentication.getPrincipal();
-            Map<String, Object> claims = jwt.getClaims();
-
+        if (claims != null) {
             return (String) claims.get("preferred_username");
         }
+
         return SYSTEM_PREFERRED_NAME;
+    }
+
+    public static String getUserId() {
+        Map<String, Object> claims = K.getClaims();
+
+        if (claims != null) {
+            return (String) claims.get("sub");
+        }
+
+        return null;
     }
 
     public static String getAccessToken() {

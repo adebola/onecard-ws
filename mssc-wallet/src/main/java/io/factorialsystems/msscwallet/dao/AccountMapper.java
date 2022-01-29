@@ -13,6 +13,7 @@ public interface AccountMapper {
     Account findAccountByUserId(String id);
     Account findAccountByCorporateId(String id);
     Account findAccountByProviderId(String id);
+    Account findAnonymousAccount();
     List<Account> findLowThresholdAccounts();
     void save(Account account);
     void update(Account account);

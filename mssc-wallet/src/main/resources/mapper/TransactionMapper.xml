@@ -5,33 +5,37 @@
     <resultMap id="transactionResultMap" type="io.factorialsystems.msscwallet.domain.Transaction">
         <id column="id" property="id" jdbcType="VARCHAR" />
         <result column="account_id" property="accountId" jdbcType="VARCHAR"/>
-        <result column="counterparty_id" property="counterpartyId" jdbcType="VARCHAR"/>
-        <result column="counterparty_name" property="counterpartyName" jdbcType="VARCHAR"/>
+        <result column="service_id" property="serviceId" jdbcType="INTEGER"/>
         <result column="service_name" property="serviceName" jdbcType="VARCHAR"/>
         <result column="tx_datetime" property="txDate" jdbcType="TIMESTAMP"/>
         <result column="tx_amount" property="txAmount"  jdbcType="DECIMAL"/>
-        <result column="tx_status" property="txStatus" jdbcType="VARCHAR"/>
-        <result column="tx_narrative" property="txNarrative"  jdbcType="VARCHAR"/>
     </resultMap>
 
-    <sql id="Column_List">
-        t.id, t.account_id, t.counterparty_id, b.name as counterparty_name, t.service_name, t.tx_datetime, t.tx_amount, t.tx_status, t.tx_narrative
+    <sql id="column_list">
+        t.id, t.account_id, t.service_id, t.service_name, t.tx_datetime, t.tx_amount
     </sql>
 
     <select id="findUserTransactions" parameterType="java.lang.String" resultMap="transactionResultMap">
         select
-        <include refid="Column_List"/>
-        from transactions t, accounts a, accounts b
+        <include refid="column_list"/>
+        from transactions t, accounts a
         where a.user_id = #{id}
         and t.account_id = a.id
-        and t.counterparty_id = b.id
     </select>
 
     <select id="findTransaction" parameterType="java.lang.String" resultMap="transactionResultMap">
         select
-        <include refid="Column_List"/>
-        from transactions t, accounts b
+        <include refid="column_list"/>
+        from transactions t
         where t.id = #{id}
-        and t.counterparty_id = b.id
     </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.Transaction">
+        insert into transactions(account_id, service_id, service_name, tx_amount, recharge_request_id)
+        values (#{accountId}, #{serviceId}, #{serviceName}, #{txAmount}, #{requestId})
+
+        <selectKey resultType="int" keyProperty="id" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+    </insert>
 </mapper>

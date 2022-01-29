@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.recharge.ekedp;
 
-import io.factorialsystems.msscprovider.domain.RechargeRequest;
+import io.factorialsystems.msscprovider.domain.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.wsdl.*;
@@ -25,7 +25,7 @@ public class EKEDPElectricRecharge implements Recharge {
     private final WebServiceTemplate webServiceTemplate;
 
     @Override
-    public RechargeStatus recharge(RechargeRequest request) {
+    public RechargeStatus recharge(SingleRechargeRequest request) {
         String session = getSession();
 
         if (session == null) {
@@ -95,7 +95,7 @@ public class EKEDPElectricRecharge implements Recharge {
 
     }
 
-    private Boolean performRecharge(String session, RechargeRequest request) {
+    private Boolean performRecharge(String session, SingleRechargeRequest request) {
         TransactionParams.ExtraData.Entry entryAccountType = new TransactionParams.ExtraData.Entry();
         entryAccountType.setKey("accountType");
         entryAccountType.setValue("OFFLINE_PREPAID");

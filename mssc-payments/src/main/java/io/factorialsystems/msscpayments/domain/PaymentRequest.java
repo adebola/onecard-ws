@@ -15,12 +15,13 @@ import java.sql.Timestamp;
 public class PaymentRequest {
     private String id;
     private BigDecimal amount;
-    private Boolean status;
+    private Integer status;
     private String message;
     private String authorizationUrl;
     private String redirectUrl;
     private String accessCode;
     private String reference;
+    private String paymentMode;
     private Boolean verified;
     private Timestamp paymentCreated;
     private Timestamp paymentVerified;

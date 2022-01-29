@@ -86,7 +86,7 @@ create table provider_services_recharge_providers (
 );
 
 create table recharge_requests (
-    id int AUTO_INCREMENT,
+    id varchar(64),
     service_id int NOT NULL,
     service_cost decimal(10,2) NOT NULL,
     recipient varchar(64) NOT NULL,
@@ -95,8 +95,11 @@ create table recharge_requests (
     payment_id varchar(64),
     authorization_url varchar(64),
     redirect_url varchar(64),
+    message varchar(64),
+    status int,
     closed boolean NOT NULL DEFAULT FALSE,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    payment_mode varchar(32) NOT NULL,
     FOREIGN KEY (service_id) REFERENCES provider_services(id),
     PRIMARY KEY (id)
 );
@@ -110,6 +113,77 @@ create table ringo_data_plans (
     validity varchar(32) NOT NULL,
     PRIMARY KEY (product_id)
 );
+
+create table bulk_recharge_requests (
+    id varchar(64),
+    service_id int NOT NULL,
+    service_cost decimal(10,2) NOT NULL,
+    total_service_cost decimal(10,2) NOT NULL,
+    group_id int,
+    product_id varchar(64),
+    payment_id varchar(64),
+    payment_mode varchar(32) NOT NULL,
+    authorization_url varchar(64),
+    redirect_url varchar(64),
+    closed boolean NOT NULL DEFAULT FALSE,
+    createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (service_id) REFERENCES provider_services(id),
+    PRIMARY KEY (id)
+);
+
+create table recharge_request_recipients (
+    bulk_recharge_request_id varchar(64),
+    scheduled_recharge_request_id varchar(64),
+    auto_recharge_request_id varchar(64),
+    msisdn varchar(64) NOT NULL,
+    INDEX idx_bulk_recharge_request_id (bulk_recharge_request_id),
+    INDEX idx_scheduled_recharge_request_id(scheduled_recharge_request_id),
+    INDEX idx_auto_recharge_request_id(auto_recharge_request_id),
+    FOREIGN KEY (auto_recharge_request_id) REFERENCES auto_recharge(id),
+    FOREIGN KEY (scheduled_recharge_request_id) REFERENCES scheduled_recharge (id),
+    FOREIGN KEY (bulk_recharge_request_id) REFERENCES bulk_recharge_requests (id)
+);
+
+create table scheduled_recharge (
+    id varchar(64),
+    request_id int,
+    request_type int DEFAULT 1 NOT NULL,
+    request_scheduled_date timestamp NOT NULL,
+    request_created_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    request_ran_on timestamp,
+    service_id int NOT NULL,
+    group_id int,
+    recipient varchar(32),
+    product_id varchar(32),
+    telephone varchar (32),
+    service_cost decimal(8, 2),
+    redirect_url varchar(64),
+    payment_mode varchar(16),
+    closed boolean NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (service_id) REFERENCES provider_services(id),
+    PRIMARY KEY (id)
+);
+
+create table auto_recharge (
+    id varchar(64),
+    request_type int DEFAULT 1 NOT NULL,
+    request_start timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    request_end timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    request_created timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    request_start_date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    request_end_date timestamp,
+    service_id int NOT NULL,
+    group_id int,
+    recipient varchar(32),
+    product_id varchar(32),
+    telephone varchar (32),
+    service_cost decimal(8, 2),
+    redirect_url varchar(64),
+    payment_mode varchar(16),
+    closed boolean NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (service_id) REFERENCES provider_services(id),
+    PRIMARY KEY (id)
+)
 
 create procedure sp_factory ( IN provider_service_id INT)
 BEGIN
@@ -125,7 +199,8 @@ BEGIN
     select rp.code into recharge_provider_code from recharge_providers rp, provider_services_recharge_providers psrp
     where psrp.provider_service_id = provider_service_id
     and psrp.recharge_provider_id = rp.id
-    order by psrp.weight desc;
+    order by psrp.weight desc
+    limit 1;
 
     select provider_code, recharge_provider_code, service_action;
 END;
@@ -177,23 +252,19 @@ values
        ('Crown', NULL, 'Crown','Adebola Omoboya', true, NOW(), 'Adebola Omoboya');
 
 
--- 7, 8 and 9 used due to insert faiulures on recharge_providers
+-- 7, 8 and 9 used due to insert failures on recharge_providers Not applicable
 insert into provider_services_recharge_providers(provider_service_id, recharge_provider_id, weight)
-values (1, 7, 1),
-       (2, 7, 1),
-       (3, 7, 1),
-       (4, 7, 1),
-       (5, 7, 1),
-       (6, 7, 1),
-       (7, 7, 1),
-       (8, 7, 1),
-       (9, 7, 2),
-       (10, 7, 2),
-       (9, 9, 1),
-       (10, 8, 1);
-
-
--- Modifications to Existing Tables
-alter table provider_services_recharge_providers add UNIQUE KEY idx_provider_recharge_service (provider_service_id, recharge_provider_id);
+values (1, 1, 1),
+       (2, 1, 1),
+       (3, 1, 1),
+       (4, 1, 1),
+       (5, 1, 1),
+       (6, 1, 1),
+       (7, 1, 1),
+       (8, 1, 1),
+       (9, 1, 2),
+       (10, 1, 2),
+       (9, 3, 1),
+       (10, 2, 1);
 
 

@@ -13,17 +13,14 @@ public class RingoProperties {
     @Value("${ringo.password}")
     private String password;
 
-    @Value("${ringo.airtime.requestid}")
-    private String airtimeRequestId;
-
     @Value("${ringo.airtime.servicecode}")
     private String airtimeServiceCode;
 
-    @Value("${ringo.data.requestid}")
-    private String dataRequestId;
-
     @Value("${ringo.data.servicecode}")
     private String dataServiceCode;
+
+    @Value("${ringo.electric.servicecode}")
+    private String electricServiceCode;
 
     @Value("${ringo.airtime.url}")
     private String airtimeUrl;
