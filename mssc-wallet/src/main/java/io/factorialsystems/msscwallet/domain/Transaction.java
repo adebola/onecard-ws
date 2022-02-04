@@ -20,4 +20,5 @@ public class Transaction {
     private String requestId;
     private Date txDate;
     private BigDecimal txAmount;
+    private String recipient;
 }

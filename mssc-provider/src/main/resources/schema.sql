@@ -149,16 +149,20 @@ create table scheduled_recharge (
     request_id int,
     request_type int DEFAULT 1 NOT NULL,
     request_scheduled_date timestamp NOT NULL,
-    request_created_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    request_ran_on timestamp,
     service_id int NOT NULL,
+    service_cost decimal(8, 2),
     group_id int,
     recipient varchar(32),
     product_id varchar(32),
     telephone varchar (32),
-    service_cost decimal(8, 2),
     redirect_url varchar(64),
+    authorization_url varchar(64),
     payment_mode varchar(16),
+    payment_id varchar(64),
+    message varchar(64),
+    status int,
+    request_created_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    request_ran_on timestamp,
     closed boolean NOT NULL DEFAULT FALSE,
     FOREIGN KEY (service_id) REFERENCES provider_services(id),
     PRIMARY KEY (id)
@@ -183,7 +187,7 @@ create table auto_recharge (
     closed boolean NOT NULL DEFAULT FALSE,
     FOREIGN KEY (service_id) REFERENCES provider_services(id),
     PRIMARY KEY (id)
-)
+);
 
 create procedure sp_factory ( IN provider_service_id INT)
 BEGIN

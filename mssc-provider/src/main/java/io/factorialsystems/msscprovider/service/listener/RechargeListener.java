@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.service.listener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.JMSConfig;
 import io.factorialsystems.msscprovider.service.BulkRechargeService;
+import io.factorialsystems.msscprovider.service.SingleRechargeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +16,7 @@ import java.io.IOException;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BulkRechargeListener {
+public class RechargeListener {
 
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
@@ -37,5 +38,22 @@ public class BulkRechargeListener {
                 e.printStackTrace();
             }
         }
+    }
+
+    @JmsListener(destination = JMSConfig.SINGLE_RECHARGE_QUEUE)
+    public void listenForSingleRechargeRequest(String jsonData) throws IOException {
+
+        if (jsonData != null) {
+            String id = objectMapper.readValue(jsonData, String.class);
+            SingleRechargeService rechargeService = applicationContext.getBean(SingleRechargeService.class);
+
+            try {
+                Thread.sleep(sleepValue);
+                rechargeService.finishRecharge(id);
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+        }
+
     }
 }

@@ -3,7 +3,7 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.dao.RingoDataPlanMapper;
-import io.factorialsystems.msscprovider.domain.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.domain.RingoDataPlan;
 import io.factorialsystems.msscprovider.dto.DataPlanDto;
 import io.factorialsystems.msscprovider.dto.FetchDataDto;

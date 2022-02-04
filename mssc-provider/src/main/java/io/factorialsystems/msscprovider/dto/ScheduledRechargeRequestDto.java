@@ -17,7 +17,7 @@ public class ScheduledRechargeRequestDto {
     private String rechargeType;
 
     @NotNull(message = "Scheduled Date must be specified")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ", shape = JsonFormat.Shape.STRING)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private Date scheduledDate;
 
     @NotNull(message = "ServiceCode must be specified")
@@ -31,7 +31,5 @@ public class ScheduledRechargeRequestDto {
     private BigDecimal serviceCost;
     private String redirectUrl;
     private String authorizationUrl;
-
-    @NotNull(message = "Payment Mode must be specified")
     private String paymentMode;
 }

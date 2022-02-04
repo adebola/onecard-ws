@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 
 <mapper namespace="io.factorialsystems.msscprovider.dao.BulkRechargeMapper">
-    <resultMap id="bulkRechargeResultMap" type="io.factorialsystems.msscprovider.domain.BulkRechargeRequest">
+    <resultMap id="bulkRechargeResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest">
         <id column="id" property="id" jdbcType="VARCHAR" />
         <result column="service_id" property="serviceId" jdbcType="INTEGER" />
         <result column="service_code" property="serviceCode" jdbcType="VARCHAR" />
@@ -36,7 +36,7 @@
         select msisdn from recharge_request_recipients where bulk_recharge_request_id = #{id}
     </select>
 
-    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.BulkRechargeRequest" >
+    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest" >
         insert into bulk_recharge_requests(id, service_id, service_cost, total_service_cost, group_id, payment_id, product_id, payment_mode, authorization_url, redirect_url)
         values(#{id}, #{serviceId}, #{serviceCost}, #{totalServiceCost}, #{groupId}, #{paymentId}, #{productId}, #{paymentMode}, #{authorizationUrl}, #{redirectUrl})
     </insert>

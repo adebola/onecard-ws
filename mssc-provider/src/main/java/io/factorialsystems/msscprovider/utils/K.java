@@ -14,7 +14,10 @@ public class K {
     public static final String SERVICE_STATUS = "Provider Service running on Port :";
     public static final String PAYSTACK_PAY_MODE = "paystack";
     public static final String WALLET_PAY_MODE = "wallet";
+    public static final String BULK_RECHARGE = "bulk";
+    public static final String SINGLE_RECHARGE = "single";
     public static final String[] ALL_PAYMENT_MODES = {PAYSTACK_PAY_MODE, WALLET_PAY_MODE };
+    public static final String[] ALL_RECHARGE_MODES = { SINGLE_RECHARGE, BULK_RECHARGE};
 
 
     private static Map<String, Object> getClaims () {

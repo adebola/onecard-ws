@@ -1,7 +1,8 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
-import io.factorialsystems.msscprovider.domain.BulkRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.BulkRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -26,4 +27,16 @@ public interface BulkRechargeMapstructMapper {
             @Mapping(target = "paymentId", ignore = true),
     })
     BulkRechargeRequest rechargeDtoToRecharge(BulkRechargeRequestDto dto);
+
+    @Mappings({
+            @Mapping(source = "serviceCode", target = "serviceCode"),
+            @Mapping(source = "serviceCost", target = "serviceCost"),
+            @Mapping(source = "groupId", target = "groupId"),
+            @Mapping(source = "recipients", target = "recipients"),
+            @Mapping(source = "productId", target = "productId"),
+            @Mapping(source = "redirectUrl", target = "redirectUrl"),
+            @Mapping(source = "authorizationUrl", target = "authorizationUrl"),
+            @Mapping(source = "paymentMode", target = "paymentMode")
+    })
+    BulkRechargeRequestDto scheduledToBulk(ScheduledRechargeRequestDto dto);
 }

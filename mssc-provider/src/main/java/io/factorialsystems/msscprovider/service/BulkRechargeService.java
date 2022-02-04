@@ -6,6 +6,8 @@ import io.factorialsystems.msscprovider.config.JMSConfig;
 import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.dao.RechargeMapper;
 import io.factorialsystems.msscprovider.domain.*;
+import io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.mapper.recharge.BulkRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.Recharge;
@@ -35,8 +37,12 @@ public class BulkRechargeService {
     private final BulkRechargeMapper bulkRechargeMapper;
     private final BulkRechargeMapstructMapper rechargeMapstructMapper;
 
+    private static String BASE_LOCAL_STATIC;
+
     @Value("${api.local.host.baseurl}")
-    private String baseLocalUrl;
+    public void setNameStatic(String baseLocal) {
+        BulkRechargeService.BASE_LOCAL_STATIC = baseLocal;
+    }
 
     public void asyncBulkRecharge(String id) {
 
@@ -77,7 +83,7 @@ public class BulkRechargeService {
         BulkRechargeRequest request = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
 
         PaymentRequestDto paymentRequestDto = initializePayment (request);
-        paymentRequestDto.setPaymentMode(request.getPaymentMode());
+//        paymentRequestDto.setPaymentMode(request.getPaymentMode());
 
         if (paymentRequestDto.getPaymentMode().equals("wallet") && paymentRequestDto.getStatus() != 200) {
             return BulkRechargeRequestResponseDto.builder()
@@ -87,6 +93,8 @@ public class BulkRechargeService {
         }
 
         request.setPaymentId(paymentRequestDto.getId());
+        request.setAuthorizationUrl(paymentRequestDto.getAuthorizationUrl());
+        request.setRedirectUrl(paymentRequestDto.getRedirectUrl());
 
         String requestId = UUID.randomUUID().toString();
         request.setId(requestId);
@@ -111,6 +119,8 @@ public class BulkRechargeService {
                 e.printStackTrace();
             }
         }
+
+        log.info("Saving Bulk Recharge Request {}", requestId);
 
         return BulkRechargeRequestResponseDto.builder()
                 .id(requestId)
@@ -163,7 +173,7 @@ public class BulkRechargeService {
             });
 
             if (request.getGroupId() != null) {
-                List<BeneficiaryDto> beneficiaries = restTemplate.getForObject(baseLocalUrl + "/api/v1/beneficiary/beneficiary/" + request.getGroupId(), List.class);
+                List<BeneficiaryDto> beneficiaries = restTemplate.getForObject(BASE_LOCAL_STATIC + "/api/v1/beneficiary/beneficiary/" + request.getGroupId(), List.class);
 
                 if (beneficiaries != null) {
 
@@ -189,7 +199,7 @@ public class BulkRechargeService {
         }
     }
 
-    private PaymentRequestDto initializePayment(BulkRechargeRequest request) {
+    public static PaymentRequestDto initializePayment(BulkRechargeRequest request) {
 
         PaymentRequestDto dto = PaymentRequestDto.builder()
                 .amount(request.getTotalServiceCost())
@@ -197,10 +207,27 @@ public class BulkRechargeService {
                 .paymentMode(request.getPaymentMode())
                 .build();
 
+        String uri;
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
 
-        return restTemplate.postForObject(baseLocalUrl + "api/v1/payment", dto, PaymentRequestDto.class);
+        if (K.getUserId() == null) { // Anonymous Login
+            uri = "api/v1/pay";
+        } else {
+            uri = "api/v1/payment";
+            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+        }
+
+        PaymentRequestDto newDto =
+                restTemplate.postForObject(BASE_LOCAL_STATIC + uri, dto, PaymentRequestDto.class);
+
+        if (newDto != null) {
+            request.setRedirectUrl(newDto.getRedirectUrl());
+            request.setAuthorizationUrl(newDto.getAuthorizationUrl());
+
+            return newDto;
+        }
+
+        throw new RuntimeException("Error Initializing Payment Please contact OneCard Support");
     }
 
     private void saveTransaction(BulkRechargeRequest request) {
@@ -211,6 +238,7 @@ public class BulkRechargeService {
                 .serviceCost(request.getTotalServiceCost())
                 .transactionDate(new Date().toString())
                 .userId(K.getUserId())
+                .recipient("bulk")
                 .build();
         try {
             jmsTemplate.convertAndSend(JMSConfig.NEW_TRANSACTION_QUEUE, objectMapper.writeValueAsString(requestTransactionDto));
@@ -222,7 +250,7 @@ public class BulkRechargeService {
 
     private Boolean checkPayment(String id) {
         PaymentRequestDto dto
-                = restTemplate.getForObject(baseLocalUrl + "api/v1/pay/" + id, PaymentRequestDto.class);
+                = restTemplate.getForObject(BASE_LOCAL_STATIC + "api/v1/pay/" + id, PaymentRequestDto.class);
 
         return dto != null ? dto.getVerified() : false;
     }

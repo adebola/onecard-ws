@@ -9,10 +9,11 @@
         <result column="service_name" property="serviceName" jdbcType="VARCHAR"/>
         <result column="tx_datetime" property="txDate" jdbcType="TIMESTAMP"/>
         <result column="tx_amount" property="txAmount"  jdbcType="DECIMAL"/>
+        <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="column_list">
-        t.id, t.account_id, t.service_id, t.service_name, t.tx_datetime, t.tx_amount
+        t.id, t.account_id, t.service_id, t.service_name, t.tx_datetime, t.tx_amount, t.recipient
     </sql>
 
     <select id="findUserTransactions" parameterType="java.lang.String" resultMap="transactionResultMap">
@@ -31,8 +32,8 @@
     </select>
 
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.Transaction">
-        insert into transactions(account_id, service_id, service_name, tx_amount, recharge_request_id)
-        values (#{accountId}, #{serviceId}, #{serviceName}, #{txAmount}, #{requestId})
+        insert into transactions(account_id, service_id, service_name, tx_amount, recharge_request_id, recipient)
+        values (#{accountId}, #{serviceId}, #{serviceName}, #{txAmount}, #{requestId}, #{recipient})
 
         <selectKey resultType="int" keyProperty="id" order="AFTER">
             select LAST_INSERT_ID()

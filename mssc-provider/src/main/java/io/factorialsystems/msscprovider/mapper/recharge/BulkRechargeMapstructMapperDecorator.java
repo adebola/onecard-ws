@@ -2,20 +2,23 @@ package io.factorialsystems.msscprovider.mapper.recharge;
 
 import io.factorialsystems.msscprovider.dao.RechargeMapper;
 import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
-import io.factorialsystems.msscprovider.domain.BulkRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.dto.BulkRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.DataPlanDto;
+import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.recharge.DataEnquiry;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -100,6 +103,29 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
             request.setServiceCost(cost);
         }
 
+        final String userId = K.getUserId();
+        final String paymentMode = dto.getPaymentMode();
+
+        if (paymentMode == null) { // No Payment Mode Specified
+            if (userId == null) { // Anonymous User Not Logged On
+                request.setPaymentMode(K.PAYSTACK_PAY_MODE);
+            } else {
+                request.setPaymentMode(K.WALLET_PAY_MODE);
+            }
+        } else {
+            String mode
+                    = Arrays.stream(K.ALL_PAYMENT_MODES).filter(x -> x.equals(paymentMode))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException(String.format("Invalid PaymentMode String (%s)", paymentMode)));
+
+            // Specified Wallet but Not Logged In
+            if (paymentMode.equals(K.WALLET_PAY_MODE) && userId == null) {
+                throw new RuntimeException("You must be logged In to do a Wallet purchase, please login or choose and alternate payment method");
+            }
+
+            request.setPaymentMode(mode);
+        }
+
         // GroupId
         if (dto.getGroupId() != null) {
             Integer count =
@@ -120,5 +146,10 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
         }
 
         return request;
+    }
+
+    @Override
+    public BulkRechargeRequestDto scheduledToBulk(ScheduledRechargeRequestDto dto) {
+        return bulkRechargeMapstructMapper.scheduledToBulk(dto);
     }
 }

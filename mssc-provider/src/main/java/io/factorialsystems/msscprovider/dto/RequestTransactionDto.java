@@ -17,4 +17,5 @@ public class RequestTransactionDto {
     BigDecimal serviceCost;
     String requestId;
     String transactionDate;
+    String recipient;
 }

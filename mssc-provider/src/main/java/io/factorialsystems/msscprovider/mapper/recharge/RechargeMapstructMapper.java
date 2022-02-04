@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
-import io.factorialsystems.msscprovider.domain.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
 import org.mapstruct.DecoratedWith;

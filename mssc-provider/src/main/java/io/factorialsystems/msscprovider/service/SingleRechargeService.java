@@ -8,7 +8,7 @@ import io.factorialsystems.msscprovider.dao.RechargeMapper;
 import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
-import io.factorialsystems.msscprovider.domain.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.DataEnquiry;
@@ -49,35 +49,41 @@ public class SingleRechargeService {
     public static final Integer DATA_ACTION = 2;
     public static final Integer ELECTRICITY_ACTION = 3;
 
+    private static String BASE_LOCAL_STATIC;
+
     @Value("${api.local.host.baseurl}")
-    private String baseLocalUrl;
+    public void setNameStatic(String baseLocal) {
+        SingleRechargeService.BASE_LOCAL_STATIC = baseLocal;
+    }
 
     public SingleRechargeRequestResponseDto startRecharge(SingleRechargeRequestDto dto) {
         SingleRechargeRequest request = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
 
         if (checkParameters(request, dto)) {
             PaymentRequestDto paymentRequest = initializePayment(request);
+
+            if (paymentRequest == null) {
+                throw new RuntimeException("Error Initializing Payment Please contact OneCard Support");
+            }
+
             request.setPaymentId(paymentRequest.getId());
-
-            if (paymentRequest.getAuthorizationUrl() != null) {
-                request.setAuthorizationUrl(paymentRequest.getAuthorizationUrl());
-            }
-
-            if (paymentRequest.getRedirectUrl() != null) {
-                request.setRedirectUrl(paymentRequest.getRedirectUrl());
-            }
-
-            if (paymentRequest.getMessage() != null) {
-                request.setMessage(paymentRequest.getMessage());
-            }
-
-            if (paymentRequest.getStatus() != null) {
-                request.setStatus(paymentRequest.getStatus());
-            }
+            request.setAuthorizationUrl(paymentRequest.getAuthorizationUrl());
+            request.setRedirectUrl(paymentRequest.getRedirectUrl());
+            request.setMessage(paymentRequest.getMessage());
+            request.setStatus(paymentRequest.getStatus());
 
             request.setId(UUID.randomUUID().toString());
             log.info(String.format("Saving Recharge Request %s", request.getId()));
             rechargeMapper.save(request);
+
+            if (request.getPaymentMode().equals("wallet") && request.getStatus() == 200) {
+                try {
+                    jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(request.getId()));
+                } catch (JsonProcessingException e) {
+                    log.error("Error sending Single Recharge Service to Self {}", e.getMessage());
+                    throw new RuntimeException(e.getMessage());
+                }
+            }
 
             return SingleRechargeRequestResponseDto.builder()
                     .id(request.getId())
@@ -87,9 +93,11 @@ public class SingleRechargeService {
                     .paymentMode(paymentRequest.getPaymentMode())
                     .redirectUrl(paymentRequest.getRedirectUrl())
                     .build();
-        } else {
-            throw new RuntimeException("Wrong Parameters in Single Recharge Request");
         }
+
+        final String message = "Error in Start Recharge CheckParameter Failed or Exception Thrown in Execution";
+        log.error(message);
+        throw new RuntimeException(message);
     }
 
     public RechargeStatus finishRecharge(String id) {
@@ -147,29 +155,9 @@ public class SingleRechargeService {
         return enquiry.getDataPlans(code);
     }
 
-    private PaymentRequestDto initializePayment(SingleRechargeRequest request) {
-        PaymentRequestDto dto = PaymentRequestDto.builder()
-                .amount(request.getServiceCost())
-                .redirectUrl(request.getRedirectUrl())
-                .paymentMode(request.getPaymentMode())
-                .build();
-
-        String uri = null;
-        RestTemplate restTemplate = new RestTemplate();
-
-        if (K.getUserId() == null) { // Anonymous Login
-            uri = "api/v1/pay";
-        } else {
-            uri = "api/v1/payment";
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-        }
-
-        return restTemplate.postForObject(baseLocalUrl + uri, dto, PaymentRequestDto.class);
-    }
-
     private Boolean checkPayment(String id) {
         PaymentRequestDto dto
-                = restTemplate.getForObject(baseLocalUrl + "api/v1/pay/" + id, PaymentRequestDto.class);
+                = restTemplate.getForObject(BASE_LOCAL_STATIC + "api/v1/pay/" + id, PaymentRequestDto.class);
 
         return dto != null ? dto.getVerified() : false;
     }
@@ -194,6 +182,7 @@ public class SingleRechargeService {
                 .serviceCost(request.getServiceCost())
                 .transactionDate(new Date().toString())
                 .userId(K.getUserId())
+                .recipient(request.getRecipient())
                 .build();
         try {
             jmsTemplate.convertAndSend(JMSConfig.NEW_TRANSACTION_QUEUE, objectMapper.writeValueAsString(requestTransactionDto));
@@ -201,6 +190,26 @@ public class SingleRechargeService {
             log.error("Error sending JMS Transaction Message to Wallet service {}", e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    public static  PaymentRequestDto initializePayment(SingleRechargeRequest request) {
+        PaymentRequestDto dto = PaymentRequestDto.builder()
+                .amount(request.getServiceCost())
+                .redirectUrl(request.getRedirectUrl())
+                .paymentMode(request.getPaymentMode())
+                .build();
+
+        String uri = null;
+        RestTemplate restTemplate = new RestTemplate();
+
+        if (K.getUserId() == null) { // Anonymous Login
+            uri = "api/v1/pay";
+        } else {
+            uri = "api/v1/payment";
+            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+        }
+
+        return restTemplate.postForObject(BASE_LOCAL_STATIC + uri, dto, PaymentRequestDto.class);
     }
 
     public static Boolean checkParameters (SingleRechargeRequest request, SingleRechargeRequestDto dto) {
@@ -225,18 +234,19 @@ public class SingleRechargeService {
             throw new RuntimeException(String.format("Unable to get Factory for Request (%s), Please ensure factories are configured appropriately", dto.getServiceCode()));
         }
 
-        ParameterCheck parameterCheck = factory.getCheck(serviceAction);
-
-        if (!parameterCheck.check(request)) {
-            throw new RuntimeException(String.format("Missing Parameter in Request (%s)", request.getServiceCode()));
-        }
-
         if (dto.getServiceCost() == null) { // Service with Fixed Cost
             DataEnquiry enquiry = factory.getPlans(serviceAction);
             DataPlanDto planDto = enquiry.getPlan(request.getProductId());
             BigDecimal cost = new BigDecimal(planDto.getPrice());
             request.setServiceCost(cost);
         }
+
+        ParameterCheck parameterCheck = factory.getCheck(serviceAction);
+
+        if (!parameterCheck.check(request)) {
+            throw new RuntimeException(String.format("Missing Parameter in Request (%s)", request.getServiceCode()));
+        }
+
 
         return true;
     }

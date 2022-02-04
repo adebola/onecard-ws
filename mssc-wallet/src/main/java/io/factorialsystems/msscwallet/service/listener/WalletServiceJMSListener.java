@@ -102,6 +102,7 @@ public class WalletServiceJMSListener {
                     .accountId(account.getId())
                     .txAmount(dto.getServiceCost())
                     .requestId(dto.getRequestId())
+                    .recipient(dto.getRecipient())
                     .build();
 
             transactionMapper.save(transaction);

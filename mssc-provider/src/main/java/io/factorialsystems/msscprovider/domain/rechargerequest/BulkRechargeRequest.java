@@ -1,4 +1,4 @@
-package io.factorialsystems.msscprovider.domain;
+package io.factorialsystems.msscprovider.domain.rechargerequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

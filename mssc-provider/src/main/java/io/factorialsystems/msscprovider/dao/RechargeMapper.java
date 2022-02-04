@@ -1,7 +1,7 @@
 package io.factorialsystems.msscprovider.dao;
 
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
-import io.factorialsystems.msscprovider.domain.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

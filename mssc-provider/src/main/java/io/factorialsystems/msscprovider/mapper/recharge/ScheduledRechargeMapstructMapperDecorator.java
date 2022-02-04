@@ -1,43 +1,41 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
 import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
-import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
+import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.utils.K;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.Date;
 
-public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper {
+@Slf4j
+public class ScheduledRechargeMapstructMapperDecorator implements ScheduledRechargeMapstructMapper {
     private ServiceActionMapper serviceActionMapper;
-    private RechargeMapstructMapper rechargeMapstructMapper;
+    private ScheduledRechargeMapstructMapper mapstructMapper;
+
+    @Autowired
+    public void setMapstructMapper(ScheduledRechargeMapstructMapper mapstructMapper) {
+        this.mapstructMapper = mapstructMapper;
+    }
 
     @Autowired
     public void setServiceActionMapper(ServiceActionMapper serviceActionMapper) {
         this.serviceActionMapper = serviceActionMapper;
     }
 
-    @Autowired
-    public void setRechargeMapstructMapper(RechargeMapstructMapper rechargeMapstructMapper) {
-        this.rechargeMapstructMapper = rechargeMapstructMapper;
-    }
-
     @Override
-    public SingleRechargeRequestDto rechargeToRechargeDto(SingleRechargeRequest request) {
-        return rechargeMapstructMapper.rechargeToRechargeDto(request);
-    }
+    public ScheduledRechargeRequest rechargeDtoToRecharge(ScheduledRechargeRequestDto dto) {
+        ScheduledRechargeRequest request = mapstructMapper.rechargeDtoToRecharge(dto);
 
-    @Override
-    public SingleRechargeRequest rechargeDtoToRecharge(SingleRechargeRequestDto dto) {
-
-        SingleRechargeRequest request = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
-
+        // ServiceCode
         String serviceCode = dto.getServiceCode();
 
         if (serviceCode == null) {
-            throw new RuntimeException("ServiceCode Not specified in Recharge Request");
+            throw new RuntimeException("ServiceCode Not specified in Scheduled Recharge Request");
         }
 
         ServiceAction action = serviceActionMapper.findByCode(serviceCode);
@@ -47,7 +45,6 @@ public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper
         }
 
         request.setServiceId(action.getId());
-        request.setServiceCode(action.getServiceCode());
 
         // We must ensure that for Fixed Priced services such as data Plans, the user must not specify a Price
         // We must also ensure for Variable Priced Services such as airtime the user must specify the Price
@@ -60,6 +57,7 @@ public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper
             request.setServiceCost(action.getServiceCost());
         }
 
+        // PaymentMode
         final String userId = K.getUserId();
         final String paymentMode = dto.getPaymentMode();
 
@@ -83,11 +81,27 @@ public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper
             request.setPaymentMode(mode);
         }
 
-        return request;
-    }
+        // Recharge Type
+        String recharge =
+                Arrays.stream(K.ALL_RECHARGE_MODES).filter(x -> x.equals(dto.getRechargeType()))
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException(String.format("Invalid Recharge Type (%s)", dto.getRechargeType())));
 
-    @Override
-    public SingleRechargeRequestDto scheduledToSingle(ScheduledRechargeRequestDto dto) {
-        return rechargeMapstructMapper.scheduledToSingle(dto);
+        if (dto.getRechargeType().equals(K.SINGLE_RECHARGE)) {
+            request.setRequestType(1);
+        } else {
+            request.setRequestType(1);
+        }
+
+        // Scheduled date
+        Date date = dto.getScheduledDate();
+        if (!date.after(new Date())) {
+            throw new RuntimeException(String.format("Date (%s) is in the past or too near to be scheduled, please run instantly",
+                    date.toString()));
+        }
+
+        request.setScheduledDate(new Timestamp(date.getTime()));
+
+        return request;
     }
 }

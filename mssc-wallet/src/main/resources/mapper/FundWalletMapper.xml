@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscwallet.dao.FundWalletMapper">
+    <resultMap id="fundWalletResultMap" type="io.factorialsystems.msscwallet.domain.FundWalletRequest">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="authorization_url" property="authorizationUrl" jdbcType="VARCHAR"/>
+        <result column="redirect_url" property="redirectUrl" jdbcType="VARCHAR"/>
+        <result column="amount" property="amount" jdbcType="DECIMAL"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="message" property="message" jdbcType="VARCHAR"/>
+        <result column="payment_id" property="paymentId" jdbcType="VARCHAR"/>
+        <result column="created_on" property="createdOn" jdbcType="TIMESTAMP"/>
+        <result column="payment_verified" property="paymentVerified" jdbcType="BOOLEAN"/>
+        <result column="closed" property="closed" jdbcType="BOOLEAN"/>
+    </resultMap>
+
+    <sql id="column_list">
+        id, user_id, authorization_url, redirect_url, amount, status, message, payment_id, payment_verified, created_on, closed
+    </sql>
+
+    <select id="findById" parameterType="java.lang.String" resultMap="fundWalletResultMap">
+        select
+        <include refid="column_list"/>
+        from fund_wallet_request
+        where id = #{id}
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.FundWalletRequest">
+        insert into fund_wallet_request(id, user_id, authorization_url, redirect_url, amount, status, message, payment_id) values
+            (#{id},  #{userId}, #{authorizationUrl}, #{redirectUrl}, #{amount}, #{status},#{message},#{paymentId})
+    </insert>
+
+    <update id="update" parameterType="io.factorialsystems.msscwallet.domain.FundWalletRequest">
+        update fund_wallet_request
+        <set>
+            <if test="closed != null">closed=#{closed},</if>
+            <if test="paymentVerified != null">payment_verified=#{paymentVerified},</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

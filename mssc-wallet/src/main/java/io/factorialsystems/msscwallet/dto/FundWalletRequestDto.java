@@ -4,16 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.Date;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionDto {
-    private Integer id;
-    private String serviceName;
-    private Date txDate;
-    private BigDecimal txAmount;
-    private String recipient;
+public class FundWalletRequestDto {
+    @NotNull(message = "Amount to be funded must be specified")
+    private BigDecimal amount;
+
+    private String redirectUrl;
 }

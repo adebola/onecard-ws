@@ -1,9 +1,6 @@
 package io.factorialsystems.msscwallet.controller;
 
-import io.factorialsystems.msscwallet.dto.AccountDto;
-import io.factorialsystems.msscwallet.dto.BalanceDto;
-import io.factorialsystems.msscwallet.dto.WalletRequestDto;
-import io.factorialsystems.msscwallet.dto.WalletResponseDto;
+import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.service.AccountService;
 import io.factorialsystems.msscwallet.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +62,17 @@ public class AccountController {
     public ResponseEntity<WalletResponseDto> charge(@RequestBody @Valid WalletRequestDto request) {
         return new ResponseEntity<>(accountService.chargeAccount(request), HttpStatus.OK);
     }
+
+    @PostMapping("/fund")
+    public ResponseEntity<FundWalletResponseDto> initializeFundWallet(@RequestBody @Valid FundWalletRequestDto request) {
+        return new ResponseEntity<>(accountService.initializeFundWallet(request), HttpStatus.OK);
+    }
+
+    @GetMapping("/fund/{id}")
+    public ResponseEntity<MessageDto> fundWallet(@PathVariable("id") String id) {
+        return new ResponseEntity<>(accountService.fundWallet(id), HttpStatus.OK);
+    }
+
 
 
 //

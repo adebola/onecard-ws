@@ -50,8 +50,8 @@ public class RechargeAuthController {
     }
 
     @PostMapping("/scheduled")
-    public ResponseEntity<?> startScheduledRecharge(@Valid @RequestBody ScheduleRequestDto dto) {
-        return null;
+    public ResponseEntity<?> startScheduledRecharge(@Valid @RequestBody ScheduledRechargeRequestDto dto) {
+        return new ResponseEntity<>(scheduledRechargeService.startRecharge(dto), HttpStatus.OK);
     }
 
     @GetMapping("/scheduled/{id}")

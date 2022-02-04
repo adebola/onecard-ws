@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 
 <mapper namespace="io.factorialsystems.msscprovider.dao.RechargeMapper">
-    <resultMap id="rechargeResultMap" type="io.factorialsystems.msscprovider.domain.SingleRechargeRequest">
+    <resultMap id="rechargeResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest">
         <id column="id" property="id" jdbcType="VARCHAR" />
         <result column="service_id" property="serviceId" jdbcType="INTEGER" />
         <result column="service_code" property="serviceCode" jdbcType="VARCHAR" />
@@ -44,7 +44,7 @@
         update recharge_requests set closed = true where id = #{id}
     </update>
 
-    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.SingleRechargeRequest" >
+    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest" >
         insert into recharge_requests(id, service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url, redirect_url, payment_mode, status, message)
         values(#{id}, #{serviceId}, #{serviceCost}, #{recipient}, #{paymentId}, #{telephone}, #{productId}, #{authorizationUrl}, #{redirectUrl}, #{paymentMode}, #{status}, #{message})
     </insert>

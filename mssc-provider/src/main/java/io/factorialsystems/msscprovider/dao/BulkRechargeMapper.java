@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.dao;
 
-import io.factorialsystems.msscprovider.domain.BulkRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.BulkRecipient;
 import io.factorialsystems.msscprovider.domain.Telephone;
 import org.apache.ibatis.annotations.Mapper;

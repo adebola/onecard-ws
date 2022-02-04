@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.recharge.ekedp;
 
-import io.factorialsystems.msscprovider.domain.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.wsdl.*;

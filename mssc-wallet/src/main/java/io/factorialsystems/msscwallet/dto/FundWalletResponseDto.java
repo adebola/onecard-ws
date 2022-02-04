@@ -1,4 +1,4 @@
-package io.factorialsystems.msscprovider.dto;
+package io.factorialsystems.msscwallet.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,11 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScheduledRechargeRequestResponseDto {
+public class FundWalletResponseDto {
     private String id;
-    private Integer status;
-    private String message;
     private String authorizationUrl;
-    private String paymentMode;
     private String redirectUrl;
 }
