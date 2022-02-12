@@ -1,10 +1,11 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
-import io.factorialsystems.msscprovider.dao.RechargeMapper;
+import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
+import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.dto.BulkRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.DataPlanDto;
 import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
@@ -25,7 +26,7 @@ import java.util.List;
 public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstructMapper {
     private FactoryProducer producer;
     private RestTemplate restTemplate;
-    private RechargeMapper rechargeMapper;
+    private SingleRechargeMapper singleRechargeMapper;
     private ServiceActionMapper serviceActionMapper;
     private BulkRechargeMapstructMapper bulkRechargeMapstructMapper;
 
@@ -42,8 +43,8 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
     }
 
     @Autowired
-    public void setRechargeMapper(RechargeMapper rechargeMapper) {
-        this.rechargeMapper = rechargeMapper;
+    public void setRechargeMapper(SingleRechargeMapper singleRechargeMapper) {
+        this.singleRechargeMapper = singleRechargeMapper;
     }
 
     @Autowired
@@ -76,7 +77,7 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
             throw new RuntimeException(String.format("Invalid ServiceCode (%s), unable to find appropriate service", serviceCode));
         }
 
-        List<RechargeFactoryParameters> parameters = rechargeMapper.factory(action.getId());
+        List<RechargeFactoryParameters> parameters = singleRechargeMapper.factory(action.getId());
 
         if (parameters != null && !parameters.isEmpty()) {
             RechargeFactoryParameters parameter = parameters.get(0);
@@ -96,11 +97,19 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
         request.setServiceCode(action.getServiceCode());
         request.setTotalServiceCost(new BigDecimal(0));
 
-        if (request.getServiceCost() == null) {
+        if (request.getServiceCost() != null && request.getProductId() != null) {
+            throw new RuntimeException("Error you have specified a cost and a plan, plans have cost");
+        }
+
+        if (request.getProductId() != null) {
             DataEnquiry enquiry = factory.getPlans(serviceAction);
             DataPlanDto planDto = enquiry.getPlan(request.getProductId());
             BigDecimal cost = new BigDecimal(planDto.getPrice());
             request.setServiceCost(cost);
+        }
+
+        if (request.getServiceCost() == null) {
+            throw new RuntimeException(String.format("No cost associated with this request either specify a cost or a plan that has a cost"));
         }
 
         final String userId = K.getUserId();
@@ -149,7 +158,12 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
     }
 
     @Override
-    public BulkRechargeRequestDto scheduledToBulk(ScheduledRechargeRequestDto dto) {
-        return bulkRechargeMapstructMapper.scheduledToBulk(dto);
+    public BulkRechargeRequestDto scheduledToBulkRechargeDto(ScheduledRechargeRequestDto dto) {
+        return bulkRechargeMapstructMapper.scheduledToBulkRechargeDto(dto);
+    }
+
+    @Override
+    public BulkRechargeRequest scheduledToBulkRecharge(ScheduledRechargeRequest request) {
+        return bulkRechargeMapstructMapper.scheduledToBulkRecharge(request);
     }
 }

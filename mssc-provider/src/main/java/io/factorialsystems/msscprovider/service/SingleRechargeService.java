@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.config.JMSConfig;
-import io.factorialsystems.msscprovider.dao.RechargeMapper;
+import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
@@ -41,7 +41,7 @@ public class SingleRechargeService {
     private final ObjectMapper objectMapper;
     private final FactoryProducer producer;
     private final RestTemplate restTemplate;
-    private final RechargeMapper rechargeMapper;
+    private final SingleRechargeMapper singleRechargeMapper;
     private final ServiceActionMapper serviceActionMapper;
     private final RechargeMapstructMapper rechargeMapstructMapper;
 
@@ -56,7 +56,7 @@ public class SingleRechargeService {
         SingleRechargeService.BASE_LOCAL_STATIC = baseLocal;
     }
 
-    public SingleRechargeRequestResponseDto startRecharge(SingleRechargeRequestDto dto) {
+    public SingleRechargeResponseDto startRecharge(SingleRechargeRequestDto dto) {
         SingleRechargeRequest request = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
 
         if (checkParameters(request, dto)) {
@@ -74,7 +74,7 @@ public class SingleRechargeService {
 
             request.setId(UUID.randomUUID().toString());
             log.info(String.format("Saving Recharge Request %s", request.getId()));
-            rechargeMapper.save(request);
+            singleRechargeMapper.save(request);
 
             if (request.getPaymentMode().equals("wallet") && request.getStatus() == 200) {
                 try {
@@ -85,7 +85,7 @@ public class SingleRechargeService {
                 }
             }
 
-            return SingleRechargeRequestResponseDto.builder()
+            return SingleRechargeResponseDto.builder()
                     .id(request.getId())
                     .authorizationUrl(request.getAuthorizationUrl())
                     .message(request.getMessage())
@@ -109,7 +109,7 @@ public class SingleRechargeService {
             throw new RuntimeException("Recharge ID NULL Set it Cannot be NULL");
         }
 
-        SingleRechargeRequest request = rechargeMapper.findById(id);
+        SingleRechargeRequest request = singleRechargeMapper.findById(id);
 
         if (request == null || request.getClosed()) {
             throw new RuntimeException(String.format("Recharge Request (%s) is either NOT AVAILABLE or CLOSED", id));
@@ -119,7 +119,7 @@ public class SingleRechargeService {
             throw new RuntimeException("Payment has not been made or notification delayed, please try again");
         }
 
-        List<RechargeFactoryParameters> parameters = rechargeMapper.factory(request.getServiceId());
+        List<RechargeFactoryParameters> parameters = singleRechargeMapper.factory(request.getServiceId());
 
         if (parameters != null && !parameters.isEmpty()) {
             RechargeFactoryParameters parameter = parameters.get(0);
@@ -129,8 +129,12 @@ public class SingleRechargeService {
             status = recharge.recharge(request);
 
             if (status.getStatus() == HttpStatus.OK) {
-                rechargeMapper.closeRequest(id);
-                saveTransaction(request);
+                singleRechargeMapper.closeRequest(id);
+
+                // If it is a scheduled Recharge, it will have been paid for and transaction logged at the time it was Scheduled
+                if (request.getScheduledRequestId() == null) {
+                    saveTransaction(request);
+                }
             }
         }
 
@@ -163,7 +167,7 @@ public class SingleRechargeService {
     }
 
     private AbstractFactory getFactory(Integer factoryType) {
-        List<RechargeFactoryParameters> parameters = rechargeMapper.factory(factoryType);
+        List<RechargeFactoryParameters> parameters = singleRechargeMapper.factory(factoryType);
 
         if (parameters != null && !parameters.isEmpty()) {
             RechargeFactoryParameters parameter = parameters.get(0);
@@ -216,7 +220,7 @@ public class SingleRechargeService {
         String serviceAction = null;
         String rechargeProviderCode = null;
 
-        RechargeMapper mapper = ApplicationContextProvider.getBean(RechargeMapper.class);
+        SingleRechargeMapper mapper = ApplicationContextProvider.getBean(SingleRechargeMapper.class);
         List<RechargeFactoryParameters> parameters = mapper.factory(request.getServiceId());
 
         if (parameters != null && !parameters.isEmpty()) {

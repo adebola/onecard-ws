@@ -23,12 +23,12 @@ public class RechargeAuthController {
     private final ScheduledRechargeService scheduledRechargeService;
 
     @PostMapping
-    public ResponseEntity<SingleRechargeRequestResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
+    public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
         return new ResponseEntity<>(rechargeService.startRecharge(dto), HttpStatus.OK);
     }
 
     @PostMapping("/bulk")
-    public ResponseEntity<BulkRechargeRequestResponseDto> startBulkRecharge(@Valid @RequestBody BulkRechargeRequestDto dto) {
+    public ResponseEntity<BulkRechargeResponseDto> startBulkRecharge(@Valid @RequestBody BulkRechargeRequestDto dto) {
         return new ResponseEntity<>(bulkRechargeService.saveService(dto), HttpStatus.OK);
     }
 

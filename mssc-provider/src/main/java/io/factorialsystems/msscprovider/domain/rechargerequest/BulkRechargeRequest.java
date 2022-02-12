@@ -23,4 +23,6 @@ public class BulkRechargeRequest {
     private String paymentId;
     private Boolean closed;
     private String[] recipients;
+    private String autoRequestId;
+    private String scheduledRequestId;
 }

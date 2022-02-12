@@ -29,5 +29,7 @@ public class SingleRechargeRequest {
     private String paymentMode;
     private Integer status;
     private String message;
-
+    private String accountType;
+    private String autoRequestId;
+    private String scheduledRequestId;
 }

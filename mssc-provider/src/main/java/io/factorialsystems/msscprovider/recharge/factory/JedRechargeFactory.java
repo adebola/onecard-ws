@@ -45,6 +45,6 @@ public class JedRechargeFactory extends AbstractFactory {
 
     @Override
     public ParameterCheck getCheck(String s) {
-        return null;
+        return ApplicationContextProvider.getBean(JedElectricRecharge.class);
     }
 }

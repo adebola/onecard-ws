@@ -3,7 +3,9 @@ package io.factorialsystems.msscprovider.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.JMSConfig;
+import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.dao.ScheduledRechargeMapper;
+import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.BulkRecipient;
 import io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest;
@@ -15,8 +17,10 @@ import io.factorialsystems.msscprovider.mapper.recharge.ScheduledRechargeMapstru
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -25,17 +29,28 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class ScheduledRechargeService {
-    private static final String BULK_RECHARGE = "bulk";
-    private static final String SINGLE_RECHARGE = "single";
+
+    @Value("${api.local.host.baseurl}")
+    private String baseLocalUrl;
+
+    public static final String BULK_RECHARGE = "bulk";
+    public static final String SINGLE_RECHARGE = "single";
+    public static final Integer SINGLE_RECHARGE_N = 1;
+    public static final Integer BULK_RECHARGE_N = 2;
 
     private final JmsTemplate jmsTemplate;
+    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final BulkRechargeMapper bulkRechargeMapper;
+    private final BulkRechargeService bulkRechargeService;
+    private final SingleRechargeMapper singleRechargeMapper;
+    private final SingleRechargeService singleRechargeService;
     private final RechargeMapstructMapper rechargeMapstructMapper;
     private final ScheduledRechargeMapper scheduledRechargeMapper;
     private final BulkRechargeMapstructMapper bulkRechargeMapstructMapper;
     private final ScheduledRechargeMapstructMapper scheduledRechargeMapstructMapper;
 
-    public ScheduledRechargeRequestResponseDto startRecharge(ScheduledRechargeRequestDto dto) {
+    public ScheduledRechargeResponseDto startRecharge(ScheduledRechargeRequestDto dto) {
         ScheduledRechargeRequest request = scheduledRechargeMapstructMapper.rechargeDtoToRecharge(dto);
 
         if (dto.getRechargeType().equals(SINGLE_RECHARGE)) {
@@ -63,7 +78,7 @@ public class ScheduledRechargeService {
                     saveTransaction(request, paymentRequestDto.getAmount());
                 }
 
-                return ScheduledRechargeRequestResponseDto.builder()
+                return ScheduledRechargeResponseDto.builder()
                         .authorizationUrl(paymentRequestDto.getAuthorizationUrl())
                         .redirectUrl(paymentRequestDto.getRedirectUrl())
                         .paymentMode(paymentRequestDto.getPaymentMode())
@@ -80,7 +95,7 @@ public class ScheduledRechargeService {
                 return null;
             }
 
-            BulkRechargeRequestDto bulkRechargeRequestDto = bulkRechargeMapstructMapper.scheduledToBulk(dto);
+            BulkRechargeRequestDto bulkRechargeRequestDto = bulkRechargeMapstructMapper.scheduledToBulkRechargeDto(dto);
             BulkRechargeRequest bulkRechargeRequest  =
                     bulkRechargeMapstructMapper.rechargeDtoToRecharge(bulkRechargeRequestDto);
 
@@ -98,6 +113,7 @@ public class ScheduledRechargeService {
             request.setMessage(paymentRequestDto.getMessage());
             request.setAuthorizationUrl(paymentRequestDto.getAuthorizationUrl());
             request.setRedirectUrl(paymentRequestDto.getRedirectUrl());
+            request.setTotalServiceCost(paymentRequestDto.getAmount());
 
             // Save Request
             String id = UUID.randomUUID().toString();
@@ -120,7 +136,7 @@ public class ScheduledRechargeService {
                 saveTransaction(request, paymentRequestDto.getAmount());
             }
 
-            return ScheduledRechargeRequestResponseDto.builder()
+            return ScheduledRechargeResponseDto.builder()
                     .authorizationUrl(paymentRequestDto.getAuthorizationUrl())
                     .redirectUrl(paymentRequestDto.getRedirectUrl())
                     .paymentMode(paymentRequestDto.getPaymentMode())
@@ -138,23 +154,57 @@ public class ScheduledRechargeService {
         return null;
     }
 
+    public void runRecharges(List<ScheduledRechargeRequest> requests) {
+
+        requests.forEach(request -> {
+            if (Objects.equals(request.getRequestType(), SINGLE_RECHARGE_N)) {
+                if (request.getPaymentId() != null && checkPayment(request.getPaymentId())) {
+                    SingleRechargeRequest singleRequest = rechargeMapstructMapper.scheduleToSingleRecharge(request);
+
+                    log.info(String.format("Processing Single Scheduled Recharge (%s)", request.getId()));
+
+                    singleRequest.setId(UUID.randomUUID().toString());
+                    singleRequest.setScheduledRequestId(request.getId());
+                    singleRechargeMapper.save(singleRequest);
+                    singleRechargeService.finishRecharge(singleRequest.getId());
+                } else {
+                    log.error("Skipping Scheduled Single Recharge Request {}, looks like it has not been paid for", request.getId());
+                    // Log To Schedule Exception table for Internal Business Consumption
+                }
+                scheduledRechargeMapper.closeRequest(request.getId());
+            } else if (Objects.equals(request.getRequestType(), BULK_RECHARGE_N)) {
+                log.info(String.format("Processing Bulk Scheduled Recharge (%s)", request.getId()));
+
+                BulkRechargeRequest bulkRechargeRequest = bulkRechargeMapstructMapper.scheduledToBulkRecharge(request);
+
+                if (request.getPaymentId() != null && checkPayment(request.getPaymentId())) {
+                    final String id = UUID.randomUUID().toString();
+
+                    bulkRechargeRequest.setId(id);
+                    bulkRechargeRequest.setScheduledRequestId(request.getId());
+                    bulkRechargeMapper.save(bulkRechargeRequest);
+
+                    Map<String, String> recipientMap = new HashMap<>();
+                    recipientMap.put("bulkRequestId", id);
+                    recipientMap.put("scheduledRequestId", request.getId());
+                    bulkRechargeMapper.updateBulkRechargeId(recipientMap);
+
+                    bulkRechargeService.runBulkRecharge(id);
+                } else {
+                    log.error("Skipping Scheduled Bulk Recharge Request {}, it might not be paid for", request.getId());
+                }
+            }
+
+            scheduledRechargeMapper.closeRequest(request.getId());
+        });
+
+    }
+
     private SingleRechargeRequest checkSingleRequestParameters(ScheduledRechargeRequestDto dto) {
-        SingleRechargeRequestDto singleRechargeRequestDto = rechargeMapstructMapper.scheduledToSingle(dto);
+        SingleRechargeRequestDto singleRechargeRequestDto = rechargeMapstructMapper.scheduledToSingleRechargeDto(dto);
         SingleRechargeRequest request =
                 rechargeMapstructMapper.rechargeDtoToRecharge(singleRechargeRequestDto);
         return SingleRechargeService.checkParameters(request, singleRechargeRequestDto) ? request : null;
-    }
-
-
-    private BulkRechargeRequest checkBulkRequestParameters(ScheduledRechargeRequestDto dto) {
-
-        if (dto.getRecipients() == null && dto.getGroupId() == null) {
-            log.error("No Group or Recipients specified, nothing todo");
-            return null;
-        }
-
-        BulkRechargeRequestDto bulkRechargeRequestDto = bulkRechargeMapstructMapper.scheduledToBulk(dto);
-        return bulkRechargeMapstructMapper.rechargeDtoToRecharge(bulkRechargeRequestDto);
     }
 
     private void saveTransaction(ScheduledRechargeRequest request, BigDecimal amount) {
@@ -173,5 +223,12 @@ public class ScheduledRechargeService {
             log.error("Error sending JMS Transaction Message to Wallet service {}", e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    private Boolean checkPayment(String id) {
+        PaymentRequestDto dto
+                = restTemplate.getForObject(baseLocalUrl + "api/v1/pay/" + id, PaymentRequestDto.class);
+
+        return dto != null ? dto.getVerified() : false;
     }
 }

@@ -47,7 +47,7 @@ create table provider_services (
     provider_id int NOT NULL,
     service_code varchar(32) NOT NULL,
     service_name varchar(64) NOT NULL,
-    service_cost decimal(8,2),
+    service_cost decimal(10,2),
     action int NOT NULL,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     createdBy varchar(64) NOT NULL,
@@ -97,9 +97,14 @@ create table recharge_requests (
     redirect_url varchar(64),
     message varchar(64),
     status int,
+    account_type varchar(64),
     closed boolean NOT NULL DEFAULT FALSE,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     payment_mode varchar(32) NOT NULL,
+    scheduled_request_id varchar(64),
+    auto_request_id varchar(64),
+    FOREIGN KEY (scheduled_request_id) REFERENCES scheduled_recharge(id),
+    FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
     FOREIGN KEY (service_id) REFERENCES provider_services(id),
     PRIMARY KEY (id)
 );
@@ -108,7 +113,7 @@ create table ringo_data_plans (
     product_id varchar(16) NOT NULL,
     network varchar(32) NOT NULL,
     category varchar(32) NOT NULL,
-    price decimal(8,2) NOT NULL,
+    price decimal(10,2) NOT NULL,
     code varchar(32) NOT NULL,
     validity varchar(32) NOT NULL,
     PRIMARY KEY (product_id)
@@ -127,6 +132,10 @@ create table bulk_recharge_requests (
     redirect_url varchar(64),
     closed boolean NOT NULL DEFAULT FALSE,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    scheduled_request_id varchar(64),
+    auto_request_id varchar(64),
+    FOREIGN KEY (scheduled_request_id) REFERENCES scheduled_recharge(id),
+    FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
     FOREIGN KEY (service_id) REFERENCES provider_services(id),
     PRIMARY KEY (id)
 );
@@ -150,7 +159,8 @@ create table scheduled_recharge (
     request_type int DEFAULT 1 NOT NULL,
     request_scheduled_date timestamp NOT NULL,
     service_id int NOT NULL,
-    service_cost decimal(8, 2),
+    service_cost decimal(10, 2),
+    total_service_cost decimal (10,2),
     group_id int,
     recipient varchar(32),
     product_id varchar(32),
@@ -181,7 +191,7 @@ create table auto_recharge (
     recipient varchar(32),
     product_id varchar(32),
     telephone varchar (32),
-    service_cost decimal(8, 2),
+    service_cost decimal(10, 2),
     redirect_url varchar(64),
     payment_mode varchar(16),
     closed boolean NOT NULL DEFAULT FALSE,
@@ -239,15 +249,15 @@ values(1, 'MTN', 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya', 'MTN'),
 
 insert into provider_services(provider_id, service_code, service_name, service_cost, action, createdby, activated, activation_date, activatedby)
 values (1, 'MTN-AIRTIME', 'MTN AIRTIME', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
-       (2, 'AIR-AIRTIME', 'AIRTEL AIRTIME', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (2, 'AIRTEL-AIRTIME', 'AIRTEL AIRTIME', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
        (3, 'GLO-AIRTIME', 'GLO AIRTIME', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
-       (4, '9-AIRTIME', '9MOBILE AIRTIME', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
-       (1, 'MTN-DATA', 'MTN DATA', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
-       (2, 'AIR-DATA', 'AIRTEL DATA', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
-       (3, 'GLO-DATA', 'GLO DATA', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
-       (4, '9-DATA', '9MOBILE DATA', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
-       (5, 'EKEDP', 'EKO Disco Recharge', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
-       (6, 'JED', 'Jos Disco Recharge', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya');
+       (4, '9MOBILE-AIRTIME', '9MOBILE AIRTIME', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (1, 'MTN-DATA', 'MTN DATA', NULL, 2, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (2, 'AIRTEL-DATA', 'AIRTEL DATA', NULL, 2, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (3, 'GLO-DATA', 'GLO DATA', NULL, 2, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (4, '9MOBILE-DATA', '9MOBILE DATA', NULL, 2, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (5, 'EKEDP', 'EKO Disco Recharge', NULL, 3, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (6, 'JED', 'Jos Disco Recharge', NULL, 3, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya');
 
 insert into recharge_providers(name, wallet_id, code, createdBy, activated, activation_date, activatedBy)
 values
@@ -266,9 +276,9 @@ values (1, 1, 1),
        (6, 1, 1),
        (7, 1, 1),
        (8, 1, 1),
-       (9, 1, 2),
-       (10, 1, 2),
-       (9, 3, 1),
-       (10, 2, 1);
+       (9, 1, 1),
+       (10, 1, 1),
+       (9, 3, 2),
+       (10, 2, 2);
 
 

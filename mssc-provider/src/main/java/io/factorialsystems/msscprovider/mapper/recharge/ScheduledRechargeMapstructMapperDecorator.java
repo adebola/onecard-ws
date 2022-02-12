@@ -17,6 +17,9 @@ public class ScheduledRechargeMapstructMapperDecorator implements ScheduledRecha
     private ServiceActionMapper serviceActionMapper;
     private ScheduledRechargeMapstructMapper mapstructMapper;
 
+    private static final Integer SINGLE_RECHARGE = 1;
+    private static final Integer BULK_RECHARGE = 2;
+
     @Autowired
     public void setMapstructMapper(ScheduledRechargeMapstructMapper mapstructMapper) {
         this.mapstructMapper = mapstructMapper;
@@ -88,9 +91,9 @@ public class ScheduledRechargeMapstructMapperDecorator implements ScheduledRecha
                         .orElseThrow(() -> new RuntimeException(String.format("Invalid Recharge Type (%s)", dto.getRechargeType())));
 
         if (dto.getRechargeType().equals(K.SINGLE_RECHARGE)) {
-            request.setRequestType(1);
+            request.setRequestType(SINGLE_RECHARGE);
         } else {
-            request.setRequestType(1);
+            request.setRequestType(BULK_RECHARGE);
         }
 
         // Scheduled date

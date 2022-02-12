@@ -8,6 +8,7 @@ import java.util.List;
 
 @Mapper
 public interface ScheduledRechargeMapper {
+    List<ScheduledRechargeRequest> findOpenRequests();
     ScheduledRechargeRequest findById(String id);
     void save(ScheduledRechargeRequest request);
     void update (ScheduledRechargeRequest request);

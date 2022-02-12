@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SingleRechargeRequestResponseDto {
+public class SingleRechargeResponseDto {
     private String id;
     private Integer status;
     private String message;

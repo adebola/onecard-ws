@@ -16,8 +16,9 @@ public class ScheduledRechargeRequest  {
     private Integer requestType;
     private Timestamp scheduledDate;
     private Integer serviceId;
-    private Integer serviceCode;
+    private String serviceCode;
     private BigDecimal serviceCost;
+    private BigDecimal totalServiceCost;
     private Integer groupId;
     private String[] recipients;
     private String recipient;
