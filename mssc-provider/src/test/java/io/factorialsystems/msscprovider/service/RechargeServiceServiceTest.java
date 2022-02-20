@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @CommonsLog
-class RechargeServiceTest {
+class RechargeServiceServiceTest {
 
     @Autowired
     private SingleRechargeService rechargeService;

@@ -1,0 +1,35 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http://com.guide/soap/server" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://com.vending/soap" targetNamespace="http://com.vending/soap">
+    <wsdl:types>
+        <xs:schema xmlns:tns="http://com.guide/soap/server" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://com.guide/soap/server">
+            <xs:element name="vendResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="StatusId" type="xs:string"/>
+                        <xs:element name="TxRefId" type="xs:string"/>
+                        <xs:element name="OrigBalance" type="xs:string"/>
+                        <xs:element name="DestBalance" type="xs:string"/>
+                        <xs:element name="OrigMsisdn" type="xs:string"/>
+                        <xs:element name="DestMsisdn" type="xs:string"/>
+                        <xs:element name="responseCode" type="xs:string"/>
+                        <xs:element name="responseMessage" type="xs:string"/>
+                        <xs:element minOccurs="0" name="seqtxRefdId" type="xs:string"/>
+                        <xs:element minOccurs="0" name="seqstatus" type="xs:string"/>
+                        <xs:element minOccurs="0" name="lasseq" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="vendResponse">
+        <wsdl:part element="sch:vendResponse" name="vendResponse"> </wsdl:part>
+    </wsdl:message>
+    <wsdl:portType name="VendingResponsePort"> </wsdl:portType>
+    <wsdl:binding name="VendingResponsePortSoap11" type="tns:VendingResponsePort">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    </wsdl:binding>
+    <wsdl:service name="VendingResponsePortService">
+        <wsdl:port binding="tns:VendingResponsePortSoap11" name="VendingResponsePortSoap11">
+            <soap:address location="http://localhost:8080/ws"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

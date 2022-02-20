@@ -67,6 +67,7 @@
                     <generatePackage>io.factorialsystems.msscprovider.wsdl</generatePackage>
                     <generateDirectory>${project.basedir}/src/main/java</generateDirectory>
 <!--                    <schemaDirectory>${project.basedir}/src/main/resources/wsdl</schemaDirectory>-->
+<!--                    <cleanPackageDirectories>false</cleanPackageDirectories>-->
 <!--                    <schemaIncludes>-->
 <!--                        <include>*.wsdl</include>-->
 <!--                    </schemaIncludes>-->

@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 
 @SpringBootTest
 @CommonsLog
-class BulkRechargeServiceTest {
+class BulkRechargeServiceTestService {
 
     @Autowired
     private BulkRechargeService service;

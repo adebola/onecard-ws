@@ -1,0 +1,241 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http://com.guide/soap/server" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://com.topup/soap" targetNamespace="http://com.topup/soap">
+    <wsdl:types>
+        <xs:schema xmlns:tns="http://com.guide/soap/server" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://com.guide/soap/server">
+            <xs:element name="requestTopupResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="return">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="ersReference" type="xs:string"/>
+                                    <xs:element name="resultCode" type="xs:string"/>
+                                    <xs:element name="resultDescription" type="xs:string"/>
+                                    <xs:element name="requestedTopupAmount">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="currency" type="xs:string"/>
+                                                <xs:element name="value" type="xs:string"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="senderPrincipal">
+                                        <xs:complexType mixed="true">
+                                            <xs:sequence>
+                                                <xs:element name="principalId">
+                                                    <xs:complexType>
+                                                        <xs:sequence>
+                                                            <xs:element name="id">
+                                                                <xs:simpleType>
+                                                                    <xs:restriction base="xs:string">
+                                                                        <xs:enumeration value="DIST1"/>
+                                                                        <xs:enumeration value="2342348010101"/>
+                                                                    </xs:restriction>
+                                                                </xs:simpleType>
+                                                            </xs:element>
+                                                            <xs:element name="type">
+                                                                <xs:simpleType>
+                                                                    <xs:restriction base="xs:string">
+                                                                        <xs:enumeration value="RESELLERID"/>
+                                                                        <xs:enumeration value="SUBSCRIBERID"/>
+                                                                    </xs:restriction>
+                                                                </xs:simpleType>
+                                                            </xs:element>
+                                                        </xs:sequence>
+                                                    </xs:complexType>
+                                                </xs:element>
+                                                <xs:element name="principalName" type="xs:string"/>
+                                                <xs:element name="accounts">
+                                                    <xs:complexType>
+                                                        <xs:sequence>
+                                                            <xs:element name="account">
+                                                                <xs:complexType>
+                                                                    <xs:sequence>
+                                                                        <xs:element name="accountSpecifier">
+                                                                            <xs:complexType>
+                                                                                <xs:sequence>
+                                                                                    <xs:element name="accountId">
+                                                                                        <xs:simpleType>
+                                                                                            <xs:restriction base="xs:string">
+                                                                                                <xs:enumeration value="DIST1"/>
+                                                                                                <xs:enumeration value="2342348010101"/>
+                                                                                            </xs:restriction>
+                                                                                        </xs:simpleType>
+                                                                                    </xs:element>
+                                                                                    <xs:element name="accountTypeId">
+                                                                                        <xs:simpleType>
+                                                                                            <xs:restriction base="xs:string">
+                                                                                                <xs:enumeration value="RESELLER"/>
+                                                                                                <xs:enumeration value="AIRTIME"/>
+                                                                                            </xs:restriction>
+                                                                                        </xs:simpleType>
+                                                                                    </xs:element>
+                                                                                </xs:sequence>
+                                                                            </xs:complexType>
+                                                                        </xs:element>
+                                                                        <xs:element name="balance">
+                                                                            <xs:complexType mixed="true">
+                                                                                <xs:sequence>
+                                                                                    <xs:element name="currency" type="xs:string"/>
+                                                                                    <xs:element name="value">
+                                                                                        <xs:simpleType>
+                                                                                            <xs:restriction base="xs:string">
+                                                                                                <xs:enumeration value="209750.00"/>
+                                                                                                <xs:enumeration value="100000.00"/>
+                                                                                            </xs:restriction>
+                                                                                        </xs:simpleType>
+                                                                                    </xs:element>
+                                                                                </xs:sequence>
+                                                                            </xs:complexType>
+                                                                        </xs:element>
+                                                                        <xs:element minOccurs="0" name="creditLimit">
+                                                                            <xs:complexType>
+                                                                                <xs:sequence>
+                                                                                    <xs:element name="currency" type="xs:string"/>
+                                                                                    <xs:element name="value" type="xs:string"/>
+                                                                                </xs:sequence>
+                                                                            </xs:complexType>
+                                                                        </xs:element>
+                                                                    </xs:sequence>
+                                                                </xs:complexType>
+                                                            </xs:element>
+                                                        </xs:sequence>
+                                                    </xs:complexType>
+                                                </xs:element>
+                                                <xs:element name="status" type="xs:string"/>
+                                                <xs:element name="msisdn" type="xs:string"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="topupAccountSpecifier">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="accountId" type="xs:string"/>
+                                                <xs:element name="accountTypeId" type="xs:string"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="topupAmount">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="currency" type="xs:string"/>
+                                                <xs:element name="value" type="xs:string"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="topupPrincipal">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="principalId">
+                                                    <xs:complexType>
+                                                        <xs:sequence>
+                                                            <xs:element name="id">
+                                                                <xs:simpleType>
+                                                                    <xs:restriction base="xs:string">
+                                                                        <xs:enumeration value="DIST1"/>
+                                                                        <xs:enumeration value="2342348010101"/>
+                                                                    </xs:restriction>
+                                                                </xs:simpleType>
+                                                            </xs:element>
+                                                            <xs:element name="type">
+                                                                <xs:simpleType>
+                                                                    <xs:restriction base="xs:string">
+                                                                        <xs:enumeration value="RESELLERID"/>
+                                                                        <xs:enumeration value="SUBSCRIBERID"/>
+                                                                    </xs:restriction>
+                                                                </xs:simpleType>
+                                                            </xs:element>
+                                                        </xs:sequence>
+                                                    </xs:complexType>
+                                                </xs:element>
+                                                <xs:element name="principalName" type="xs:string"/>
+                                                <xs:element name="accounts">
+                                                    <xs:complexType>
+                                                        <xs:sequence>
+                                                            <xs:element name="account">
+                                                                <xs:complexType>
+                                                                    <xs:sequence>
+                                                                        <xs:element name="accountSpecifier">
+                                                                            <xs:complexType>
+                                                                                <xs:sequence>
+                                                                                    <xs:element name="accountId">
+                                                                                        <xs:simpleType>
+                                                                                            <xs:restriction base="xs:string">
+                                                                                                <xs:enumeration value="DIST1"/>
+                                                                                                <xs:enumeration value="2342348010101"/>
+                                                                                            </xs:restriction>
+                                                                                        </xs:simpleType>
+                                                                                    </xs:element>
+                                                                                    <xs:element name="accountTypeId">
+                                                                                        <xs:simpleType>
+                                                                                            <xs:restriction base="xs:string">
+                                                                                                <xs:enumeration value="RESELLER"/>
+                                                                                                <xs:enumeration value="AIRTIME"/>
+                                                                                            </xs:restriction>
+                                                                                        </xs:simpleType>
+                                                                                    </xs:element>
+                                                                                </xs:sequence>
+                                                                            </xs:complexType>
+                                                                        </xs:element>
+                                                                        <xs:element name="balance">
+                                                                            <xs:complexType mixed="true">
+                                                                                <xs:sequence>
+                                                                                    <xs:element name="currency" type="xs:string"/>
+                                                                                    <xs:element name="value">
+                                                                                        <xs:simpleType>
+                                                                                            <xs:restriction base="xs:string">
+                                                                                                <xs:enumeration value="209750.00"/>
+                                                                                                <xs:enumeration value="100000.00"/>
+                                                                                            </xs:restriction>
+                                                                                        </xs:simpleType>
+                                                                                    </xs:element>
+                                                                                </xs:sequence>
+                                                                            </xs:complexType>
+                                                                        </xs:element>
+                                                                        <xs:element minOccurs="0" name="creditLimit">
+                                                                            <xs:complexType>
+                                                                                <xs:sequence>
+                                                                                    <xs:element name="currency" type="xs:string"/>
+                                                                                    <xs:element name="value" type="xs:string"/>
+                                                                                </xs:sequence>
+                                                                            </xs:complexType>
+                                                                        </xs:element>
+                                                                    </xs:sequence>
+                                                                </xs:complexType>
+                                                            </xs:element>
+                                                        </xs:sequence>
+                                                    </xs:complexType>
+                                                </xs:element>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="requestTopupResponse">
+        <wsdl:part element="sch:requestTopupResponse" name="requestTopupResponse"> </wsdl:part>
+    </wsdl:message>
+    <wsdl:portType name="RequestTopupResponsePort">
+        <wsdl:operation name="requestTopup">
+            <wsdl:output message="tns:requestTopupResponse" name="requestTopupResponse"> </wsdl:output>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="RequestTopupResponsePortSoap11" type="tns:RequestTopupResponsePort">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="requestTopup">
+            <soap:operation soapAction=""/>
+            <wsdl:output name="requestTopupResponse">
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="RequestTopupResponsePortService">
+        <wsdl:port binding="tns:RequestTopupResponsePortSoap11" name="RequestTopupResponsePortSoap11">
+            <soap:address location="http://localhost:8080/ws"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

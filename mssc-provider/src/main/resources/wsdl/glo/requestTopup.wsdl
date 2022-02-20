@@ -1,0 +1,85 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http://com.guide/soap/server" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://com.topup/soap" targetNamespace="http://com.topup/soap">
+    <wsdl:types>
+        <xs:schema xmlns:tns="http://com.guide/soap/server" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://com.guide/soap/server">
+            <xs:element name="requestTopup">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="context">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="channel" type="xs:string"/>
+                                    <xs:element name="clientComment" type="xs:string"/>
+                                    <xs:element name="clientId" type="xs:string"/>
+                                    <xs:element name="clientReference" type="xs:string"/>
+                                    <xs:element name="clientRequestTimeout" type="xs:string"/>
+                                    <xs:element name="initiatorPrincipalId">
+                                        <xs:complexType>
+                                            <xs:sequence>
+                                                <xs:element name="id" type="xs:string"/>
+                                                <xs:element name="type" type="xs:string"/>
+                                                <xs:element name="userId" type="xs:string"/>
+                                            </xs:sequence>
+                                        </xs:complexType>
+                                    </xs:element>
+                                    <xs:element name="password" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                        <xs:element name="senderPrincipalId">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="id" type="xs:string"/>
+                                    <xs:element name="type" type="xs:string"/>
+                                    <xs:element name="userId" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                        <xs:element name="topupPrincipalId">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="id" type="xs:string"/>
+                                    <xs:element name="type" type="xs:string"/>
+                                    <xs:element name="userId" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                        <xs:element name="senderAccountSpecifier">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="accountId" type="xs:string"/>
+                                    <xs:element name="accountTypeId" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                        <xs:element name="topupAccountSpecifier">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="accountId" type="xs:string"/>
+                                    <xs:element name="accountTypeId" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                        <xs:element name="productId" type="xs:string"/>
+                        <xs:element name="amount">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="currency" type="xs:string"/>
+                                    <xs:element name="value" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:portType name="RequestTopupPort"> </wsdl:portType>
+    <wsdl:binding name="RequestTopupPortSoap11" type="tns:RequestTopupPort">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    </wsdl:binding>
+    <wsdl:service name="RequestTopupPortService">
+        <wsdl:port binding="tns:RequestTopupPortSoap11" name="RequestTopupPortSoap11">
+            <soap:address location="http://localhost:8080/ws"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

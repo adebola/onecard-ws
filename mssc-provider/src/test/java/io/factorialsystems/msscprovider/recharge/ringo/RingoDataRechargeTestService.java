@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @CommonsLog
-class RingoDataRechargeTest {
+class RingoDataRechargeTestService {
 
     @Autowired
     private RingoDataRecharge recharge;

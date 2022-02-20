@@ -1,0 +1,27 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http://com.guide/soap/server" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://com.vending/soap" targetNamespace="http://com.vending/soap">
+    <wsdl:types>
+        <xs:schema xmlns:tns="http://com.guide/soap/server" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://com.guide/soap/server">
+            <xs:element name="vend">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="origMsisdn" type="xs:string"/>
+                        <xs:element name="destMsisdn" type="xs:string"/>
+                        <xs:element name="amount" type="xs:string"/>
+                        <xs:element name="sequence" type="xs:string"/>
+                        <xs:element name="tarifftypeId" type="xs:string"/>
+                        <xs:element name="serviceproviderId" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:portType name="VendingPort"> </wsdl:portType>
+    <wsdl:binding name="VendingPortSoap11" type="tns:VendingPort">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    </wsdl:binding>
+    <wsdl:service name="VendingPortService">
+        <wsdl:port binding="tns:VendingPortSoap11" name="VendingPortSoap11">
+            <soap:address location="http://localhost:8080/ws"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

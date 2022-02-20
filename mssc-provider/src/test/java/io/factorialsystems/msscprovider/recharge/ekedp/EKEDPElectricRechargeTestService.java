@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @CommonsLog
-class EKEDPElectricRechargeTest {
+class EKEDPElectricRechargeTestService {
 
     @Autowired
     private EKEDPElectricRecharge recharge;
