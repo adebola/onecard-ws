@@ -76,13 +76,19 @@ public class SingleRechargeService {
             log.info(String.format("Saving Recharge Request %s", request.getId()));
             singleRechargeMapper.save(request);
 
-            if (request.getPaymentMode().equals("wallet") && request.getStatus() == 200) {
-                try {
-                    jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(request.getId()));
-                } catch (JsonProcessingException e) {
-                    log.error("Error sending Single Recharge Service to Self {}", e.getMessage());
-                    throw new RuntimeException(e.getMessage());
-                }
+            if (request.getPaymentMode().equals("wallet")) {
+                 if (request.getStatus() == 200) {
+                     try {
+                         jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(request.getId()));
+                     } catch (JsonProcessingException e) {
+                         log.error("Error sending Single Recharge Service to Self {}", e.getMessage());
+                         throw new RuntimeException(e.getMessage());
+                     }
+                 } else {
+                     final String message = String.format("Payment Error %s : ", request.getMessage());
+                     log.error(message);
+                     throw new RuntimeException(message);
+                 }
             }
 
             return SingleRechargeResponseDto.builder()
@@ -180,12 +186,14 @@ public class SingleRechargeService {
 
     private void saveTransaction(SingleRechargeRequest request) {
 
+        log.info("UserId : {}", request.getUserId());
+
         RequestTransactionDto requestTransactionDto = RequestTransactionDto.builder()
                 .serviceId(request.getServiceId())
                 .requestId(request.getId())
                 .serviceCost(request.getServiceCost())
                 .transactionDate(new Date().toString())
-                .userId(K.getUserId())
+                .userId(request.getUserId())
                 .recipient(request.getRecipient())
                 .build();
         try {
@@ -250,7 +258,6 @@ public class SingleRechargeService {
         if (!parameterCheck.check(request)) {
             throw new RuntimeException(String.format("Missing Parameter in Request (%s)", request.getServiceCode()));
         }
-
 
         return true;
     }

@@ -52,6 +52,7 @@ public interface RechargeMapstructMapper {
 
     @Mappings({
             @Mapping(source = "serviceId", target = "serviceId"),
+            @Mapping(source = "userId", target = "userId"),
             @Mapping(source = "serviceCost", target = "serviceCost"),
             @Mapping(source = "telephone", target = "telephone"),
             @Mapping(source = "productId", target = "productId"),

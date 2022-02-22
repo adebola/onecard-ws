@@ -60,12 +60,16 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance {
                         .build();
             }
 
-            log.info("Ringo Airtime Recharge failure for {} cost {}", airtimeRequest.getMsisdn(), cost);
+            if (response != null && response.getMessage() != null) {
+                log.error("Ringo Airtime Recharge failure for {} cost {}, Reason {}", airtimeRequest.getMsisdn(), cost, response.getMessage());
+            } else {
+                log.error("Ringo Airtime Recharge failure for {} cost {}, NULL Response", airtimeRequest.getMsisdn(), cost);
+            }
+
             return RechargeStatus.builder()
                     .status(HttpStatus.BAD_REQUEST)
                     .message("Ringo Recharge Failure")
                     .build();
-
 
         } catch (JsonProcessingException e) {
             log.error("Ringo Recharge Exception {}", e.getMessage());

@@ -15,6 +15,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class SingleRechargeRequest {
     private String id;
+    private String userId;
     private Integer serviceId;
     private String serviceCode;
     private String recipient;

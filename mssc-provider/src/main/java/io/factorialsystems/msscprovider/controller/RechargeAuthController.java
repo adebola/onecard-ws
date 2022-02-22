@@ -56,6 +56,11 @@ public class RechargeAuthController {
 
     @GetMapping("/scheduled/{id}")
     public ResponseEntity<MessageDto> finishScheduledRecharge(@PathVariable("id") String id) {
-        return null;
+
+      if (scheduledRechargeService.finalizeScheduledRecharge(id)) {
+          return new ResponseEntity<>(new MessageDto("Scheduled Recharge Request Submitted Successfully"), HttpStatus.ACCEPTED);
+      } else {
+          return new ResponseEntity<>(new MessageDto("Payment Failed for Scheduled Request"), HttpStatus.BAD_REQUEST);
+      }
     }
 }

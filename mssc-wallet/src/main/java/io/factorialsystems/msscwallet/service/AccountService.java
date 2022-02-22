@@ -142,7 +142,9 @@ public class AccountService {
             }
         }
 
-        throw new RuntimeException("Wallet Funding Unsuccessful, please ensure payment was successful");
+        final String message = String.format("Wallet Funding Unsuccessful, Funding request (%s) not found", id);
+        log.error(message);
+        throw new RuntimeException(message);
     }
 
     @Transactional

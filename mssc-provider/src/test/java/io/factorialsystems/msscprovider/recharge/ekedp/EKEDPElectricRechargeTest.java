@@ -32,9 +32,22 @@ class EKEDPElectricRechargeTest {
     void payPostPaidBill() {
         SingleRechargeRequest request = new SingleRechargeRequest();
         request.setId(UUID.randomUUID().toString());
-        request.setRecipient("0244140270-01");
-        request.setAccountType("postpaid");
-        request.setServiceCost(new BigDecimal(200));
+//        request.setRecipient("0244140270-01");
+        request.setRecipient("45700863561");
+        request.setAccountType("prepaid");
+        request.setServiceCost(new BigDecimal(500));
         recharge.payPostPaidBill(request);
+    }
+
+    @Test
+    public void reverse() {
+        String id = "690722a0-e12f-4101-a436-b31828c81efd";
+        recharge.reversePayment(id);
+    }
+
+    @Test
+    public void validatePayment() {
+        String id = "690722a0-e12f-4101-a436-b31828c81efd";
+        recharge.validatePayment(id);
     }
 }

@@ -128,7 +128,7 @@ public class EKEDPElectricRecharge implements Recharge, ParameterCheck, Balance 
 
         TransactionParams.ExtraData.Entry entryMeter = new TransactionParams.ExtraData.Entry();
 
-        if (accountType.equals(EKEDPRechargeFactory.ACCOUNT_TYPE_PREPAID)) {
+        if (request.getAccountType().equals(EKEDPRechargeFactory.ACCOUNT_TYPE_PREPAID)) {
             entryMeter.setKey("meterNumber");
         } else {
             entryMeter.setKey("accountNumber");
@@ -165,6 +165,12 @@ public class EKEDPElectricRecharge implements Recharge, ParameterCheck, Balance 
         WalletResponse response = jaxbResponse.getValue().getResponse();
 
         if (response.getRetn() == 0) {
+
+            // Retrieve the Token
+            if (request.getAccountType().equals(EKEDPRechargeFactory.ACCOUNT_TYPE_PREPAID)) {
+                GetOrderDetailsV2Response orderDetailsV2Response = getOrderDetails(session, request.getId());
+            }
+
             return true;
         }
 
@@ -232,6 +238,54 @@ public class EKEDPElectricRecharge implements Recharge, ParameterCheck, Balance 
         }
 
         return null;
+    }
+
+    private GetOrderDetailsV2Response getOrderDetails(String session, String paymentId) {
+        GetOrderDetailsV2 orderDetailsV2 = new GetOrderDetailsV2();
+        orderDetailsV2.setPaymentReference(paymentId);
+        orderDetailsV2.setTenantId(properties.getPartnerId());
+
+        JAXBElement<GetOrderDetailsV2> jaxbOrderDetails = objectFactory.createGetOrderDetailsV2(orderDetailsV2);
+        JAXBElement<GetOrderDetailsV2Response> jaxbResponse =  (JAXBElement<GetOrderDetailsV2Response>) webServiceTemplate
+                .marshalSendAndReceive(properties.getUrl(), jaxbOrderDetails, callback(session));
+
+        return jaxbResponse.getValue();
+    }
+
+    public void reversePayment(String paymentId) {
+        String session = getSession();
+        login(session);
+
+        NotifyForReversal notifyForReversal = new NotifyForReversal();
+        notifyForReversal.setPaymentReference(paymentId);
+        notifyForReversal.setTenantId(properties.getPartnerId());
+
+        JAXBElement<NotifyForReversal> jaxbReversal = objectFactory.createNotifyForReversal(notifyForReversal);
+        JAXBElement<NotifyForReversalResponse> jaxbResponse =  (JAXBElement<NotifyForReversalResponse>) webServiceTemplate
+                .marshalSendAndReceive(properties.getUrl(), jaxbReversal, callback(session));
+
+        logout(session);
+    }
+
+    public void validatePayment(String id) {
+        String session = getSession();
+        login(session);
+
+        ValidatePayment validatePayment = new ValidatePayment();
+        validatePayment.setTenantId(properties.getPartnerId());
+
+        ValidationParams params = new ValidationParams();
+        params.setAccountType("OFFLINE_PREPAID");
+        params.setCustomerId("45700863561");
+
+        validatePayment.setParams(params);
+        validatePayment.setTenantId(properties.getPartnerId());
+
+        JAXBElement<ValidatePayment> jaxbValidate = objectFactory.createValidatePayment(validatePayment);
+        JAXBElement<ValidatePaymentResponse> jaxbResponse =  (JAXBElement<ValidatePaymentResponse>) webServiceTemplate
+                .marshalSendAndReceive(properties.getUrl(), jaxbValidate, callback(session));
+
+        logout(session);
     }
 
     public void payPostPaidBill(SingleRechargeRequest request) {

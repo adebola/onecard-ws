@@ -1,0 +1,13 @@
+{
+  "properties": [
+    {
+      "name": "aws.bucket",
+      "type": "java.lang.String",
+      "description": "Bucket to deploy objects in AWS S3."
+    },
+    {
+      "name": "aws.endpoint",
+      "type": "java.lang.String",
+      "description": "AWS Bucket URI."
+    }
+  ] }

@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class ScheduledRechargeRequest  {
     private String id;
+    private String userId;
     private String requestId;
     private Integer requestType;
     private Timestamp scheduledDate;

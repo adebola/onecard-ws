@@ -42,6 +42,7 @@ public interface BulkRechargeMapstructMapper {
 
     @Mappings({
             @Mapping(source = "serviceId", target = "serviceId"),
+            @Mapping(source = "userId", target = "userId"),
             @Mapping(source = "serviceCode", target = "serviceCode"),
             @Mapping(source = "serviceCost", target = "serviceCost"),
             @Mapping(source = "groupId", target = "groupId"),

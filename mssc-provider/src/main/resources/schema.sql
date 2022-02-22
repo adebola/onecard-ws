@@ -87,6 +87,7 @@ create table provider_services_recharge_providers (
 
 create table recharge_requests (
     id varchar(64),
+    user_id varchar(64),
     service_id int NOT NULL,
     service_cost decimal(10,2) NOT NULL,
     recipient varchar(64) NOT NULL,
@@ -116,11 +117,13 @@ create table ringo_data_plans (
     price decimal(10,2) NOT NULL,
     code varchar(32) NOT NULL,
     validity varchar(32) NOT NULL,
+    allowance varchar(64),
     PRIMARY KEY (product_id)
 );
 
 create table bulk_recharge_requests (
     id varchar(64),
+    user_id varchar(64),
     service_id int NOT NULL,
     service_cost decimal(10,2) NOT NULL,
     total_service_cost decimal(10,2) NOT NULL,
@@ -155,6 +158,7 @@ create table recharge_request_recipients (
 
 create table scheduled_recharge (
     id varchar(64),
+    user_id varchar(64),
     request_id int,
     request_type int DEFAULT 1 NOT NULL,
     request_scheduled_date timestamp NOT NULL,
@@ -180,6 +184,7 @@ create table scheduled_recharge (
 
 create table auto_recharge (
     id varchar(64),
+    user_id varchar(64),
     request_type int DEFAULT 1 NOT NULL,
     request_start timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     request_end timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,

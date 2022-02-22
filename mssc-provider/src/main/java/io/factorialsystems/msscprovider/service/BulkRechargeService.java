@@ -173,6 +173,7 @@ public class BulkRechargeService {
                                 .serviceCost(request.getServiceCost())
                                 .id(UUID.randomUUID().toString())
                                 .recipient(telephone.getMsisdn())
+                                .productId(request.getProductId())
                                 .build()
                 );
             });
@@ -191,6 +192,7 @@ public class BulkRechargeService {
                                         .serviceCost(request.getServiceCost())
                                         .id(UUID.randomUUID().toString())
                                         .recipient(beneficiary.getTelephone())
+                                        .productId(request.getProductId())
                                         .build()
                         );
                     });
@@ -244,7 +246,7 @@ public class BulkRechargeService {
                 .requestId(request.getId())
                 .serviceCost(request.getTotalServiceCost())
                 .transactionDate(new Date().toString())
-                .userId(K.getUserId())
+                .userId(request.getUserId())
                 .recipient("bulk")
                 .build();
         try {

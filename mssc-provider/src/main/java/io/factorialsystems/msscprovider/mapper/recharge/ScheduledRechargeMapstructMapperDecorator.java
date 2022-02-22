@@ -34,8 +34,11 @@ public class ScheduledRechargeMapstructMapperDecorator implements ScheduledRecha
     public ScheduledRechargeRequest rechargeDtoToRecharge(ScheduledRechargeRequestDto dto) {
         ScheduledRechargeRequest request = mapstructMapper.rechargeDtoToRecharge(dto);
 
+        final String userId = K.getUserId();
+
         // ServiceCode
         String serviceCode = dto.getServiceCode();
+        request.setUserId(userId);
 
         if (serviceCode == null) {
             throw new RuntimeException("ServiceCode Not specified in Scheduled Recharge Request");
@@ -61,7 +64,6 @@ public class ScheduledRechargeMapstructMapperDecorator implements ScheduledRecha
         }
 
         // PaymentMode
-        final String userId = K.getUserId();
         final String paymentMode = dto.getPaymentMode();
 
         if (paymentMode == null) { // No Payment Mode Specified

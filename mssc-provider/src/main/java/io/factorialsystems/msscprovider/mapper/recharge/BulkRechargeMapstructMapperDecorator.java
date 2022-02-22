@@ -26,8 +26,8 @@ import java.util.List;
 public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstructMapper {
     private FactoryProducer producer;
     private RestTemplate restTemplate;
-    private SingleRechargeMapper singleRechargeMapper;
     private ServiceActionMapper serviceActionMapper;
+    private SingleRechargeMapper singleRechargeMapper;
     private BulkRechargeMapstructMapper bulkRechargeMapstructMapper;
 
     @Value("${api.local.host.baseurl}")
@@ -63,6 +63,8 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
         String serviceAction = null;
         String rechargeProviderCode = null;
         BulkRechargeRequest request = bulkRechargeMapstructMapper.rechargeDtoToRecharge(dto);
+
+        request.setUserId(K.getUserId());
 
         // ServiceCode
         String serviceCode = dto.getServiceCode();
@@ -109,7 +111,7 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
         }
 
         if (request.getServiceCost() == null) {
-            throw new RuntimeException(String.format("No cost associated with this request either specify a cost or a plan that has a cost"));
+            throw new RuntimeException("No cost associated with this request either specify a cost or a plan that has a cost");
         }
 
         final String userId = K.getUserId();
@@ -149,7 +151,7 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
         // Recipient
         if (dto.getRecipients() != null && dto.getRecipients().length > 0) {
             int recipientCount = dto.getRecipients().length;
-            double cost = dto.getServiceCost().doubleValue() * recipientCount;
+            double cost = request.getServiceCost().doubleValue() * recipientCount;
             BigDecimal currentCost = request.getTotalServiceCost();
             request.setTotalServiceCost(currentCost.add(new BigDecimal(cost)));
         }

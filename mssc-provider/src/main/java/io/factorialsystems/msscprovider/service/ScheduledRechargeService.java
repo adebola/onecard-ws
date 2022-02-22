@@ -7,6 +7,7 @@ import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.dao.ScheduledRechargeMapper;
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.BulkRecipient;
+import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
@@ -14,7 +15,9 @@ import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.mapper.recharge.BulkRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
 import io.factorialsystems.msscprovider.mapper.recharge.ScheduledRechargeMapstructMapper;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.recharge.DataEnquiry;
+import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
+import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +44,7 @@ public class ScheduledRechargeService {
     private final JmsTemplate jmsTemplate;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final FactoryProducer factoryProducer;
     private final BulkRechargeMapper bulkRechargeMapper;
     private final BulkRechargeService bulkRechargeService;
     private final SingleRechargeMapper singleRechargeMapper;
@@ -54,6 +58,8 @@ public class ScheduledRechargeService {
         ScheduledRechargeRequest request = scheduledRechargeMapstructMapper.rechargeDtoToRecharge(dto);
 
         if (dto.getRechargeType().equals(SINGLE_RECHARGE)) {
+            log.info("Scheduling a Single Recharge Service ScheduledDate: {} ServiceCode {}", dto.getScheduledDate().toString(), dto.getServiceCode());
+
             SingleRechargeRequest singleRechargeRequest = checkSingleRequestParameters(dto);
 
             if (request != null && singleRechargeRequest != null)  {
@@ -89,6 +95,7 @@ public class ScheduledRechargeService {
 
             }
         } else if (dto.getRechargeType().equals(BULK_RECHARGE)) {
+            log.info("Scheduling a Bulk Recharge Service ScheduledDate: {} ServiceCode {}", dto.getScheduledDate().toString(), dto.getServiceCode());
 
             if (dto.getRecipients() == null && dto.getGroupId() == null) {
                 log.error("No Group or Recipients specified, nothing todo");
@@ -167,6 +174,10 @@ public class ScheduledRechargeService {
                     singleRequest.setScheduledRequestId(request.getId());
                     singleRechargeMapper.save(singleRequest);
                     singleRechargeService.finishRecharge(singleRequest.getId());
+
+                    if (request.getServiceCost() == null) {
+                        request.setServiceCost(getSingleRechargeServiceCost(singleRequest));
+                    }
                 } else {
                     log.error("Skipping Scheduled Single Recharge Request {}, looks like it has not been paid for", request.getId());
                     // Log To Schedule Exception table for Internal Business Consumption
@@ -214,8 +225,8 @@ public class ScheduledRechargeService {
                 .requestId(request.getId())
                 .serviceCost(amount)
                 .transactionDate(new Date().toString())
-                .userId(K.getUserId())
-                .recipient(request.getRecipient() == null ? "scheduled-bulk" : request.getRecipient())
+                .userId(request.getUserId())
+                .recipient(request.getRecipient() == null ? "scheduled-bulk" : "scheduled-" + request.getRecipient())
                 .build();
         try {
             jmsTemplate.convertAndSend(JMSConfig.NEW_TRANSACTION_QUEUE, objectMapper.writeValueAsString(requestTransactionDto));
@@ -230,5 +241,41 @@ public class ScheduledRechargeService {
                 = restTemplate.getForObject(baseLocalUrl + "api/v1/pay/" + id, PaymentRequestDto.class);
 
         return dto != null ? dto.getVerified() : false;
+    }
+
+    private BigDecimal getSingleRechargeServiceCost(SingleRechargeRequest request) {
+        String serviceAction = null;
+        String rechargeProviderCode = null;
+
+        List<RechargeFactoryParameters> parameters = singleRechargeMapper.factory(request.getServiceId());
+
+        if (parameters != null && !parameters.isEmpty()) {
+            RechargeFactoryParameters parameter = parameters.get(0);
+            rechargeProviderCode = parameter.getRechargeProviderCode();
+            serviceAction = parameter.getServiceAction();
+        } else {
+            throw new RuntimeException(String.format("Unable to Load SingleRechargeFactoryParameters for (%s)", request.getServiceCode()));
+        }
+
+        AbstractFactory factory = factoryProducer.getFactory(rechargeProviderCode);
+
+        if (factory == null) {
+            throw new RuntimeException(String.format("Unable to get Factory for Request (%s), Please ensure factories are configured appropriately", request.getServiceCode()));
+        }
+
+        DataEnquiry enquiry = factory.getPlans(serviceAction);
+        DataPlanDto planDto = enquiry.getPlan(request.getProductId());
+        return new BigDecimal(planDto.getPrice());
+    }
+
+    public Boolean finalizeScheduledRecharge(String id) {
+        ScheduledRechargeRequest request = scheduledRechargeMapper.findById(id);
+
+        if (request != null && request.getPaymentId() != null && checkPayment(request.getPaymentId())) {
+            saveTransaction(request, request.getServiceCost());
+            return true;
+        }
+
+        return false;
     }
 }

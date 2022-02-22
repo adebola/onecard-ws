@@ -4,6 +4,7 @@
 <mapper namespace="io.factorialsystems.msscprovider.dao.ScheduledRechargeMapper">
     <resultMap id="scheduledRechargeResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest">
         <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
         <result column="request_id" property="requestId" jdbcType="VARCHAR" />
         <result column="request_type" property="requestType" jdbcType="INTEGER" />
         <result column="request_scheduled_date" property="scheduledDate" jdbcType="TIMESTAMP" />
@@ -28,6 +29,7 @@
 
     <sql id="column_list">
         r.id,
+        r.user_id,
         r.request_id,
         r.request_type,
         r.request_scheduled_date,
@@ -68,8 +70,8 @@
 
 
     <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest" >
-        insert into scheduled_recharge(id, request_scheduled_date, service_id, request_type, group_id, recipient, product_id,  telephone, service_cost, total_service_cost, redirect_url, authorization_url, payment_mode, payment_id, message, status)
-        values(#{id}, #{scheduledDate}, #{serviceId}, #{requestType}, #{groupId}, #{recipient}, #{productId}, #{telephone}, #{serviceCost}, #{totalServiceCost}, #{redirectUrl}, #{authorizationUrl},  #{paymentMode}, #{paymentId}, #{message}, #{status})
+        insert into scheduled_recharge(id, user_id, request_scheduled_date, service_id, request_type, group_id, recipient, product_id,  telephone, service_cost, total_service_cost, redirect_url, authorization_url, payment_mode, payment_id, message, status)
+        values(#{id}, #{userId}, #{scheduledDate}, #{serviceId}, #{requestType}, #{groupId}, #{recipient}, #{productId}, #{telephone}, #{serviceCost}, #{totalServiceCost}, #{redirectUrl}, #{authorizationUrl},  #{paymentMode}, #{paymentId}, #{message}, #{status})
     </insert>
 
     <update id="update" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest">
