@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class BulkRechargeRequest {
     private String id;
+    private String userId;
     private Integer serviceId;
     private String serviceCode;
     private Integer groupId;
@@ -23,4 +24,6 @@ public class BulkRechargeRequest {
     private String paymentId;
     private Boolean closed;
     private String[] recipients;
+    private String autoRequestId;
+    private String scheduledRequestId;
 }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.JMSConfig;
 import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
-import io.factorialsystems.msscprovider.dao.RechargeMapper;
+import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.*;
 import io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
@@ -33,7 +33,7 @@ public class BulkRechargeService {
     private final FactoryProducer producer;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
-    private final RechargeMapper rechargeMapper;
+    private final SingleRechargeMapper singleRechargeMapper;
     private final BulkRechargeMapper bulkRechargeMapper;
     private final BulkRechargeMapstructMapper rechargeMapstructMapper;
 
@@ -69,12 +69,12 @@ public class BulkRechargeService {
     }
 
     @Transactional
-    public BulkRechargeRequestResponseDto saveService(BulkRechargeRequestDto dto) {
+    public BulkRechargeResponseDto saveService(BulkRechargeRequestDto dto) {
 
         if (dto.getRecipients() == null && dto.getGroupId() == null) {
             log.error("No Group or Recipients specified, nothing todo");
 
-            return BulkRechargeRequestResponseDto.builder()
+            return BulkRechargeResponseDto.builder()
                     .status(300)
                     .message("No Group or Recipients specified, nothing todo")
                     .build();
@@ -86,7 +86,7 @@ public class BulkRechargeService {
 //        paymentRequestDto.setPaymentMode(request.getPaymentMode());
 
         if (paymentRequestDto.getPaymentMode().equals("wallet") && paymentRequestDto.getStatus() != 200) {
-            return BulkRechargeRequestResponseDto.builder()
+            return BulkRechargeResponseDto.builder()
                     .status(paymentRequestDto.getStatus())
                     .message(paymentRequestDto.getMessage())
                     .build();
@@ -101,6 +101,7 @@ public class BulkRechargeService {
         bulkRechargeMapper.save(request);
 
         if (dto.getRecipients() != null && dto.getRecipients().length > 0) {
+            log.info("Received Bulk recharge Request for {} Recipients", dto.getRecipients().length);
             List<BulkRecipient> recipients = new ArrayList<>(dto.getRecipients().length);
             Arrays.stream(dto.getRecipients()).forEach( recipient -> {
                 recipients.add(new BulkRecipient(requestId, recipient));
@@ -122,7 +123,7 @@ public class BulkRechargeService {
 
         log.info("Saving Bulk Recharge Request {}", requestId);
 
-        return BulkRechargeRequestResponseDto.builder()
+        return BulkRechargeResponseDto.builder()
                 .id(requestId)
                 .message("Success")
                 .status(200)
@@ -134,7 +135,7 @@ public class BulkRechargeService {
 
     public void runBulkRecharge(String id) {
 
-        log.info(String.format("received message for Asynchronous processing of Bulk Recharge Request (%s)", id));
+        log.info(String.format("received message for processing of Bulk Recharge Request (%s)", id));
 
         BulkRechargeRequest request = bulkRechargeMapper.findById(id);
 
@@ -144,13 +145,17 @@ public class BulkRechargeService {
             return;
         }
 
-        if (request.getPaymentId() != null && !checkPayment(request.getPaymentId())) {
-            final String message = String.format("Payment Not found or No Payment has been made for Bulk Recharge (%s)", request.getId());
-            log.error(message);
-            return;
+        // We don't need to check for payment if it is a Scheduled Recharge as Payment is made before Scheduling
+        // The Payment is also checked before invoking this function.
+        if (request.getScheduledRequestId() == null) {
+            if (request.getPaymentId() != null && !checkPayment(request.getPaymentId())) {
+                final String message = String.format("Payment Not found or No Payment has been made for Bulk Recharge (%s)", request.getId());
+                log.error(message);
+                return;
+            }
         }
 
-        List<RechargeFactoryParameters> parameters = rechargeMapper.factory(request.getServiceId());
+        List<RechargeFactoryParameters> parameters = singleRechargeMapper.factory(request.getServiceId());
 
         if (parameters != null && !parameters.isEmpty()) {
             RechargeFactoryParameters parameter = parameters.get(0);
@@ -166,14 +171,16 @@ public class BulkRechargeService {
                                 .serviceId(request.getServiceId())
                                 .serviceCode(request.getServiceCode())
                                 .serviceCost(request.getServiceCost())
-                                .id(id)
+                                .id(UUID.randomUUID().toString())
                                 .recipient(telephone.getMsisdn())
+                                .productId(request.getProductId())
                                 .build()
                 );
             });
 
             if (request.getGroupId() != null) {
-                List<BeneficiaryDto> beneficiaries = restTemplate.getForObject(BASE_LOCAL_STATIC + "/api/v1/beneficiary/beneficiary/" + request.getGroupId(), List.class);
+                List<BeneficiaryDto> beneficiaries =
+                        restTemplate.getForObject(BASE_LOCAL_STATIC + "/api/v1/beneficiary/beneficiary/" + request.getGroupId(), List.class);
 
                 if (beneficiaries != null) {
 
@@ -183,15 +190,17 @@ public class BulkRechargeService {
                                         .serviceId(request.getServiceId())
                                         .serviceCode(request.getServiceCode())
                                         .serviceCost(request.getServiceCost())
-                                        .id(id)
+                                        .id(UUID.randomUUID().toString())
                                         .recipient(beneficiary.getTelephone())
+                                        .productId(request.getProductId())
                                         .build()
                         );
                     });
                 }
             }
 
-            if (request.getPaymentMode().equals("paystack")) {
+
+            if (request.getPaymentMode().equals("paystack") && request.getScheduledRequestId() == null) {
                 saveTransaction(request);
             }
 
@@ -237,7 +246,7 @@ public class BulkRechargeService {
                 .requestId(request.getId())
                 .serviceCost(request.getTotalServiceCost())
                 .transactionDate(new Date().toString())
-                .userId(K.getUserId())
+                .userId(request.getUserId())
                 .recipient("bulk")
                 .build();
         try {

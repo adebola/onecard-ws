@@ -22,4 +22,5 @@ public class SingleRechargeRequestDto {
     private BigDecimal serviceCost;
     private String redirectUrl;
     private String paymentMode;
+    private String accountType;
 }

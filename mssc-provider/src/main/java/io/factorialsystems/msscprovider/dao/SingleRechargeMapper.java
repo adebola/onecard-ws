@@ -7,9 +7,10 @@ import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 
 @Mapper
-public interface RechargeMapper {
+public interface SingleRechargeMapper {
     SingleRechargeRequest findById(String id);
     void save(SingleRechargeRequest request);
     List<RechargeFactoryParameters> factory(Integer id);
     void closeRequest(String id);
+    void saveRechargeRequests(List<SingleRechargeRequest> requests);
 }

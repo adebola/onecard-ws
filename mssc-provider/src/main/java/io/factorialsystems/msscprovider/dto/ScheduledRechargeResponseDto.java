@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BulkRechargeRequestResponseDto {
+public class ScheduledRechargeResponseDto {
     private String id;
     private Integer status;
     private String message;
+    private String authorizationUrl;
     private String paymentMode;
     private String redirectUrl;
-    private String authorizationUrl;
 }

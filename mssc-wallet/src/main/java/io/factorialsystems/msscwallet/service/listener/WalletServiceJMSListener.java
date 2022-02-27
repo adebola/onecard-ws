@@ -79,10 +79,9 @@ public class WalletServiceJMSListener {
             if (account == null) {
                 final String message = String.format("Error saving New Transaction, Unable to find Account for User (%s)", dto.getUserId());
                 log.error(message);
-                throw new RuntimeException(message);
             }
 
-            log.info("Retrieved Account for Transaction {}", account.getId());
+            log.info("Retrieved Account for Transaction ID {}, UserName {}", account.getId(), account.getName());
 
             Optional<ServiceActionDto> actionDto
                     = Optional.ofNullable(restTemplate.getForObject(baseUrl + "api/v1/serviceprovider/service/" + dto.getServiceId(), ServiceActionDto.class));

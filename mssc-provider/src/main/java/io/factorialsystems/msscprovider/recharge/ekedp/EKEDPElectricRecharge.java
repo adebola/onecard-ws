@@ -1,10 +1,14 @@
 package io.factorialsystems.msscprovider.recharge.ekedp;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.recharge.Balance;
+import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.recharge.factory.EKEDPRechargeFactory;
 import io.factorialsystems.msscprovider.wsdl.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.ws.client.core.WebServiceMessageCallback;
@@ -16,10 +20,12 @@ import javax.xml.namespace.QName;
 import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPHeaderElement;
 import javax.xml.soap.SOAPMessage;
+import java.math.BigDecimal;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-public class EKEDPElectricRecharge implements Recharge {
+public class EKEDPElectricRecharge implements Recharge, ParameterCheck, Balance {
     private final EKEDProperties properties;
     private final ObjectFactory objectFactory;
     private final WebServiceTemplate webServiceTemplate;
@@ -55,14 +61,22 @@ public class EKEDPElectricRecharge implements Recharge {
                 .build();
     }
 
-    private String getSession() {
+    @Override
+    public Boolean check(SingleRechargeRequest request) {
+        return request != null &&
+                request.getRecipient() != null &&
+                request.getServiceCost() != null &&
+                request.getAccountType() != null;
+    }
 
+    private String getSession() {
         StartSession session = new StartSession();
         session.setPartnerId(properties.getPartnerId());
         session.setAccessKey(properties.getAccessKey());
 
         JAXBElement<StartSession> jaxbElement = objectFactory.createStartSession(session);
-        JAXBElement<StartSessionResponse> response = (JAXBElement<StartSessionResponse>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
+        JAXBElement<StartSessionResponse> response =
+                (JAXBElement<StartSessionResponse>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
 
         if (response != null && response.getValue() != null) {
             StartSessionResponse sessionResponse = response.getValue();
@@ -73,8 +87,6 @@ public class EKEDPElectricRecharge implements Recharge {
     }
 
     private Boolean login(String session) {
-//        JAXBElement<String> jaxbSession = objectFactory.createSessionId(session);
-
         Login login = new Login();
         login.setEmail(properties.getMail());
         login.setAccessKey(properties.getAccessKey());
@@ -92,16 +104,36 @@ public class EKEDPElectricRecharge implements Recharge {
         }
 
         return false;
+    }
 
+    private void logout(String session) {
+        Logout logout = new Logout();
+        JAXBElement<Logout> jaxbLogout = objectFactory.createLogout(logout);
+
+        JAXBElement<LogoutResponse> jaxbResponse =
+                (JAXBElement<LogoutResponse>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbLogout, callback(session));
     }
 
     private Boolean performRecharge(String session, SingleRechargeRequest request) {
+
+        if (request.getAccountType() == null || EKEDPRechargeFactory.codeMapper.get(request.getAccountType()) == null) {
+            throw new RuntimeException("Account Type not specified or invalid, please ensure it is set to either \"prepaid\" or \"postpaid\"");
+        }
+
+        final String accountType = EKEDPRechargeFactory.codeMapper.get(request.getAccountType());
+
         TransactionParams.ExtraData.Entry entryAccountType = new TransactionParams.ExtraData.Entry();
         entryAccountType.setKey("accountType");
-        entryAccountType.setValue("OFFLINE_PREPAID");
+        entryAccountType.setValue(accountType);
 
         TransactionParams.ExtraData.Entry entryMeter = new TransactionParams.ExtraData.Entry();
-        entryMeter.setKey("meterNumber");
+
+        if (request.getAccountType().equals(EKEDPRechargeFactory.ACCOUNT_TYPE_PREPAID)) {
+            entryMeter.setKey("meterNumber");
+        } else {
+            entryMeter.setKey("accountNumber");
+        }
+
         entryMeter.setValue(request.getRecipient());
 
         TransactionParams.ExtraData.Entry entryPurpose = new TransactionParams.ExtraData.Entry();
@@ -118,18 +150,32 @@ public class EKEDPElectricRecharge implements Recharge {
         extraData.getEntry().add(entryPurpose);
         extraData.getEntry().add(entryPartner);
 
-//        TransactionParams parameters = new TransactionParams();
-//        parameters.setExtraData(extraData);
-//        parameters.setAmount(request.getServiceCost().doubleValue());
-//
-//        ChargeWalletV2 chargeWalletV2 = new ChargeWalletV2();
-//        chargeWalletV2.setParams(parameters);
-//
-//        JAXBElement<ChargeWalletV2> jaxbCharge = objectFactory.createChargeWalletV2(chargeWalletV2);
-//        JAXBElement<ChargeWalletV2Response> jaxbResponse = (JAXBElement<ChargeWalletV2Response>) webServiceTemplate
-//                .marshalSendAndReceive(properties.getUrl(), jaxbCharge, callback(session));
+        TransactionParams parameters = new TransactionParams();
+        parameters.setExtraData(extraData);
+        parameters.setAmount(request.getServiceCost().doubleValue());
+        parameters.setPaymentReference(request.getId());
 
-        return true;
+        ChargeWalletV2 chargeWalletV2 = new ChargeWalletV2();
+        chargeWalletV2.setParams(parameters);
+
+        JAXBElement<ChargeWalletV2> jaxbCharge = objectFactory.createChargeWalletV2(chargeWalletV2);
+        JAXBElement<ChargeWalletV2Response> jaxbResponse =
+                (JAXBElement<ChargeWalletV2Response>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbCharge, callback(session));
+
+        WalletResponse response = jaxbResponse.getValue().getResponse();
+
+        if (response.getRetn() == 0) {
+
+            // Retrieve the Token
+            if (request.getAccountType().equals(EKEDPRechargeFactory.ACCOUNT_TYPE_PREPAID)) {
+                GetOrderDetailsV2Response orderDetailsV2Response = getOrderDetails(session, request.getId());
+            }
+
+            return true;
+        }
+
+        log.error("Performing Recharge Code {}, Description {}", response.getRetn(), response.getDesc());
+        return false;
     }
 
     private WebServiceMessageCallback callback(String session) {
@@ -139,7 +185,8 @@ public class EKEDPElectricRecharge implements Recharge {
                 SOAPMessage soapMessage = ((SaajSoapMessage) webServiceMessage).getSaajMessage();
                 SOAPHeader soapHeader = soapMessage.getSOAPHeader();
 
-                SOAPHeaderElement actionElement = soapHeader.addHeaderElement(new QName("http://soap.convergenceondemand.net/TMP/", "sessionId", "tmp"));
+                SOAPHeaderElement actionElement =
+                        soapHeader.addHeaderElement(new QName("http://soap.convergenceondemand.net/TMP/", "sessionId", "tmp"));
                 actionElement.setMustUnderstand(false);
                 actionElement.setTextContent(session);
             } catch (Exception ex) {
@@ -147,35 +194,119 @@ public class EKEDPElectricRecharge implements Recharge {
             }
         };
     }
+
+    @Override
+    public BigDecimal getBalance() {
+        String session = getSession();
+
+        if (session == null) {
+            throw new RuntimeException("Error acquiring EKEDP Session");
+        }
+
+        if (!login(session)) {
+            throw new RuntimeException("Login Error");
+        }
+
+        GetBalance balance = new GetBalance();
+        JAXBElement<GetBalance> jaxbBalance = objectFactory.createGetBalance(balance);
+        JAXBElement<GetBalanceResponse> jaxbResponse = (JAXBElement<GetBalanceResponse>) webServiceTemplate
+                .marshalSendAndReceive(properties.getUrl(), jaxbBalance, callback(session));
+
+        logout(session);
+
+        if (jaxbResponse != null && jaxbResponse.getValue() != null && jaxbResponse.getValue().getResponse() != null && jaxbResponse.getValue().getResponse().getBalance() != null) {
+            return jaxbResponse.getValue().getResponse().getBalance();
+        }
+
+        throw new RuntimeException("Error Getting Balance for Eko Distribution Company");
+    }
+
+    private CustomerInfo validateCustomer(String session, String meteroraccountId) {
+        ValidateCustomer validateCustomer = new ValidateCustomer();
+        validateCustomer.setTenantId(properties.getPartnerId());
+        validateCustomer.setAccountOrMeterNumber(meteroraccountId);
+
+        JAXBElement<ValidateCustomer> jaxbCustomer = objectFactory.createValidateCustomer(validateCustomer);
+        JAXBElement<ValidateCustomerResponse> jaxbResponse =  (JAXBElement<ValidateCustomerResponse>) webServiceTemplate
+                .marshalSendAndReceive(properties.getUrl(), jaxbCustomer, callback(session));
+
+        if (jaxbResponse.getValue() != null && jaxbResponse.getValue().getResponse() != null && jaxbResponse.getValue().getResponse().getRetn() == 0) {
+            return jaxbResponse.getValue().getResponse().getCustomerInfo();
+        } else {
+            CustomerInfoResponse response = jaxbResponse.getValue().getResponse();
+            log.error("Error Validating Customer Code {}, Message {}", response.getRetn(),  response.getDesc());
+        }
+
+        return null;
+    }
+
+    private GetOrderDetailsV2Response getOrderDetails(String session, String paymentId) {
+        GetOrderDetailsV2 orderDetailsV2 = new GetOrderDetailsV2();
+        orderDetailsV2.setPaymentReference(paymentId);
+        orderDetailsV2.setTenantId(properties.getPartnerId());
+
+        JAXBElement<GetOrderDetailsV2> jaxbOrderDetails = objectFactory.createGetOrderDetailsV2(orderDetailsV2);
+        JAXBElement<GetOrderDetailsV2Response> jaxbResponse =  (JAXBElement<GetOrderDetailsV2Response>) webServiceTemplate
+                .marshalSendAndReceive(properties.getUrl(), jaxbOrderDetails, callback(session));
+
+        return jaxbResponse.getValue();
+    }
+
+    public void reversePayment(String paymentId) {
+        String session = getSession();
+        login(session);
+
+        NotifyForReversal notifyForReversal = new NotifyForReversal();
+        notifyForReversal.setPaymentReference(paymentId);
+        notifyForReversal.setTenantId(properties.getPartnerId());
+
+        JAXBElement<NotifyForReversal> jaxbReversal = objectFactory.createNotifyForReversal(notifyForReversal);
+        JAXBElement<NotifyForReversalResponse> jaxbResponse =  (JAXBElement<NotifyForReversalResponse>) webServiceTemplate
+                .marshalSendAndReceive(properties.getUrl(), jaxbReversal, callback(session));
+
+        logout(session);
+    }
+
+    public void validatePayment(String id) {
+        String session = getSession();
+        login(session);
+
+        ValidatePayment validatePayment = new ValidatePayment();
+        validatePayment.setTenantId(properties.getPartnerId());
+
+        ValidationParams params = new ValidationParams();
+        params.setAccountType("OFFLINE_PREPAID");
+        params.setCustomerId("45700863561");
+
+        validatePayment.setParams(params);
+        validatePayment.setTenantId(properties.getPartnerId());
+
+        JAXBElement<ValidatePayment> jaxbValidate = objectFactory.createValidatePayment(validatePayment);
+        JAXBElement<ValidatePaymentResponse> jaxbResponse =  (JAXBElement<ValidatePaymentResponse>) webServiceTemplate
+                .marshalSendAndReceive(properties.getUrl(), jaxbValidate, callback(session));
+
+        logout(session);
+    }
+
+    public void payPostPaidBill(SingleRechargeRequest request) {
+        String session = getSession();
+
+        if (session == null) {
+            throw new RuntimeException("Error acquiring EKEDP Session");
+        }
+
+        if (!login(session)) {
+            throw new RuntimeException("Login Error");
+        }
+
+        CustomerInfo customerInfo = validateCustomer(session, request.getRecipient());
+
+        if (customerInfo != null) {
+            performRecharge(session, request);
+        } else {
+            log.error("Recharge Error unable to Validate Customer");
+        }
+
+        logout(session);
+    }
 }
-
-
-//<soapenv:Header>
-//    <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
-//        <wsse:UsernameToken xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
-//            <wsse:Username>abc</wsse:Username>
-//            <wsse:Password>abc</wsse:Password>
-//        </wsse:UsernameToken>
-//    </wsse:Security>
-//</soapenv:Header>
-//
-//<soapenv:Header>
-//    <tmp:sessionId>6ABA1505086A30CC795E3824864D30B05733B34E63799B5C2AD1E9E0A6717E78</tmp :sessionId>
-//</soapenv:Header>
-
-//                        SoapHeader soapHeader = ((SoapMessage) webServiceMessage).getSoapHeader();
-//                        Map<String, String> mapRequest = new HashMap();
-//                        mapRequest.put("sessionId", session);
-
-// try {
-//                                    SaajSoapMessage saajSoapMessage = (SaajSoapMessage) webServiceMessage;
-//                                    SOAPMessage soapMessage = saajSoapMessage.getSaajMessage();
-//                                    SOAPPart soapPart = soapMessage.getSOAPPart();
-//                                    SOAPEnvelope soapEnvelope = soapPart.getEnvelope();
-//                                    SOAPHeader soapHeader = soapEnvelope.getHeader();
-//
-//                                    soapHeader.addHeaderElement((Name)objectFactory.createSessionId(session));
-//                                    soapMessage.saveChanges();
-//                                } catch (Exception ex) {
-//                                    ex.printStackTrace();
-//                                }

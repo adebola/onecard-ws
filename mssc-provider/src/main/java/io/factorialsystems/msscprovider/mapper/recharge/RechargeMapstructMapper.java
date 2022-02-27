@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
+import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
@@ -27,13 +28,14 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "redirectUrl", target = "redirectUrl"),
             @Mapping(source = "telephone", target = "telephone"),
             @Mapping(source = "productId", target = "productId"),
+            @Mapping(source = "accountType", target = "accountType"),
             @Mapping(target = "paymentMode",ignore = true),
             @Mapping(target = "serviceCode", ignore = true),
             @Mapping(target = "serviceId", ignore = true),
             @Mapping(target = "authorizationUrl", ignore = true),
             @Mapping(target = "createdDate", ignore = true),
             @Mapping(target = "closed", ignore = true),
-            @Mapping(target = "paymentId", ignore = true),
+            @Mapping(target = "paymentId", ignore = true)
     })
     SingleRechargeRequest rechargeDtoToRecharge(SingleRechargeRequestDto dto);
 
@@ -46,5 +48,20 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "telephone", target = "telephone"),
             @Mapping(source = "paymentMode", target = "paymentMode")
     })
-    SingleRechargeRequestDto scheduledToSingle(ScheduledRechargeRequestDto dto);
+    SingleRechargeRequestDto scheduledToSingleRechargeDto(ScheduledRechargeRequestDto dto);
+
+    @Mappings({
+            @Mapping(source = "serviceId", target = "serviceId"),
+            @Mapping(source = "userId", target = "userId"),
+            @Mapping(source = "serviceCost", target = "serviceCost"),
+            @Mapping(source = "telephone", target = "telephone"),
+            @Mapping(source = "productId", target = "productId"),
+            @Mapping(source = "authorizationUrl", target = "authorizationUrl"),
+            @Mapping(source = "redirectUrl", target = "redirectUrl"),
+            @Mapping(source = "paymentId", target = "paymentId"),
+            @Mapping(source = "paymentMode", target = "paymentMode"),
+            @Mapping(source = "status", target = "status"),
+            @Mapping(source = "message", target = "message")
+    })
+    SingleRechargeRequest scheduleToSingleRecharge(ScheduledRechargeRequest request);
 }

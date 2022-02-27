@@ -13,4 +13,5 @@ public class DataPlanDto {
     private String category;
     private String price;
     private String validity;
+    private String allowance;
 }

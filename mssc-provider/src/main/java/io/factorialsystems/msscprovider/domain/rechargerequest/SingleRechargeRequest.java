@@ -15,6 +15,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class SingleRechargeRequest {
     private String id;
+    private String userId;
     private Integer serviceId;
     private String serviceCode;
     private String recipient;
@@ -29,5 +30,8 @@ public class SingleRechargeRequest {
     private String paymentMode;
     private Integer status;
     private String message;
+    private String accountType;
+    private String autoRequestId;
+    private String scheduledRequestId;
     private Integer sequence;
 }

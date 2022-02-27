@@ -23,12 +23,12 @@ public class RechargeAuthController {
     private final ScheduledRechargeService scheduledRechargeService;
 
     @PostMapping
-    public ResponseEntity<SingleRechargeRequestResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
+    public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
         return new ResponseEntity<>(rechargeService.startRecharge(dto), HttpStatus.OK);
     }
 
     @PostMapping("/bulk")
-    public ResponseEntity<BulkRechargeRequestResponseDto> startBulkRecharge(@Valid @RequestBody BulkRechargeRequestDto dto) {
+    public ResponseEntity<BulkRechargeResponseDto> startBulkRecharge(@Valid @RequestBody BulkRechargeRequestDto dto) {
         return new ResponseEntity<>(bulkRechargeService.saveService(dto), HttpStatus.OK);
     }
 
@@ -56,6 +56,11 @@ public class RechargeAuthController {
 
     @GetMapping("/scheduled/{id}")
     public ResponseEntity<MessageDto> finishScheduledRecharge(@PathVariable("id") String id) {
-        return null;
+
+      if (scheduledRechargeService.finalizeScheduledRecharge(id)) {
+          return new ResponseEntity<>(new MessageDto("Scheduled Recharge Request Submitted Successfully"), HttpStatus.ACCEPTED);
+      } else {
+          return new ResponseEntity<>(new MessageDto("Payment Failed for Scheduled Request"), HttpStatus.BAD_REQUEST);
+      }
     }
 }

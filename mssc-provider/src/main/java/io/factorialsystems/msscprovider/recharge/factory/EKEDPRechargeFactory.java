@@ -6,7 +6,19 @@ import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.ekedp.EKEDPElectricRecharge;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class EKEDPRechargeFactory extends AbstractFactory {
+
+    public static final Map<String, String> codeMapper = new HashMap<>();
+    public static final String ACCOUNT_TYPE_PREPAID = "prepaid";
+    public static final String ACCOUNT_TYPE_POSTPAID = "postpaid";
+
+    static {
+        codeMapper.put("prepaid", "OFFLINE_PREPAID");
+        codeMapper.put("postpaid", "OFFLINE_POSTPAID");
+    }
 
     @Override
     public Recharge getRecharge(String action) {
@@ -24,6 +36,6 @@ public class EKEDPRechargeFactory extends AbstractFactory {
 
     @Override
     public ParameterCheck getCheck(String s) {
-        return null;
+        return ApplicationContextProvider.getBean(EKEDPElectricRecharge.class);
     }
 }
