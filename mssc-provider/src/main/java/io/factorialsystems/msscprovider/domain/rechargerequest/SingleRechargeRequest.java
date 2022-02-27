@@ -29,5 +29,5 @@ public class SingleRechargeRequest {
     private String paymentMode;
     private Integer status;
     private String message;
-
+    private Integer sequence;
 }

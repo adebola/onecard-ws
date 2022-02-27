@@ -132,6 +132,11 @@ public class SingleRechargeService {
                 rechargeMapper.closeRequest(id);
                 saveTransaction(request);
             }
+
+            if(status.getStatus() == HttpStatus.ALREADY_REPORTED){
+                //Todo("Check dm and update accordingly")
+                //Note: status.getBody() will contain the duplicate transaction 'ref' and 'status'
+            }
         }
 
         return status;

@@ -11,4 +11,5 @@ import org.springframework.http.HttpStatus;
 public class RechargeStatus {
     private String message;
     private HttpStatus status;
+    private Object body;
 }
