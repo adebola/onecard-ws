@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,5 +17,6 @@ public class BulkRechargeResponseDto {
     private String message;
     private String paymentMode;
     private String redirectUrl;
+    private BigDecimal totalCost;
     private String authorizationUrl;
 }
