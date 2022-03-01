@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.recharge.glo;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.wsdl.glo.RequestTopup;
@@ -20,7 +21,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class GloAirtimeRecharge implements Recharge {
+public class GloAirtimeRecharge implements Recharge, ParameterCheck {
     private final GloProperties properties;
     private final WebServiceTemplate webServiceTemplate;
 
@@ -93,5 +94,10 @@ public class GloAirtimeRecharge implements Recharge {
 //                .build();
 
         return null;
+    }
+
+    @Override
+    public Boolean check(SingleRechargeRequest request) {
+        return false; //todo
     }
 }

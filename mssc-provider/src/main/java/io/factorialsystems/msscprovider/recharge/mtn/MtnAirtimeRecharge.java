@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.recharge.mtn;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.wsdl.*;
@@ -36,7 +37,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MtnAirtimeRecharge implements Recharge {
+public class MtnAirtimeRecharge implements Recharge, ParameterCheck {
     private final MtnProperties properties;
     private final WebServiceTemplate webServiceTemplate;
 
@@ -73,13 +74,18 @@ public class MtnAirtimeRecharge implements Recharge {
                 .build();
     }
 
-    public HttpComponentsMessageSender httpComponentsMessageSender() {
+    private HttpComponentsMessageSender httpComponentsMessageSender() {
         HttpComponentsMessageSender httpComponentsMessageSender = new HttpComponentsMessageSender();
         httpComponentsMessageSender.setCredentials(usernamePasswordCredentials());
         return httpComponentsMessageSender;
     }
 
-    public UsernamePasswordCredentials usernamePasswordCredentials() {
+    private UsernamePasswordCredentials usernamePasswordCredentials() {
         return new UsernamePasswordCredentials(properties.getUser(), properties.getPassword());
+    }
+
+    @Override
+    public Boolean check(SingleRechargeRequest request) {
+        return false;//todo
     }
 }
