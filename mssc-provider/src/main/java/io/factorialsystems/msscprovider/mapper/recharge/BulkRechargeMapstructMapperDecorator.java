@@ -37,6 +37,7 @@ public class BulkRechargeMapstructMapperDecorator implements BulkRechargeMapstru
     public void setFactoryProducer(FactoryProducer producer) {
         this.producer = producer;
     }
+
     @Autowired
     public void setServiceActionMapper(ServiceActionMapper serviceActionMapper) {
         this.serviceActionMapper = serviceActionMapper;

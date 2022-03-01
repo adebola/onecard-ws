@@ -4,17 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SingleRechargeRequestDto {
-    @NotNull(message = "Code must be specified")
+    @NotEmpty(message = "Code must be specified")
     private String serviceCode;
 
-    @NotNull(message = "Recipient must be specified")
+    @NotEmpty(message = "Recipient must be specified")
     private String recipient;
 
     private String productId;

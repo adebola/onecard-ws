@@ -13,6 +13,7 @@ public class JMSConfig {
     public static final String NEW_TRANSACTION_QUEUE = "new-transaction-queue";
     public static final String BULK_RECHARGE_QUEUE = "bulk-recharge-queue";
     public static final String SINGLE_RECHARGE_QUEUE = "single-recharge-queue";
+    public static final String NEW_BULK_RECHARGE_QUEUE = "new-bulk-recharge-queue";
 
     @Bean
     public RestTemplate restTemplate() {

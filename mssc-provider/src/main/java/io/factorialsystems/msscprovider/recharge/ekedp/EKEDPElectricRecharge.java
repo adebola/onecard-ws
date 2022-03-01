@@ -22,6 +22,8 @@ import javax.xml.soap.SOAPHeaderElement;
 import javax.xml.soap.SOAPMessage;
 import java.math.BigDecimal;
 
+import static java.lang.Thread.sleep;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -165,16 +167,34 @@ public class EKEDPElectricRecharge implements Recharge, ParameterCheck, Balance 
         WalletResponse response = jaxbResponse.getValue().getResponse();
 
         if (response.getRetn() == 0) {
+            log.info("Payment Reference {}", request.getId());
+            log.info("Response Status: {} Balance {} OrderId {}", response.getRetn(), response.getBalance(), response.getOrderId());
 
             // Retrieve the Token
             if (request.getAccountType().equals(EKEDPRechargeFactory.ACCOUNT_TYPE_PREPAID)) {
                 GetOrderDetailsV2Response orderDetailsV2Response = getOrderDetails(session, request.getId());
+
+                OrderDetails details = orderDetailsV2Response.getResponse().getOrderDetails();
+
+                if (details != null) {
+                    if (details.getStatus().value().equals("AWAITING_SERVICE_PROVIDER")) {
+                        try {
+                            sleep(5000);
+                            orderDetailsV2Response = getOrderDetails(session, request.getId());
+                            details = orderDetailsV2Response.getResponse().getOrderDetails();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    log.info("Token: {}", details.getTokenData().getStdToken().getValue());
+                }
             }
 
             return true;
         }
 
-        log.error("Performing Recharge Code {}, Description {}", response.getRetn(), response.getDesc());
+        log.error("Performing Recharge Code: {}, Description: {}", response.getRetn(), response.getDesc());
         return false;
     }
 
@@ -231,6 +251,9 @@ public class EKEDPElectricRecharge implements Recharge, ParameterCheck, Balance 
                 .marshalSendAndReceive(properties.getUrl(), jaxbCustomer, callback(session));
 
         if (jaxbResponse.getValue() != null && jaxbResponse.getValue().getResponse() != null && jaxbResponse.getValue().getResponse().getRetn() == 0) {
+            CustomerInfo customerInfo = jaxbResponse.getValue().getResponse().getCustomerInfo();
+
+            log.info("CustomerInfo Name: {}, Address: {}",customerInfo.getName(), customerInfo.getAddress());
             return jaxbResponse.getValue().getResponse().getCustomerInfo();
         } else {
             CustomerInfoResponse response = jaxbResponse.getValue().getResponse();
@@ -264,6 +287,8 @@ public class EKEDPElectricRecharge implements Recharge, ParameterCheck, Balance 
         JAXBElement<NotifyForReversalResponse> jaxbResponse =  (JAXBElement<NotifyForReversalResponse>) webServiceTemplate
                 .marshalSendAndReceive(properties.getUrl(), jaxbReversal, callback(session));
 
+        NotifyReversalResponse response = jaxbResponse.getValue().getResponse();
+        log.info("Reversal Response Retn: {}, Desc: {}", response.getRetn(), response.getDesc());
         logout(session);
     }
 
@@ -284,6 +309,19 @@ public class EKEDPElectricRecharge implements Recharge, ParameterCheck, Balance 
         JAXBElement<ValidatePayment> jaxbValidate = objectFactory.createValidatePayment(validatePayment);
         JAXBElement<ValidatePaymentResponse> jaxbResponse =  (JAXBElement<ValidatePaymentResponse>) webServiceTemplate
                 .marshalSendAndReceive(properties.getUrl(), jaxbValidate, callback(session));
+
+        ValidatePaymentResponseV2 paymentResponseV2 = jaxbResponse.getValue().getResponse();
+
+        if (paymentResponseV2 != null) {
+            log.info("return: {}, Description: {}", paymentResponseV2.getRetn(), paymentResponseV2.getDesc());
+
+            if (paymentResponseV2.getRetn() == 0) {
+                ValidationInfo validationInfo = paymentResponseV2.getValidationInfo();
+
+                log.info("ValidationInfo Amount: {}, CustomerId: {}", validationInfo.getAmount(), validationInfo.getCustomerId());
+            }
+        }
+
 
         logout(session);
     }

@@ -247,7 +247,7 @@ public class BulkRechargeService {
                 .serviceCost(request.getTotalServiceCost())
                 .transactionDate(new Date().toString())
                 .userId(request.getUserId())
-                .recipient("bulk")
+                .recipient("Bulk")
                 .build();
         try {
             jmsTemplate.convertAndSend(JMSConfig.NEW_TRANSACTION_QUEUE, objectMapper.writeValueAsString(requestTransactionDto));

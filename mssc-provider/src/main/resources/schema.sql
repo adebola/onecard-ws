@@ -156,6 +156,35 @@ create table recharge_request_recipients (
     FOREIGN KEY (bulk_recharge_request_id) REFERENCES bulk_recharge_requests (id)
 );
 
+create table new_bulk_recharge_requests (
+    id varchar(64),
+    user_id varchar(64),
+    total_service_cost decimal(10,2) NOT NULL,
+    payment_id varchar(64),
+    payment_mode varchar(32) NOT NULL,
+    authorization_url varchar(64),
+    redirect_url varchar(64),
+    closed boolean NOT NULL DEFAULT FALSE,
+    createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    scheduled_request_id varchar(64),
+    auto_request_id varchar(64),
+    FOREIGN KEY (scheduled_request_id) REFERENCES scheduled_recharge(id),
+    FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
+    PRIMARY KEY (id)
+);
+
+create table bulk_individual_requests (
+    id int AUTO_INCREMENT,
+    bulk_request_id varchar(64) NOT NULL,
+    service_id int NOT NULL,
+    service_cost decimal(10,2) NOT NULL,
+    product_id varchar(64),
+    telephone varchar(64),
+    recipient varchar(64) NOT NULL,
+    FOREIGN KEY (bulk_request_id) REFERENCES new_bulk_recharge_requests(id),
+    PRIMARY KEY (id)
+);
+
 create table scheduled_recharge (
     id varchar(64),
     user_id varchar(64),
