@@ -115,4 +115,5 @@ class EKEDPElectricRechargeTestService {
         String id = "45ec1adf-b4d7-4f1e-a60e-d528084effea";
         recharge.validatePayment(id);
     }
+
 }
