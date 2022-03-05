@@ -1,4 +1,4 @@
-package io.factorialsystems.msscprovider.service;
+package io.factorialsystems.msscprovider.service.model;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.PaymentRequestDto;

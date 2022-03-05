@@ -33,6 +33,7 @@ public class K {
 
     public static String getAccessToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (authentication != null) {
             Jwt jwt = (Jwt)authentication.getPrincipal();
             return jwt.getTokenValue();

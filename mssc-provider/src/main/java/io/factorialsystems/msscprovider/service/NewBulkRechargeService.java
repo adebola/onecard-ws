@@ -9,19 +9,23 @@ import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.BulkRechargeResponseDto;
-import io.factorialsystems.msscprovider.dto.NewBulkRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.PaymentRequestDto;
-import io.factorialsystems.msscprovider.dto.RequestTransactionDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.mapper.recharge.NewBulkRechargeMapstructMapper;
+import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
+import io.factorialsystems.msscprovider.service.file.ExcelReader;
+import io.factorialsystems.msscprovider.service.file.FileUploader;
+import io.factorialsystems.msscprovider.service.file.UploadFile;
+import io.factorialsystems.msscprovider.service.model.ServiceHelper;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 import java.util.List;
@@ -35,9 +39,26 @@ public class NewBulkRechargeService {
     private final JmsTemplate jmsTemplate;
     private final FactoryProducer producer;
     private final ObjectMapper objectMapper;
+    private final FileUploader fileUploader;
     private final NewBulkRechargeMapstructMapper mapper;
     private final SingleRechargeMapper singleRechargeMapper;
     private final NewBulkRechargeMapper newBulkRechargeMapper;
+
+    public void uploadRecharge(MultipartFile file) {
+        UploadFile uploadFile = fileUploader.uploadFile(file);
+        ExcelReader excelReader = new ExcelReader(uploadFile);
+
+        NewBulkRechargeRequestDto newRequestDto = new NewBulkRechargeRequestDto();
+        newRequestDto.setPaymentMode("wallet");
+        List<IndividualRequestDto> individualRequests = excelReader.readContents();
+
+        if (individualRequests == null || individualRequests.isEmpty()) {
+            throw new RuntimeException("Empty or Un-Populated Excel file");
+        }
+
+        newRequestDto.setRecipients(individualRequests);
+        saveService(newRequestDto);
+    }
 
     @Transactional
     public BulkRechargeResponseDto saveService(NewBulkRechargeRequestDto dto) {
@@ -133,18 +154,29 @@ public class NewBulkRechargeService {
                 RechargeFactoryParameters parameter = parameters.get(0);
                 String rechargeProviderCode = parameter.getRechargeProviderCode();
                 AbstractFactory factory = producer.getFactory(rechargeProviderCode);
-                Recharge recharge = factory.getRecharge(parameter.getServiceAction());
+                String serviceAction = parameter.getServiceAction();
 
-                recharge.recharge(
-                        SingleRechargeRequest.builder()
-                                .serviceId(individualRequest.getServiceId())
-                                .serviceCode(individualRequest.getServiceCode())
-                                .serviceCost(individualRequest.getServiceCost())
-                                .id(UUID.randomUUID().toString())
-                                .recipient(individualRequest.getRecipient())
-                                .productId(individualRequest.getProductId())
-                                .build()
-                );
+                SingleRechargeRequest singleRechargeRequest = SingleRechargeRequest.builder()
+                        .serviceId(individualRequest.getServiceId())
+                        .serviceCode(individualRequest.getServiceCode())
+                        .serviceCost(individualRequest.getServiceCost())
+                        .id(UUID.randomUUID().toString())
+                        .recipient(individualRequest.getRecipient())
+                        .productId(individualRequest.getProductId())
+                        .build();
+
+               ParameterCheck parameterCheck = factory.getCheck(serviceAction);
+
+                if (parameterCheck.check(singleRechargeRequest)) {
+                    Recharge recharge = factory.getRecharge(parameter.getServiceAction());
+                    recharge.recharge(singleRechargeRequest);
+                } else {
+                    final String errorMessage =
+                            String.format("Invalid Parameters in One of the Requests in a BulkRecharge Action: (%s) serviceCode: (%s), Recipient: (%s) Made By: (%s)",
+                                    serviceAction, individualRequest.getServiceCode(), individualRequest.getRecipient(), K.getEmail());
+                    log.error(errorMessage);
+                    throw new RuntimeException(errorMessage);
+                }
             }
         });
 

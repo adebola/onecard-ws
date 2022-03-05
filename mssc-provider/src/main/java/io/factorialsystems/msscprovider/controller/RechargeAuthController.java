@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 
@@ -76,4 +77,11 @@ public class RechargeAuthController {
           return new ResponseEntity<>(new MessageDto("Payment Failed for Scheduled Request"), HttpStatus.BAD_REQUEST);
       }
     }
+
+    @PostMapping("/bulkfile")
+    public ResponseEntity<?> uploadBulkFile(@RequestPart(value = "file") MultipartFile file) {
+        newBulkRechargeService.uploadRecharge(file);
+        return new ResponseEntity<>(new MessageDto("Bulk Request has been submitted successfully, results will be mailed to you"), HttpStatus.ACCEPTED);
+    }
+
 }

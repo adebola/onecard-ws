@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Digits;
+import javax.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -13,14 +14,14 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScheduledRechargeRequestDto {
-    @NotNull(message = "Please specify type either single or bulk recharge")
+    @NotEmpty(message = "Please specify type either single or bulk recharge")
     private String rechargeType;
 
-    @NotNull(message = "Scheduled Date must be specified")
+    @NotEmpty(message = "Scheduled Date must be specified")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private Date scheduledDate;
 
-    @NotNull(message = "ServiceCode must be specified")
+    @NotEmpty(message = "ServiceCode must be specified")
     private String serviceCode;
 
     private Integer groupId;
@@ -28,7 +29,10 @@ public class ScheduledRechargeRequestDto {
     private String recipient;
     private String productId;
     private String telephone;
+
+    @Digits(integer = 9, fraction = 2)
     private BigDecimal serviceCost;
+
     private String redirectUrl;
     private String paymentMode;
 }

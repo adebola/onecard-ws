@@ -23,6 +23,7 @@
         <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
         <result column="product_id" property="productId" jdbcType="VARCHAR"/>
         <result column="telephone" property="telephone" jdbcType="VARCHAR"/>
+        <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="bulk_column_list">
@@ -30,7 +31,7 @@
     </sql>
 
     <sql id="individual_column_list">
-        b.id, b.bulk_request_id, b.service_id, p.service_code, b.service_cost, b.product_id, b.telephone
+        b.id, b.bulk_request_id, b.recipient, b.service_id, p.service_code, b.service_cost, b.product_id, b.telephone
     </sql>
 
     <select id="findBulkRechargeById" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">

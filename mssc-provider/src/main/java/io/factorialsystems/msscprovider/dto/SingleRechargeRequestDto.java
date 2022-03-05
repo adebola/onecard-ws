@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 
@@ -19,7 +20,10 @@ public class SingleRechargeRequestDto {
 
     private String productId;
     private String telephone;
+
+    @Digits(integer = 9, fraction = 2)
     private BigDecimal serviceCost;
+
     private String redirectUrl;
     private String paymentMode;
     private String accountType;
