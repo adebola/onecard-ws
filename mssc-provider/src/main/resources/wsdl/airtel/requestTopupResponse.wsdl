@@ -1,0 +1,40 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http://com.guide/soap/server" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://com.topup/soap" targetNamespace="http://com.topup/soap">
+    <wsdl:types>
+        <xs:schema xmlns:tns="http://com.guide/soap/server" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://com.guide/soap/server">
+            <xs:element name="requestTopupResponse">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="TYPE" type="xs:string"/>
+                        <xs:element name="TXNSTATUS" type="xs:string"/>
+                        <xs:element name="DATE" type="xs:dateTime"/>
+                        <xs:element name="EXTREFNUM" type="xs:string"/>
+                        <xs:element name="TXNID" type="xs:string"/>
+                        <xs:element name="MESSAGE" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:message name="requestTopupResponse">
+        <wsdl:part element="sch:requestTopupResponse" name="requestTopupResponse"> </wsdl:part>
+    </wsdl:message>
+    <wsdl:portType name="RequestTopupResponsePort">
+        <wsdl:operation name="requestTopup">
+            <wsdl:output message="tns:requestTopupResponse" name="requestTopupResponse"> </wsdl:output>
+        </wsdl:operation>
+    </wsdl:portType>
+    <wsdl:binding name="RequestTopupResponsePortSoap11" type="tns:RequestTopupResponsePort">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <wsdl:operation name="requestTopup">
+            <soap:operation soapAction=""/>
+            <wsdl:output name="requestTopupResponse">
+                <soap:body use="literal"/>
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    <wsdl:service name="RequestTopupResponsePortService">
+        <wsdl:port binding="tns:RequestTopupResponsePortSoap11" name="RequestTopupResponsePortSoap11">
+            <soap:address location="http://localhost:8080/ws"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

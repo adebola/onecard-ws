@@ -4,12 +4,14 @@
 <mapper namespace="io.factorialsystems.msscprovider.dao.ScheduledRechargeMapper">
     <resultMap id="scheduledRechargeResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest">
         <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
         <result column="request_id" property="requestId" jdbcType="VARCHAR" />
         <result column="request_type" property="requestType" jdbcType="INTEGER" />
         <result column="request_scheduled_date" property="scheduledDate" jdbcType="TIMESTAMP" />
         <result column="service_id" property="serviceId" jdbcType="INTEGER" />
         <result column="service_code" property="serviceCode" jdbcType="VARCHAR" />
         <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
+        <result column="total_service_cost" property="totalServiceCost" jdbcType="DECIMAL"/>
         <result column="group_id" property="groupId" jdbcType="INTEGER" />
         <result column="recipient" property="recipient" jdbcType="VARCHAR" />
         <result column="product_id" property="productId" jdbcType="VARCHAR"/>
@@ -27,12 +29,14 @@
 
     <sql id="column_list">
         r.id,
+        r.user_id,
         r.request_id,
         r.request_type,
         r.request_scheduled_date,
         r.service_id,
         p.service_code,
         r.service_cost,
+        r.total_service_cost,
         r.group_id,
         r.recipient,
         r.product_id,
@@ -41,7 +45,7 @@
         r.payment_mode,
         r.payment_id,
         r.status,
-        r.message
+        r.message,
         r.request_created_on,
         r.request_ran_on,
         r.closed
@@ -55,10 +59,19 @@
         and   r.service_id = p.id
     </select>
 
+    <select id="findOpenRequests" resultMap="scheduledRechargeResultMap">
+        select
+        <include refid="column_list"></include>
+        from scheduled_recharge r, provider_services p
+        where r.closed = false
+        and   r.request_scheduled_date &gt; NOW()
+        and   r.service_id = p.id
+    </select>
+
 
     <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest" >
-        insert into scheduled_recharge(id, request_scheduled_date, service_id, group_id, recipient, product_id,  telephone, service_cost, redirect_url, authorization_url, payment_mode, payment_id, message, status)
-        values(#{id}, #{scheduledDate}, #{serviceId}, #{groupId}, #{recipient}, #{productId}, #{telephone}, #{serviceCost}, #{redirectUrl}, #{authorizationUrl},  #{paymentMode}, #{paymentId}, #{message}, #{status})
+        insert into scheduled_recharge(id, user_id, request_scheduled_date, service_id, request_type, group_id, recipient, product_id,  telephone, service_cost, total_service_cost, redirect_url, authorization_url, payment_mode, payment_id, message, status)
+        values(#{id}, #{userId}, #{scheduledDate}, #{serviceId}, #{requestType}, #{groupId}, #{recipient}, #{productId}, #{telephone}, #{serviceCost}, #{totalServiceCost}, #{redirectUrl}, #{authorizationUrl},  #{paymentMode}, #{paymentId}, #{message}, #{status})
     </insert>
 
     <update id="update" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest">

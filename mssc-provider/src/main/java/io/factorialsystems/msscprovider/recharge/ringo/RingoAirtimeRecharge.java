@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.recharge.Balance;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
@@ -18,10 +19,12 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RingoAirtimeRecharge implements Recharge, ParameterCheck {
+public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final RingoProperties ringoProperties;
@@ -50,19 +53,23 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck {
                     restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoAirtimeResponse.class);
 
             if (response != null && response.getMessage() != null && response.getMessage().equalsIgnoreCase("Successful")) {
-                log.info("Successful Ringo Airtime Recharge {}", cost);
+                log.info("Successful Ringo Airtime Recharge for {} cost {}", airtimeRequest.getMsisdn(), cost);
                 return RechargeStatus.builder()
                         .status(HttpStatus.OK)
                         .message("Ringo Recharge Successful")
                         .build();
             }
 
-            log.info("Ringo Airtime Recharge failure {}", cost);
+            if (response != null && response.getMessage() != null) {
+                log.error("Ringo Airtime Recharge failure for {} cost {}, Reason {}", airtimeRequest.getMsisdn(), cost, response.getMessage());
+            } else {
+                log.error("Ringo Airtime Recharge failure for {} cost {}, NULL Response", airtimeRequest.getMsisdn(), cost);
+            }
+
             return RechargeStatus.builder()
                     .status(HttpStatus.BAD_REQUEST)
                     .message("Ringo Recharge Failure")
                     .build();
-
 
         } catch (JsonProcessingException e) {
             log.error("Ringo Recharge Exception {}", e.getMessage());
@@ -73,5 +80,10 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck {
     @Override
     public Boolean check(SingleRechargeRequest request) {
         return request != null && request.getRecipient() != null && request.getServiceCost() != null;
+    }
+
+    @Override
+    public BigDecimal getBalance() {
+        return new BigDecimal(0);
     }
 }

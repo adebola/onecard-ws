@@ -3,6 +3,8 @@ package io.factorialsystems.msscprovider.recharge.jed;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.recharge.Balance;
+import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.factory.JedRechargeFactory;
@@ -15,10 +17,12 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JedElectricRecharge implements Recharge {
+public class JedElectricRecharge implements Recharge, ParameterCheck, Balance {
     private final JedProperties properties;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -26,15 +30,15 @@ public class JedElectricRecharge implements Recharge {
     @Override
     public RechargeStatus recharge(SingleRechargeRequest request) {
 
+        if (request == null || request.getRecipient() == null || request.getServiceCost() == null || request.getTelephone() == null) {
+            throw new RuntimeException("Request parameters for recharge missing");
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add(JedRechargeFactory.TOKEN, properties.getToken());
         headers.add(JedRechargeFactory.PRIVATE_KEY, properties.getPrivateKey());
         HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        if (request == null || request.getRecipient() == null || request.getServiceCost() == null || request.getTelephone() == null) {
-            throw new RuntimeException("Request parameters for recharge missing");
-        }
 
         HttpEntity<JedVerifyResponse> response =
                 restTemplate.exchange(properties.getUrl() + "/verifyAccount.php/?customer=" + request.getRecipient(), HttpMethod.GET, entity, JedVerifyResponse.class);
@@ -62,6 +66,7 @@ public class JedElectricRecharge implements Recharge {
             assert (paymentResponse != null && paymentResponse.getStatus() != null);
 
             if (paymentResponse.getStatus().equals("100")) {
+                
                 return RechargeStatus.builder()
                         .status(HttpStatus.OK)
                         .message(paymentResponse.getPayDetails().getToken())
@@ -74,5 +79,18 @@ public class JedElectricRecharge implements Recharge {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    @Override
+    public Boolean check(SingleRechargeRequest request) {
+        return request != null &&
+                request.getRecipient() != null &&
+                request.getServiceCost() != null &&
+                request.getTelephone() != null;
+    }
+
+    @Override
+    public BigDecimal getBalance() {
+        return new BigDecimal(0);
     }
 }

@@ -1,8 +1,9 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
 import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
-import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
+import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.utils.K;
@@ -33,6 +34,7 @@ public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper
     public SingleRechargeRequest rechargeDtoToRecharge(SingleRechargeRequestDto dto) {
 
         SingleRechargeRequest request = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
+        request.setUserId(K.getUserId());
 
         String serviceCode = dto.getServiceCode();
 
@@ -87,7 +89,12 @@ public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper
     }
 
     @Override
-    public SingleRechargeRequestDto scheduledToSingle(ScheduledRechargeRequestDto dto) {
-        return rechargeMapstructMapper.scheduledToSingle(dto);
+    public SingleRechargeRequestDto scheduledToSingleRechargeDto(ScheduledRechargeRequestDto dto) {
+        return rechargeMapstructMapper.scheduledToSingleRechargeDto(dto);
+    }
+
+    @Override
+    public SingleRechargeRequest scheduleToSingleRecharge(ScheduledRechargeRequest request) {
+        return rechargeMapstructMapper.scheduleToSingleRecharge(request);
     }
 }

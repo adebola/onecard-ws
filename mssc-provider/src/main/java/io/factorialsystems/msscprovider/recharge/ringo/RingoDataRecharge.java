@@ -54,14 +54,20 @@ public class RingoDataRecharge implements Recharge, DataEnquiry, ParameterCheck 
 
 
             if (response != null && response.getMessage() != null && response.getMessage().equalsIgnoreCase("Successful")) {
-                log.info(String.format("Ringo data Recharge for (%s) Successful Plan (%s)", request.getRecipient(), request.getRecipient()));
+                log.info(String.format("Ringo data Recharge for (%s) Successful Plan (%s)", request.getRecipient(), request.getProductId()));
                 return RechargeStatus.builder()
                         .status(HttpStatus.OK)
                         .message("Ringo Data Recharge Successful")
                         .build();
             }
 
-            log.info(String.format("Ringo data Recharge for (%s) failure Plan (%s)", request.getRecipient(), request.getProductId()));
+            if (response != null && response.getMessage() != null) {
+                log.error(String.format("Ringo data Recharge for (%s) failure Plan (%s) Message (%s)",
+                        request.getRecipient(), request.getProductId(), response.getMessage()));
+            } else {
+                log.error(String.format("Ringo data Recharge for (%s) failure Plan (%s)",
+                        request.getRecipient(), request.getProductId()));
+            }
 
             return RechargeStatus.builder()
                     .status(HttpStatus.BAD_REQUEST)

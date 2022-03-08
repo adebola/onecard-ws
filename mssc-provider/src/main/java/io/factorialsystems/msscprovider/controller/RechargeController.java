@@ -2,7 +2,7 @@ package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.MessageDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.SingleRechargeRequestResponseDto;
+import io.factorialsystems.msscprovider.dto.SingleRechargeResponseDto;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.service.SingleRechargeService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class RechargeController {
     private final SingleRechargeService rechargeService;
 
     @PostMapping
-    public ResponseEntity<SingleRechargeRequestResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
+    public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
         return new ResponseEntity<>(rechargeService.startRecharge(dto), HttpStatus.OK);
     }
 

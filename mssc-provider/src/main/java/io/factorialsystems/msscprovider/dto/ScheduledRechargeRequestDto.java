@@ -30,6 +30,5 @@ public class ScheduledRechargeRequestDto {
     private String telephone;
     private BigDecimal serviceCost;
     private String redirectUrl;
-    private String authorizationUrl;
     private String paymentMode;
 }

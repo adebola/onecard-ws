@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscprovider.dao.SingleRechargeMapper">
+    <resultMap id="rechargeResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="service_id" property="serviceId" jdbcType="INTEGER" />
+        <result column="service_code" property="serviceCode" jdbcType="VARCHAR" />
+        <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
+        <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
+        <result column="payment_id" property="paymentId" jdbcType="VARCHAR"/>
+        <result column="closed" property="closed" jdbcType="BOOLEAN"/>
+        <result column="authorization_url" property="authorizationUrl" jdbcType="VARCHAR"/>
+        <result column="telephone" property="telephone" jdbcType="VARCHAR"/>
+        <result column="product_id" property="productId" jdbcType="VARCHAR"/>
+        <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="message" property="message" jdbcType="VARCHAR"/>
+        <result column="account_type" property="accountType" jdbcType="VARCHAR"/>
+        <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>
+        <result column="scheduled_request_id" property="scheduledRequestId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="factoryResultMap" type="io.factorialsystems.msscprovider.domain.RechargeFactoryParameters">
+        <result column="provider_code" property="providerCode" jdbcType="VARCHAR"/>
+        <result column="recharge_provider_code" property="rechargeProviderCode" jdbcType="VARCHAR"/>
+        <result column="service_action" property="serviceAction" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Column_List">
+        r.id,
+        r.user_id,
+        r.service_id,
+        p.service_code,
+        r.service_cost,
+        r.payment_id,
+        r.recipient,
+        r.closed,
+        r.authorization_url,
+        r.telephone,
+        r.product_id,
+        r.payment_mode,
+        r.message,
+        r.status,
+        r.auto_request_id,
+        r.scheduled_request_id,
+        r.account_type
+    </sql>
+
+    <select id="findById" parameterType="java.lang.String" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.id = #{id}
+        and r.service_id = p.id
+    </select>
+
+    <select id="factory" parameterType="java.lang.Integer" resultMap="factoryResultMap">
+        {call sp_factory(#{id, jdbcType = INTEGER, mode = IN})}
+    </select>
+
+    <update id="closeRequest" parameterType="java.lang.String">
+        update recharge_requests set closed = true where id = #{id}
+    </update>
+
+    <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest" >
+        insert into recharge_requests(id, user_id, service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url, redirect_url, payment_mode, status, message, account_type, auto_request_id, scheduled_request_id)
+        values(#{id}, #{userId}, #{serviceId}, #{serviceCost}, #{recipient}, #{paymentId}, #{telephone}, #{productId}, #{authorizationUrl}, #{redirectUrl}, #{paymentMode}, #{status}, #{message}, #{accountType}, #{autoRequestId}, #{scheduledRequestId})
+    </insert>
+
+    <insert id="saveRechargeRequests" parameterType="java.util.List">
+        insert into recharge_requests(id, user_id, service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url,
+                                      redirect_url, payment_mode, status, message, account_type, auto_request_id, scheduled_request_id)
+        values
+        <foreach item="item" index="index" collection="list"  separator=",">
+            (#{item.id, jdbcType=VARCHAR}, #{item.user_id, jdbcType=VARCHAR}, #{item.serviceId, jdbcType=INTEGER}, #{item.serviceCost, jdbcType=VARCHAR},
+             #{item.recipient, jdbcType=VARCHAR}, #{item.paymentId, jdbcTypw=VARCHAR}, #{item.telephone, jdbcType=VARCHAR},
+             #{item.productId, jdbcType=VARCHAR}, #{item.authorizationUrl, jdbcType=VARCHAR}, #{item.redirectUrl, jdbcType=VARCHAR},
+             #{item.paymentMode, jdbcType=VARCHAR}, #{item.status, jdbcType=INTEGER}, #{item.message, jdbcType=VARCHAR},
+             #{item.accountType, jdbcType=VARCHAR}, #{item.autoRequestId, jdbcType=VARCHAR}, #{item.scheduledRequestId, jdbcType=VARCHAR} )
+        </foreach>
+    </insert>
+</mapper>

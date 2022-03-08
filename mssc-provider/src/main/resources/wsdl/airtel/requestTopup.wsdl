@@ -1,0 +1,35 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http://com.guide/soap/server" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://com.topup/soap" targetNamespace="http://com.topup/soap">
+    <wsdl:types>
+        <xs:schema xmlns:tns="http://com.guide/soap/server" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://com.guide/soap/server">
+            <xs:element name="requestTopup">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="TYPE" type="xs:string"/>
+                        <xs:element name="DATE" type="xs:dateTime"/>
+                        <xs:element name="EXTNWCODE" type="xs:string"/>
+                        <xs:element name="MSISDN" type="xs:string"/>
+                        <xs:element name="PIN" type="xs:string"/>
+                        <xs:element name="LOGINID" type="xs:string"/>
+                        <xs:element name="PASSWORD" type="xs:string"/>
+                        <xs:element name="EXTCODE" type="xs:string"/>
+                        <xs:element name="EXTREFNUM" type="xs:string"/>
+                        <xs:element name="MSISDN2" type="xs:string"/>
+                        <xs:element name="AMOUNT" type="xs:integer"/>
+                        <xs:element name="LANGUAGE1" type="xs:string"/>
+                        <xs:element name="LANGUAGE2" type="xs:string"/>
+                        <xs:element name="SELECTOR" type="xs:string"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:schema>
+    </wsdl:types>
+    <wsdl:portType name="RequestTopupPort"> </wsdl:portType>
+    <wsdl:binding name="RequestTopupPortSoap11" type="tns:RequestTopupPort">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    </wsdl:binding>
+    <wsdl:service name="RequestTopupPortService">
+        <wsdl:port binding="tns:RequestTopupPortSoap11" name="RequestTopupPortSoap11">
+            <soap:address location="http://localhost:8080/ws"/>
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>

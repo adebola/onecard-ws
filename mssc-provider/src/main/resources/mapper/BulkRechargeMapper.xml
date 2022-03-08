@@ -4,6 +4,7 @@
 <mapper namespace="io.factorialsystems.msscprovider.dao.BulkRechargeMapper">
     <resultMap id="bulkRechargeResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest">
         <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
         <result column="service_id" property="serviceId" jdbcType="INTEGER" />
         <result column="service_code" property="serviceCode" jdbcType="VARCHAR" />
         <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
@@ -14,6 +15,8 @@
         <result column="authorization_url" property="authorizationUrl" jdbcType="VARCHAR"/>
         <result column="product_id" property="productId" jdbcType="VARCHAR"/>
         <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
+        <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>
+        <result column="scheduled_request_id" property="scheduledRequestId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <resultMap id="recipientResultMap" type="io.factorialsystems.msscprovider.domain.Telephone">
@@ -21,7 +24,7 @@
     </resultMap>
 
     <sql id="column_list">
-        r.id, r.service_id, p.service_code, r.service_cost, r.total_service_cost, r.group_id, r.payment_id, r.closed, r.authorization_url, r.product_id, r.payment_mode
+        r.id, r.user_id, r.service_id, p.service_code, r.service_cost, r.total_service_cost, r.group_id, r.payment_id, r.closed, r.authorization_url, r.product_id, r.payment_mode, r.auto_request_id, r.scheduled_request_id
     </sql>
 
     <select id="findById" parameterType="java.lang.String" resultMap="bulkRechargeResultMap">
@@ -37,8 +40,8 @@
     </select>
 
     <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.BulkRechargeRequest" >
-        insert into bulk_recharge_requests(id, service_id, service_cost, total_service_cost, group_id, payment_id, product_id, payment_mode, authorization_url, redirect_url)
-        values(#{id}, #{serviceId}, #{serviceCost}, #{totalServiceCost}, #{groupId}, #{paymentId}, #{productId}, #{paymentMode}, #{authorizationUrl}, #{redirectUrl})
+        insert into bulk_recharge_requests(id, user_id, service_id, service_cost, total_service_cost, group_id, payment_id, product_id, payment_mode, authorization_url, redirect_url, auto_request_id, scheduled_request_id)
+        values(#{id}, #{userId}, #{serviceId}, #{serviceCost}, #{totalServiceCost}, #{groupId}, #{paymentId}, #{productId}, #{paymentMode}, #{authorizationUrl}, #{redirectUrl}, #{autoRequestId}, #{scheduledRequestId})
     </insert>
 
     <update id="closeRequest" parameterType="java.lang.String">
@@ -51,4 +54,8 @@
             (#{item.bulkRequestId, jdbcType=INTEGER}, #{item.msisdn, jdbcType=VARCHAR} )
         </foreach>
     </insert>
+
+    <update id="updateBulkRechargeId" parameterType="java.util.Map">
+        update recharge_request_recipients set bulk_recharge_request_id = #{bulkRequestId} where scheduled_recharge_request_id = #{scheduledRequestId}
+    </update>
 </mapper>

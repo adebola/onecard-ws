@@ -39,7 +39,9 @@ public class BeneficiaryService {
             return;
         }
 
-        final String errorMessage = "You do not have the Permission for this DELETE operation";
+        final String errorMessage =
+                String.format("You do not have the Permission for this DELETE operation for Beneficiary %d", id);
+
         log.error(errorMessage);
         throw new NoPermissionException(errorMessage);
     }
@@ -53,7 +55,9 @@ public class BeneficiaryService {
             return;
         }
 
-        final String errorMessage = "You do not have the Permission for this UPDATE operation";
+        final String errorMessage =
+                String.format("You do not have the Permission for this UPDATE operation for Beneficiary %d", id);
+
         log.error(errorMessage);
         throw new NoPermissionException(errorMessage);
     }
@@ -65,7 +69,8 @@ public class BeneficiaryService {
             return mapstructMapper.beneficiaryToDto(beneficiary);
         }
 
-        final String errorMessage = "You do not have the Permission for this GET BENEFICIARY operation";
+        final String errorMessage =
+                String.format("You do not have the Permission for this GET operation for Beneficiary %d", id);
         log.error(errorMessage);
 
         throw new NoPermissionException(errorMessage);
