@@ -1,10 +1,7 @@
 package io.factorialsystems.msscprovider.domain.rechargerequest;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -13,6 +10,7 @@ import java.sql.Timestamp;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class SingleRechargeRequest {
     private String id;
     private String userId;

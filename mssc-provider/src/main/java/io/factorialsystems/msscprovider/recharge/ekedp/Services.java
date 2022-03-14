@@ -8,10 +8,9 @@ import java.math.BigDecimal;
 
 public interface Services {
     BigDecimal getBalance();
-    CustomerInfo validateCustomer(String meterOrAccountId);
+    CustomerInfo validateCustomer(String meterOrAccountId, String tenantId);
     OrderDetails getOrderDetails(String paymentId);
     void reversePayment(String paymentId);
     void validatePayment(String customerId, String accountType);
-    void payPostPaidBill(SingleRechargeRequest request);
     OrderDetails performRecharge(SingleRechargeRequest request);
 }

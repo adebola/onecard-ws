@@ -53,9 +53,9 @@ public class ServicesImpl implements Services{
     }
 
     @Override
-    public CustomerInfo validateCustomer(String meterOrAccountId) {
+    public CustomerInfo validateCustomer(String meterOrAccountId, String tenantId) {
         ValidateCustomer validateCustomer = new ValidateCustomer();
-        validateCustomer.setTenantId(properties.getPartnerId());
+        validateCustomer.setTenantId(tenantId);
         validateCustomer.setAccountOrMeterNumber(meterOrAccountId);
 
         JAXBElement<ValidateCustomer> jaxbCustomer = objectFactory.createValidateCustomer(validateCustomer);
@@ -71,9 +71,9 @@ public class ServicesImpl implements Services{
         if(response.getRetn() == Responses.SUCCESS_CODE.getCode()) return response.getCustomerInfo();
 
         if(canRefreshSession(response.getRetn()))
-            return this.validateCustomer(meterOrAccountId);
+            return this.validateCustomer(meterOrAccountId, tenantId);
 
-        throw new RuntimeException("Error Getting Customer Info for Eko Distribution Company");
+        throw new RuntimeException("Error Getting Customer Info for Eko Distribution Company"+ response.getRetn());
     }
 
     @Override
@@ -153,18 +153,8 @@ public class ServicesImpl implements Services{
     }
 
     @Override
-    public void payPostPaidBill(SingleRechargeRequest request) {
-        CustomerInfo customerInfo = validateCustomer(request.getRecipient());
-
-        if (customerInfo != null) {
-            performRecharge(request);
-        } else {
-            log.error("Recharge Error unable to Validate Customer");
-        }
-    }
-
-    @Override
     public OrderDetails performRecharge(SingleRechargeRequest request) {
+        System.out.println("SingleRechargeRequest "+request.toString());
         if (request.getAccountType() == null || EKEDPRechargeFactory.codeMapper.get(request.getAccountType()) == null) {
             throw new RuntimeException("Account Type not specified or invalid, please ensure it is set to either \"prepaid\" or \"postpaid\"");
         }
@@ -202,7 +192,7 @@ public class ServicesImpl implements Services{
         TransactionParams parameters = new TransactionParams();
         parameters.setExtraData(extraData);
         parameters.setAmount(request.getServiceCost().doubleValue());
-        parameters.setPaymentReference(request.getId());
+        parameters.setPaymentReference(request.getId());//Partner’s payment reference ???
 
         ChargeWalletV2 chargeWalletV2 = new ChargeWalletV2();
         chargeWalletV2.setParams(parameters);
@@ -217,9 +207,11 @@ public class ServicesImpl implements Services{
 
         WalletResponse response = jaxbResponse.getValue().getResponse();
 
+        System.out.println("ERR"+ response);
+
         if(response.getRetn() == Responses.SUCCESS_CODE.getCode()) {
             // Retrieve the Token
-            if (request.getAccountType().equals(EKEDPRechargeFactory.ACCOUNT_TYPE_PREPAID)) {
+            if (request.getAccountType().equals(EKEDPRechargeFactory.ACCOUNT_TYPE_POSTPAID)) {
                 OrderDetails details = response.getOrderDetails();
 
                 if (details != null) {
