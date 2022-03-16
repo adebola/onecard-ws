@@ -9,14 +9,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RingoPayDstvWithAddonRequest {
-	private String hasAddon = "True";
+public class RingoPayCableRequest {
+	private String hasAddon; //e.g "True";
 	private String period; //e.g "1"
 	private String smartCardNo;
 	private String code; //e.g "ACSSE36"
 	private String serviceCode; //e.g "P-TV"
 	private String name; //e.g "DStv Access"
-	private String type = "DSTV";
+	private String type; //e.g "DSTV"
 	private String requestId;
 	private Addondetails addondetails;
 }

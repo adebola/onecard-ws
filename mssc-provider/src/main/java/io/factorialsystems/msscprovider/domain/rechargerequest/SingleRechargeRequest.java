@@ -1,7 +1,10 @@
 package io.factorialsystems.msscprovider.domain.rechargerequest;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.factorialsystems.msscprovider.recharge.ringo.request.Addondetails;
+import io.factorialsystems.msscprovider.recharge.ringo.request.CableServiceCode;
+import io.factorialsystems.msscprovider.recharge.ringo.request.CableType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,11 +38,11 @@ public class SingleRechargeRequest {
     private String autoRequestId;
     private String scheduledRequestId;
 
-    //DSTV Extras
-    private Boolean withAddon;
+    //CABLE Extras
     private String period;
     private Addondetails addondetails;
     private String code;
     private String name;
+    private CableType type;
 
 }

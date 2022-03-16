@@ -6,12 +6,11 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeReq
 import io.factorialsystems.msscprovider.recharge.RechargeResponseStatus;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoFetchDstvAddonRequest;
-import io.factorialsystems.msscprovider.recharge.ringo.request.RingoPayDstvWithAddonRequest;
-import io.factorialsystems.msscprovider.recharge.ringo.request.RingoValidateDstvRequest;
+import io.factorialsystems.msscprovider.recharge.ringo.request.RingoPayCableRequest;
+import io.factorialsystems.msscprovider.recharge.ringo.request.RingoValidateCableRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoFetchAddonDstvResponse;
-import io.factorialsystems.msscprovider.recharge.ringo.response.RingoPayWithAddonDstvResponse;
-import io.factorialsystems.msscprovider.recharge.ringo.response.RingoPayWithOutAddonDstvResponse;
-import io.factorialsystems.msscprovider.recharge.ringo.response.RingoValidateDstvResponse;
+import io.factorialsystems.msscprovider.recharge.ringo.response.RingoPayCableResponse;
+import io.factorialsystems.msscprovider.recharge.ringo.response.RingoValidateCableResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -43,16 +42,16 @@ public class DstvService {
         return httpHeaders;
     }
 
-    public RechargeResponseStatus validateDstv(RingoValidateDstvRequest request){
+    public RechargeResponseStatus validateCable(RingoValidateCableRequest request){
         try {
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), getHeader());
 
-            RingoValidateDstvResponse response = restTemplate.postForObject(ringoProperties.getBaseUrl(), entity, RingoValidateDstvResponse.class);
+            RingoValidateCableResponse response = restTemplate.postForObject(ringoProperties.getBaseUrl(), entity, RingoValidateCableResponse.class);
 
             if(response!=null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
                 return RechargeResponseStatus.builder()
                         .status(true)
-                        .message("Ringo Validate Dstv Successful")
+                        .message("Ringo Validate Cable Successful")
                         .data(response)
                         .build();
             }
@@ -60,7 +59,7 @@ public class DstvService {
             if(response!=null && !Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
                 return RechargeResponseStatus.builder()
                         .status(false)
-                        .message("Ringo Validate Dstv Failed")
+                        .message("Ringo Validate Cable Failed")
                         .data(response)
                         .build();
             }
@@ -71,7 +70,7 @@ public class DstvService {
 
         return RechargeResponseStatus.builder()
                 .status(false)
-                .message("Ringo Validate Dstv Failed")
+                .message("Ringo Validate Cable Failed")
                 .build();
     }
 
@@ -109,15 +108,12 @@ public class DstvService {
     }
 
     public RechargeStatus recharge(SingleRechargeRequest singleRechargeRequest){
-        return singleRechargeRequest.getWithAddon() ? payWithAddon(singleRechargeRequest) : payWithOutAddon(singleRechargeRequest);
-    }
-
-    private RechargeStatus payWithAddon(SingleRechargeRequest singleRechargeRequest){
-        RingoPayDstvWithAddonRequest request = RingoPayDstvWithAddonRequest
+        RingoPayCableRequest request = RingoPayCableRequest
                 .builder()
                 .serviceCode(singleRechargeRequest.getServiceCode())
                 .requestId(singleRechargeRequest.getId())
                 .code(singleRechargeRequest.getCode())
+                .type(singleRechargeRequest.getType().getValue())
                 .addondetails(singleRechargeRequest.getAddondetails())
                 .period(singleRechargeRequest.getPeriod())
                 .smartCardNo(singleRechargeRequest.getRecipient())
@@ -128,12 +124,12 @@ public class DstvService {
         try {
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), getHeader());
 
-            RingoPayWithAddonDstvResponse response = restTemplate.postForObject(ringoProperties.getBaseUrl(), entity, RingoPayWithAddonDstvResponse.class);
+            RingoPayCableResponse response = restTemplate.postForObject(ringoProperties.getBaseUrl(), entity, RingoPayCableResponse.class);
 
             if(response!=null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
                 return RechargeStatus.builder()
                         .status(HttpStatus.OK)
-                        .message("Ringo Pay Dstv With Addon Successful")
+                        .message("Ringo Pay Cable Successful")
                         .data(response)
                         .build();
             }
@@ -141,7 +137,7 @@ public class DstvService {
             if(response!=null && !Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
                 return RechargeStatus.builder()
                         .status(HttpStatus.BAD_REQUEST)
-                        .message("Ringo Pay Dstv With Addon Failed")
+                        .message("Ringo Pay Cable Failed")
                         .data(response)
                         .build();
             }
@@ -152,51 +148,7 @@ public class DstvService {
 
         return RechargeStatus.builder()
                 .status(HttpStatus.BAD_REQUEST)
-                .message("Ringo Pay Dstv With Addon Failed")
-                .build();
-    }
-
-    private RechargeStatus payWithOutAddon(SingleRechargeRequest singleRechargeRequest){
-        RingoPayDstvWithAddonRequest request = RingoPayDstvWithAddonRequest
-                .builder()
-                .serviceCode(singleRechargeRequest.getServiceCode())
-                .requestId(singleRechargeRequest.getId())
-                .code(singleRechargeRequest.getCode())
-                .addondetails(singleRechargeRequest.getAddondetails())
-                .period(singleRechargeRequest.getPeriod())
-                .smartCardNo(singleRechargeRequest.getRecipient())
-                .name(singleRechargeRequest.getName())
-                .build();
-        request.setCode(singleRechargeRequest.getServiceCode());
-
-        try {
-            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), getHeader());
-
-            RingoPayWithOutAddonDstvResponse response = restTemplate.postForObject(ringoProperties.getBaseUrl(), entity, RingoPayWithOutAddonDstvResponse.class);
-
-            if(response!=null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
-                return RechargeStatus.builder()
-                        .status(HttpStatus.OK)
-                        .message("Ringo Pay Dstv Without Addon Successful")
-                        .data(response)
-                        .build();
-            }
-
-            if(response!=null && !Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
-                return RechargeStatus.builder()
-                        .status(HttpStatus.BAD_REQUEST)
-                        .message("Ringo Pay Dstv Without Addon Failed")
-                        .data(response)
-                        .build();
-            }
-
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        return RechargeStatus.builder()
-                .status(HttpStatus.BAD_REQUEST)
-                .message("Ringo Pay Dstv Without Addon Failed")
+                .message("Ringo Pay Cable Addon Failed")
                 .build();
     }
 

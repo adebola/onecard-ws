@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RingoPayWithOutAddonDstvResponse {
+public class RingoPayCableResponse {
 	private String message;
 	private String status;
+	private String type;
 }

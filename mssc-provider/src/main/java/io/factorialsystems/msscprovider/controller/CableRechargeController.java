@@ -3,12 +3,11 @@ package io.factorialsystems.msscprovider.controller;
 import io.factorialsystems.msscprovider.dto.MessageDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeResponseDto;
-import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.RechargeResponseStatus;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.ringo.DstvService;
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoFetchDstvAddonRequest;
-import io.factorialsystems.msscprovider.recharge.ringo.request.RingoValidateDstvRequest;
+import io.factorialsystems.msscprovider.recharge.ringo.request.RingoValidateCableRequest;
 import io.factorialsystems.msscprovider.service.SingleRechargeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,34 +16,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.view.RedirectView;
 
 import javax.validation.Valid;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/recharge/dstv")
-@Api(tags = "DSTV Service Management")
-public class DstvRechargeController {
+@RequestMapping("/api/v1/recharge/cable")
+@Api(tags = "Cable Service Management")
+public class CableRechargeController {
     private final SingleRechargeService rechargeService;
     private final DstvService dstvService;
-    private final RechargeMapstructMapper rechargeMapstructMapper;
-
-    @GetMapping("/doc")
-    public String demo() {
-        return "Hello World";
-    }
-
-    @GetMapping("/swagger-ui.html")
-    public RedirectView redirectWithUsingRedirectView() {
-        return new RedirectView("/swagger-ui/");
-    }
 
     @PostMapping("/validate")
-    @ApiOperation(value = "Validates DSTV Account Details", response = RechargeResponseStatus.class)
-    public ResponseEntity<RechargeResponseStatus> validateDstv(@Valid @RequestBody RingoValidateDstvRequest ringoValidateDstvRequest) {
-        return new ResponseEntity<>(dstvService.validateDstv(ringoValidateDstvRequest), HttpStatus.OK);
+    @ApiOperation(value = "Validates Cable TV Account Details", response = RechargeResponseStatus.class)
+    public ResponseEntity<RechargeResponseStatus> validateDstv(@Valid @RequestBody RingoValidateCableRequest ringoValidateCableRequest) {
+        return new ResponseEntity<>(dstvService.validateCable(ringoValidateCableRequest), HttpStatus.OK);
     }
 
     @GetMapping("/plans/{code}")

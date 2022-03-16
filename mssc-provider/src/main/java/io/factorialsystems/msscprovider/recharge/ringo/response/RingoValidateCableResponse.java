@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RingoValidateDstvResponse{
+public class RingoValidateCableResponse {
 	private List<ProductItem> product;
 	private String smartCardNo;
 	private String message;
