@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.ws.client.core.WebServiceTemplate;
+import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 @Configuration
 public class SoapConfig {
@@ -24,6 +25,11 @@ public class SoapConfig {
 
     @Bean
     WebServiceTemplate webServiceTemplate(Jaxb2Marshaller marshaller) {
-        return new WebServiceTemplate(marshaller);
+        HttpComponentsMessageSender httpComponentsMessageSender = new HttpComponentsMessageSender();
+        httpComponentsMessageSender.setReadTimeout(300000);
+        httpComponentsMessageSender.setConnectionTimeout(500000);
+        WebServiceTemplate template = new WebServiceTemplate(marshaller);
+        template.setMessageSender(httpComponentsMessageSender);
+        return template;
     }
 }

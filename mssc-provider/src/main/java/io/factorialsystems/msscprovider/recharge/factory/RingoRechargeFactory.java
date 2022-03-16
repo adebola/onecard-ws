@@ -6,6 +6,7 @@ import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.ringo.RingoAirtimeRecharge;
 import io.factorialsystems.msscprovider.recharge.ringo.RingoDataRecharge;
+import io.factorialsystems.msscprovider.recharge.ringo.RingoDstvRecharge;
 import io.factorialsystems.msscprovider.recharge.ringo.RingoElectricRecharge;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class RingoRechargeFactory extends AbstractFactory {
         codeMapper.put("9MOBILE-DATA", "9mobile");
         codeMapper.put("EKEDP", "EKEDC");
         codeMapper.put("JED", "JEDC");
+        codeMapper.put("DSTV", "DSTV");
     }
 
     @Override
@@ -61,6 +63,8 @@ public class RingoRechargeFactory extends AbstractFactory {
             return ApplicationContextProvider.getBean(RingoDataRecharge.class);
         } else if (action.equalsIgnoreCase("ELECTRICITY")) {
             return ApplicationContextProvider.getBean(RingoElectricRecharge.class);
+        }else if (action.equalsIgnoreCase("DSTV")) {
+            return ApplicationContextProvider.getBean(RingoDstvRecharge.class);
         }
 
         return null;

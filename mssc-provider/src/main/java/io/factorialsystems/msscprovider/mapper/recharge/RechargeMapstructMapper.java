@@ -19,6 +19,13 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "redirectUrl", target = "redirectUrl"),
             @Mapping(source = "productId", target = "productId"),
             @Mapping(source = "paymentMode", target = "paymentMode"),
+
+            //DSTV
+            @Mapping(source = "withAddon", target = "withAddon"),
+            @Mapping(source = "period", target = "period"),
+            @Mapping(source = "addondetails", target = "addondetails"),
+            @Mapping(source = "code", target = "code"),
+            @Mapping(source = "name", target = "name"),
     })
     SingleRechargeRequestDto rechargeToRechargeDto(SingleRechargeRequest request);
 
@@ -29,6 +36,15 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "telephone", target = "telephone"),
             @Mapping(source = "productId", target = "productId"),
             @Mapping(source = "accountType", target = "accountType"),
+
+            //DSTV
+            @Mapping(source = "withAddon", target = "withAddon"),
+            @Mapping(source = "period", target = "period"),
+            @Mapping(source = "addondetails", target = "addondetails"),
+            @Mapping(source = "code", target = "code"),
+            @Mapping(source = "name", target = "name"),
+
+
             @Mapping(target = "paymentMode",ignore = true),
             @Mapping(target = "serviceCode", ignore = true),
             @Mapping(target = "serviceId", ignore = true),

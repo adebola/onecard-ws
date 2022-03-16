@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.dto;
 
+import io.factorialsystems.msscprovider.recharge.ringo.request.Addondetails;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,4 +28,11 @@ public class SingleRechargeRequestDto {
     private String redirectUrl;
     private String paymentMode;
     private String accountType;
+
+    //DSTV
+    private Boolean withAddon;
+    private String period;
+    private Addondetails addondetails;
+    private String code;
+    private String name;
 }

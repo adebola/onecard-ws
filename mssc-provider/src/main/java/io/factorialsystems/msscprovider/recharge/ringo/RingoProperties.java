@@ -24,4 +24,7 @@ public class RingoProperties {
 
     @Value("${ringo.airtime.url}")
     private String airtimeUrl;
+
+    @Value("${ringo.base.url}")
+    private String baseUrl;
 }

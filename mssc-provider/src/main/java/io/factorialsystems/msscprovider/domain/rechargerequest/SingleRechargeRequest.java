@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.domain.rechargerequest;
 
 
+import io.factorialsystems.msscprovider.recharge.ringo.request.Addondetails;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,4 +34,12 @@ public class SingleRechargeRequest {
     private String accountType;
     private String autoRequestId;
     private String scheduledRequestId;
+
+    //DSTV Extras
+    private Boolean withAddon;
+    private String period;
+    private Addondetails addondetails;
+    private String code;
+    private String name;
+
 }
