@@ -21,6 +21,13 @@
         from ringo_data_plans
     </select>
 
+    <select id="findByNetworkId" parameterType="java.lang.String" resultMap="ringoDataPlanResultMap">
+        select
+        <include refid="column_list"/>
+        from ringo_data_plans where network = #{id}
+    </select>
+
+
     <select id="findById" parameterType="java.lang.String" resultMap="ringoDataPlanResultMap">
         select
         <include refid="column_list"/>
@@ -38,5 +45,4 @@
             (#{item.id, jdbcType=VARCHAR}, #{item.network, jdbcType=VARCHAR}, #{item.category, jdbcType=VARCHAR}, #{item.price, jdbcType=VARCHAR}, #{item.allowance, jdbcType=VARCHAR}, #{item.validity, jdbcType=VARCHAR})
         </foreach>
     </insert>
-
 </mapper>

@@ -2,10 +2,7 @@ package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
-import io.factorialsystems.msscprovider.service.BulkRechargeService;
-import io.factorialsystems.msscprovider.service.NewBulkRechargeService;
-import io.factorialsystems.msscprovider.service.ScheduledRechargeService;
-import io.factorialsystems.msscprovider.service.SingleRechargeService;
+import io.factorialsystems.msscprovider.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,7 +20,8 @@ public class RechargeAuthController {
     private final SingleRechargeService rechargeService;
     private final BulkRechargeService bulkRechargeService;
     private final NewBulkRechargeService newBulkRechargeService;
-    private final ScheduledRechargeService scheduledRechargeService;
+//    private final ScheduledRechargeService scheduledRechargeService;
+    private final NewScheduledRechargeService newScheduledRechargeService;
 
     @PostMapping
     public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
@@ -63,19 +61,33 @@ public class RechargeAuthController {
         return new ResponseEntity<>(new MessageDto("Request submitted successfully"), HttpStatus.OK);
     }
 
+//    @PostMapping("/scheduled")
+//    public ResponseEntity<?> startScheduledRecharge(@Valid @RequestBody ScheduledRechargeRequestDto dto) {
+//        return new ResponseEntity<>(scheduledRechargeService.startRecharge(dto), HttpStatus.OK);
+//    }
+//
+//    @GetMapping("/scheduled/{id}")
+//    public ResponseEntity<MessageDto> finishScheduledRecharge(@PathVariable("id") String id) {
+//
+//      if (scheduledRechargeService.finalizeScheduledRecharge(id)) {
+//          return new ResponseEntity<>(new MessageDto("Scheduled Recharge Request Submitted Successfully"), HttpStatus.ACCEPTED);
+//      } else {
+//          return new ResponseEntity<>(new MessageDto("Payment Failed for Scheduled Request"), HttpStatus.BAD_REQUEST);
+//      }
+//    }
+
     @PostMapping("/scheduled")
-    public ResponseEntity<?> startScheduledRecharge(@Valid @RequestBody ScheduledRechargeRequestDto dto) {
-        return new ResponseEntity<>(scheduledRechargeService.startRecharge(dto), HttpStatus.OK);
+    public ResponseEntity<?> startNewScheduledRecharge(@Valid @RequestBody NewScheduledRechargeRequestDto dto) {
+        return new ResponseEntity<>(newScheduledRechargeService.startRecharge(dto), HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/scheduled/{id}")
-    public ResponseEntity<MessageDto> finishScheduledRecharge(@PathVariable("id") String id) {
-
-      if (scheduledRechargeService.finalizeScheduledRecharge(id)) {
-          return new ResponseEntity<>(new MessageDto("Scheduled Recharge Request Submitted Successfully"), HttpStatus.ACCEPTED);
-      } else {
-          return new ResponseEntity<>(new MessageDto("Payment Failed for Scheduled Request"), HttpStatus.BAD_REQUEST);
-      }
+    public ResponseEntity<MessageDto> finishNewScheduledRecharge(@PathVariable("id") String id) {
+        if (newScheduledRechargeService.finalizeScheduledRecharge(id)) {
+            return new ResponseEntity<>(new MessageDto("Scheduled Recharge Request Submitted Successfully"), HttpStatus.ACCEPTED);
+        } else {
+            return new ResponseEntity<>(new MessageDto("Payment Failed for Scheduled Request"), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PostMapping("/bulkfile")
@@ -84,4 +96,9 @@ public class RechargeAuthController {
         return new ResponseEntity<>(new MessageDto("Bulk Request has been submitted successfully, results will be mailed to you"), HttpStatus.ACCEPTED);
     }
 
+    @PostMapping("/schedulefile")
+    public ResponseEntity<?> uploadScheduleFile(@RequestPart(value = "date") DateDto dto,  @RequestPart(value = "file") MultipartFile file) {
+        newScheduledRechargeService.uploadRecharge(file, dto.getScheduledDate());
+        return new ResponseEntity<>(new MessageDto("Scheduled Request has been submitted successfully, results will be mailed to you"), HttpStatus.ACCEPTED);
+    }
 }

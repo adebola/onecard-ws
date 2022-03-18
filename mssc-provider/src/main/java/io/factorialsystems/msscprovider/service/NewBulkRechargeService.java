@@ -64,11 +64,11 @@ public class NewBulkRechargeService {
     public BulkRechargeResponseDto saveService(NewBulkRechargeRequestDto dto) {
 
         if (dto.getRecipients() == null || dto.getRecipients().isEmpty()) {
-            log.error("No Group or Recipients specified, nothing todo");
-
+            final String errorMessage = "No Recipients specified, nothing todo";
+            log.error(errorMessage);
             return BulkRechargeResponseDto.builder()
                     .status(300)
-                    .message("No Group or Recipients specified, nothing todo")
+                    .message(errorMessage)
                     .build();
         }
 

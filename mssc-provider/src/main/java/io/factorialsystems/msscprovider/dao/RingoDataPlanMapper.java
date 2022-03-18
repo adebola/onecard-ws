@@ -8,6 +8,7 @@ import java.util.List;
 @Mapper
 public interface RingoDataPlanMapper {
     List<RingoDataPlan> findAll();
+    List<RingoDataPlan> findByNetworkId(String id);
     RingoDataPlan findById(String id);
     void save(RingoDataPlan plan);
     void saveList(List<RingoDataPlan> plans);

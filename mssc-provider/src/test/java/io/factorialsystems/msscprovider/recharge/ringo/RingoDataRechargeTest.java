@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class RingoDataRechargeTest {
 
     @Autowired
-    private RingoDataRecharge recharge;
+    private RingoMobileDataRecharge recharge;
 
     @Test
     void rechargeTest() {
