@@ -27,4 +27,22 @@ public class RingoProperties {
 
     @Value("${ringo.base.url}")
     private String baseUrl;
+
+    @Value("${ringo.dstv.addon.url}")
+    private String dstvAddon;
+
+    @Value("${ringo.cable.service.type.dstv}")
+    private String dstv;
+
+    @Value("${ringo.cable.service.type.gotv}")
+    private String gotv;
+
+    @Value("${ringo.cable.service.type.startimes}")
+    private String startimes;
+
+    @Value("${ringo.cable.service.code.verification}")
+    private String cableVerification;
+
+    @Value("${ringo.cable.service.code.payment}")
+    private String cablePayment;
 }

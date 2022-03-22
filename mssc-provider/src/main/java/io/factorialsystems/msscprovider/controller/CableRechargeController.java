@@ -1,16 +1,19 @@
 package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.MessageDto;
+import io.factorialsystems.msscprovider.dto.RingoValidateCableRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeResponseDto;
 import io.factorialsystems.msscprovider.recharge.RechargeResponseStatus;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.ringo.DstvService;
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoFetchDstvAddonRequest;
-import io.factorialsystems.msscprovider.recharge.ringo.request.RingoValidateCableRequest;
 import io.factorialsystems.msscprovider.service.SingleRechargeService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,32 +23,38 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 @Slf4j
+@CrossOrigin(origins = "*")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/recharge/cable")
-@Api(tags = "Cable Service Management")
 public class CableRechargeController {
     private final SingleRechargeService rechargeService;
     private final DstvService dstvService;
 
     @PostMapping("/validate")
-    @ApiOperation(value = "Validates Cable TV Account Details", response = RechargeResponseStatus.class)
-    public ResponseEntity<RechargeResponseStatus> validateDstv(@Valid @RequestBody RingoValidateCableRequest ringoValidateCableRequest) {
-        return new ResponseEntity<>(dstvService.validateCable(ringoValidateCableRequest), HttpStatus.OK);
+    @Operation(summary = "Validate Cable TV", description = "It validates users smart card against respective cable tv and returns details of such smart card account.")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Validate/Retrieves Smart Card Details Successfully.", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RechargeResponseStatus.class))})})
+    public ResponseEntity<RechargeResponseStatus> validateDstv(@Valid @RequestBody RingoValidateCableRequestDto ringoValidateCableRequestDto) {
+        return new ResponseEntity<>(dstvService.validateCable(ringoValidateCableRequestDto), HttpStatus.OK);
     }
 
     @GetMapping("/plans/{code}")
-    @ApiOperation(value = "Fetch DSTV Addon List base on code from @validateDstv API response", response = RechargeResponseStatus.class)
-    public ResponseEntity<RechargeResponseStatus> fetchAddonList(@PathVariable("code") String code) {
+    @Operation(summary = "Retrieve Cable TV Addon", description = "It retrieves a particular cable tv list of add on based on the previously validated smart card account, meaning that code parsed here is gotten after calling validate endpoint.")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Retrieves Addon Successfully.", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RechargeResponseStatus.class))})})
+    public ResponseEntity<RechargeResponseStatus> fetchAddonList(@PathVariable String code) {
         return new ResponseEntity<>(dstvService.fetchAddonList(new RingoFetchDstvAddonRequest(code)), HttpStatus.OK);
     }
 
     @PostMapping
+    @Operation(summary = "Starts Cable TV Payment", description = "It initiate a cable tv payment based on the previously validated smart card account details, meaning that code values parsed to the object is gotten after calling validate and or addon endpoints respectively.")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Retrieves Addon Successfully.", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RechargeResponseStatus.class))})})
     public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
         return new ResponseEntity<>(rechargeService.startRecharge(dto), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Finish/Complete Cable TV Payment", description = "It proceed to complete cable tv payment/subscription based on the previously initialised payment, meaning that 'id' parse is gotten after calling start/initialise payment.")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Retrieves Addon Successfully.", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RechargeResponseStatus.class))})})
     public ResponseEntity<MessageDto> finishRecharge(@PathVariable("id") String id) {
         RechargeStatus status = rechargeService.finishRecharge(id);
 

@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.security;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,6 +20,8 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         converter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
 
         http.authorizeRequests()
+                .antMatchers("/**/swagger-ui/**", "/**/api-docs/**")
+                .permitAll()
                 .antMatchers("/api/v1/serviceprovider","/api/v1/serviceprovider/*","/api/v1/serviceprovider/**").permitAll()
                 .antMatchers("/api/v1/recharge","/api/v1/recharge/*","/api/v1/recharge/**").permitAll()
                 .anyRequest().authenticated()

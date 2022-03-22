@@ -2,8 +2,10 @@ package io.factorialsystems.msscprovider.mapper.recharge;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.dto.RingoValidateCableRequestDto;
 import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
+import io.factorialsystems.msscprovider.recharge.ringo.request.RingoValidateCableRequest;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,7 +23,6 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "paymentMode", target = "paymentMode"),
 
             //DSTV
-            @Mapping(source = "withAddon", target = "withAddon"),
             @Mapping(source = "period", target = "period"),
             @Mapping(source = "addondetails", target = "addondetails"),
             @Mapping(source = "code", target = "code"),
@@ -38,7 +39,6 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "accountType", target = "accountType"),
 
             //DSTV
-            @Mapping(source = "withAddon", target = "withAddon"),
             @Mapping(source = "period", target = "period"),
             @Mapping(source = "addondetails", target = "addondetails"),
             @Mapping(source = "code", target = "code"),
@@ -80,4 +80,11 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "message", target = "message")
     })
     SingleRechargeRequest scheduleToSingleRecharge(ScheduledRechargeRequest request);
+
+    @Mappings({
+            @Mapping(source = "cardNumber", target = "smartCardNumber"),
+            @Mapping(source = "cableType", target = "cableType"),
+            @Mapping(source = "cableServiceCode", target = "cableServiceCode")
+    })
+    RingoValidateCableRequest ringoValidateCableRequest(RingoValidateCableRequestDto requestDto);
 }

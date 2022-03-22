@@ -4,8 +4,10 @@ import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.dto.RingoValidateCableRequestDto;
 import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
+import io.factorialsystems.msscprovider.recharge.ringo.request.RingoValidateCableRequest;
 import io.factorialsystems.msscprovider.utils.K;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -96,5 +98,10 @@ public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper
     @Override
     public SingleRechargeRequest scheduleToSingleRecharge(ScheduledRechargeRequest request) {
         return rechargeMapstructMapper.scheduleToSingleRecharge(request);
+    }
+
+    @Override
+    public RingoValidateCableRequest ringoValidateCableRequest(RingoValidateCableRequestDto requestDto) {
+        return rechargeMapstructMapper.ringoValidateCableRequest(requestDto);
     }
 }
