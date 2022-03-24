@@ -22,8 +22,7 @@ public class LoadBalancedRoutesConfig {
                         "/api/v1/recharge", "/api/v1/recharge/**", "**/swagger-ui/**", "**/api/v1/provider/api-docs/",
                         "/api/v1/serviceprovider", "/api/v1/serviceprovider/**",
                         "/api/v1/auth-recharge", "/api/v1/auth-recharge/**")
-                        .filters(f->f.rewritePath("/api/v1/provider/api-docs/","/api-docs")
-                                .setResponseHeader("Access-Control-Allow-Origin", "*"))//Todo('Remove Cors Access from Header on Production')
+                        .filters(f->f.rewritePath("/api/v1/provider/api-docs/","/api-docs"))
                         .uri("lb://provider-server"))
                 .route("user-service", r -> r.path("/api/v1/user", "/api/v1/user/**",
                                 "/api/v1/role", "/api/v1/role/**",
