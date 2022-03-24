@@ -213,7 +213,7 @@ public class SingleRechargeService {
                 .paymentMode(request.getPaymentMode())
                 .build();
 
-        String uri = null;
+        String uri;
         RestTemplate restTemplate = new RestTemplate();
 
         if (K.getUserId() == null) { // Anonymous Login

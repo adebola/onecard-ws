@@ -19,7 +19,6 @@ public class K {
     public static final String[] ALL_PAYMENT_MODES = {PAYSTACK_PAY_MODE, WALLET_PAY_MODE };
     public static final String[] ALL_RECHARGE_MODES = { SINGLE_RECHARGE, BULK_RECHARGE};
 
-
     private static Map<String, Object> getClaims () {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
