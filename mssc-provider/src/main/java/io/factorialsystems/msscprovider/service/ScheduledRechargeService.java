@@ -172,12 +172,16 @@ public class ScheduledRechargeService {
 
                     singleRequest.setId(UUID.randomUUID().toString());
                     singleRequest.setScheduledRequestId(request.getId());
-                    singleRechargeMapper.save(singleRequest);
-                    singleRechargeService.finishRecharge(singleRequest.getId());
 
                     if (request.getServiceCost() == null) {
-                        request.setServiceCost(getSingleRechargeServiceCost(singleRequest));
+                        singleRequest.setProductId(request.getProductId());
+                        singleRequest.setServiceCost(getSingleRechargeServiceCost(singleRequest));
+                    } else {
+                        singleRequest.setServiceCost(request.getServiceCost());
                     }
+
+                    singleRechargeMapper.save(singleRequest);
+                    singleRechargeService.finishRecharge(singleRequest.getId());
                 } else {
                     log.error("Skipping Scheduled Single Recharge Request {}, looks like it has not been paid for", request.getId());
                     // Log To Schedule Exception table for Internal Business Consumption

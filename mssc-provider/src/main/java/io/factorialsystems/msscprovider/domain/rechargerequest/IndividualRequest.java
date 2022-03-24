@@ -15,6 +15,7 @@ public class IndividualRequest {
     private Integer serviceId;
     private String serviceCode;
     private String bulkRequestId;
+    private String scheduledRequestId;
     private String productId;
     private BigDecimal serviceCost;
     private String telephone;

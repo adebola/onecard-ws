@@ -5,9 +5,8 @@ import io.factorialsystems.msscprovider.recharge.DataEnquiry;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.ringo.RingoAirtimeRecharge;
-import io.factorialsystems.msscprovider.recharge.ringo.RingoDataRecharge;
-import io.factorialsystems.msscprovider.recharge.ringo.RingoDstvRecharge;
 import io.factorialsystems.msscprovider.recharge.ringo.RingoElectricRecharge;
+import io.factorialsystems.msscprovider.recharge.ringo.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +31,8 @@ public class RingoRechargeFactory extends AbstractFactory {
         codeMapper.put("EKEDP", "EKEDC");
         codeMapper.put("JED", "JEDC");
         codeMapper.put("DSTV", "DSTV");
+        codeMapper.put("SPECTRANET-DATA", "SPECTRANET");
+        codeMapper.put("SMILE-DATA", "SMILE");
     }
 
     @Override
@@ -41,7 +42,18 @@ public class RingoRechargeFactory extends AbstractFactory {
 
     @Override
     public DataEnquiry getPlans(String action) {
-        return ApplicationContextProvider.getBean(RingoDataRecharge.class);
+
+        if (action.equalsIgnoreCase("DATA") || action.equalsIgnoreCase("GLO-DATA") ||
+                action.equalsIgnoreCase("MTN-DATA") || action.equalsIgnoreCase("AIRTEL-DATA") ||
+                action.equalsIgnoreCase("9MOBILE-DATA")) {
+            return ApplicationContextProvider.getBean(RingoMobileDataRecharge.class);
+        } else if (action.equalsIgnoreCase("SPECTRANET") || action.equalsIgnoreCase("SPECTRANET-DATA")) {
+            return ApplicationContextProvider.getBean(RingoSpectranetRecharge.class);
+        } else if (action.equalsIgnoreCase("SMILE") || action.equalsIgnoreCase("SMILE-DATA")) {
+            return ApplicationContextProvider.getBean(RingoSmileRecharge.class);
+        }
+
+        return null;
     }
 
     @Override
@@ -60,9 +72,13 @@ public class RingoRechargeFactory extends AbstractFactory {
         if (action.equalsIgnoreCase("AIRTIME")) {
             return ApplicationContextProvider.getBean(RingoAirtimeRecharge.class);
         } else if (action.equalsIgnoreCase("DATA")) {
-            return ApplicationContextProvider.getBean(RingoDataRecharge.class);
+            return ApplicationContextProvider.getBean(RingoMobileDataRecharge.class);
         } else if (action.equalsIgnoreCase("ELECTRICITY")) {
             return ApplicationContextProvider.getBean(RingoElectricRecharge.class);
+        } else if (action.equalsIgnoreCase("SPECTRANET")) {
+            return ApplicationContextProvider.getBean(RingoSpectranetRecharge.class);
+        } else if  (action.equalsIgnoreCase("SMILE")) {
+            return ApplicationContextProvider.getBean(RingoSmileRecharge.class);
         }else if (action.equalsIgnoreCase("DSTV")) {
             return ApplicationContextProvider.getBean(RingoDstvRecharge.class);
         }

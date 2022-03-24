@@ -25,6 +25,18 @@ public class RingoProperties {
     @Value("${ringo.airtime.url}")
     private String airtimeUrl;
 
+    @Value("${ringo.other.data.servicecode}")
+    private String otherDataServiceCode;
+
+    @Value("${ringo.enquiry.data.servicecode}")
+    private String enquiryDataCode;
+
+    @Value("${ringo.spectranet.type}")
+    private String spectranetType;
+
+    @Value("${ringo.smile.type}")
+    private String smileType;
+
     @Value("${ringo.base.url}")
     private String baseUrl;
 

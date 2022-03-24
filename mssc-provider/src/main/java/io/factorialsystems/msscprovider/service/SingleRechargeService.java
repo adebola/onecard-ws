@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.config.JMSConfig;
-import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
+import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
@@ -30,7 +30,6 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -48,6 +47,7 @@ public class SingleRechargeService {
     public static final Integer AIRTIME_ACTION = 1;
     public static final Integer DATA_ACTION = 2;
     public static final Integer ELECTRICITY_ACTION = 3;
+    public static final Integer SPECTRANET_ACTION = 4;
 
     private static String BASE_LOCAL_STATIC;
 
@@ -94,6 +94,7 @@ public class SingleRechargeService {
             return SingleRechargeResponseDto.builder()
                     .id(request.getId())
                     .authorizationUrl(request.getAuthorizationUrl())
+                    .amount(request.getServiceCost())
                     .message(request.getMessage())
                     .status(request.getStatus())
                     .paymentMode(paymentRequest.getPaymentMode())
@@ -151,7 +152,8 @@ public class SingleRechargeService {
 
         ServiceAction action = serviceActionMapper.findByCode(code);
 
-        if (action == null || !Objects.equals(action.getActionId(), DATA_ACTION)) {
+//        || !Objects.equals(action.getActionId(), DATA_ACTION)
+        if (action == null) {
             throw new RuntimeException(String.format("Unknown data plan (%s) Or Data Plan is not for DATA", code));
         }
 
@@ -256,7 +258,7 @@ public class SingleRechargeService {
         ParameterCheck parameterCheck = factory.getCheck(serviceAction);
 
         if (!parameterCheck.check(request)) {
-            throw new RuntimeException(String.format("Missing Parameter in Request (%s)", request.getServiceCode()));
+            throw new RuntimeException(String.format("Missing / Wrong Parameter in Request (%s)", request.getServiceCode()));
         }
 
         return true;

@@ -29,15 +29,22 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RingoDataRecharge implements Recharge, DataEnquiry, ParameterCheck {
+public class RingoMobileDataRecharge implements Recharge, DataEnquiry, ParameterCheck {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final RingoProperties ringoProperties;
+    private final RingoSpectranetRecharge spectranetRecharge;
     private final DataPlanMapstructMapper dataPlanMapper;
     private final RingoDataPlanMapper ringoDataPlanMapper;
 
     @Override
     public RechargeStatus recharge(SingleRechargeRequest request) {
+
+        if (request.getServiceCode().equals("SPECTRANET-DATA")) {
+            return spectranetRecharge.recharge(request);
+        } else if (request.getServiceCode().equals("SMILE-DATA")) {
+            return null;
+        }
 
         HttpHeaders headers = getHeaders();
         RingoDataRequest dataRequest =  RingoDataRequest.builder()
@@ -51,7 +58,6 @@ public class RingoDataRecharge implements Recharge, DataEnquiry, ParameterCheck 
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(dataRequest), headers);
             RingoDataResponse response =
                     restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoDataResponse.class);
-
 
             if (response != null && response.getMessage() != null && response.getMessage().equalsIgnoreCase("Successful")) {
                 log.info(String.format("Ringo data Recharge for (%s) Successful Plan (%s)", request.getRecipient(), request.getProductId()));
