@@ -29,6 +29,12 @@ public class RoleController {
         return new ResponseEntity<>(roleService.getRoles(), HttpStatus.OK);
     }
 
+    @GetMapping("/companyroles")
+    @PreAuthorize("hasAnyRole('ROLE_Onecard_Admin', 'ROLE_Company_Admin')")
+    ResponseEntity<List<KeycloakRoleDto>> getCompanyRoles() {
+        return new ResponseEntity<>(roleService.getCompanyRoles(), HttpStatus.OK);
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public ResponseEntity<KeycloakRoleDto> getRoleById(@PathVariable("id") String id) {

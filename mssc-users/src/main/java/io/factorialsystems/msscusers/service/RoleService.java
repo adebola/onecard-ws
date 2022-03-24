@@ -19,21 +19,21 @@ public class RoleService {
     private final RolesResource rolesResource;
     private final KeycloakRoleMapper keycloakRoleMapper;
 
+    public static final String ROLES_ONECARD = "Onecard";
+    public static final String ROLES_COMPANY = "Company";
+
     @Autowired
     RoleService(Keycloak keycloak, KeycloakRoleMapper keycloakRoleMapper) {
         this.keycloakRoleMapper = keycloakRoleMapper;
-        this.rolesResource = keycloak.realm("onecard").roles();
+        this.rolesResource = keycloak.realm(ROLES_ONECARD).roles();
     }
 
     public List<KeycloakRoleDto> getRoles(){
-        List<RoleRepresentation> roles  = rolesResource.list()
-                .stream()
-                .filter(r -> r.getName().startsWith("Onecard"))
-                .collect(Collectors.toList());
+        return getFilteredRoles(ROLES_ONECARD);
+    }
 
-//        roles.removeIf(r -> !(r.getName().startsWith("Onecard")));
-        log.info(String.format("Roles Size is %d", roles.size()));
-        return keycloakRoleMapper.listRoleRepresentationToDto(roles);
+    public List<KeycloakRoleDto> getCompanyRoles() {
+        return getFilteredRoles(ROLES_COMPANY);
     }
 
     public KeycloakRoleDto getRoleById(String id) {
@@ -43,14 +43,6 @@ public class RoleService {
                 .filter(r -> r.getId().equals(id))
                 .findFirst()
                 .map(keycloakRoleMapper::roleRepresentationToDto).orElse(null);
-
-//        Optional<RoleRepresentation> foundRole = rolesResource.list()
-//                .stream()
-//                .filter(r -> r.getId().equals(id))
-//                .findFirst()
-//                .map(keycloakRoleMapper::roleRepresentationToDto).orElse(null);
-//
-//        return foundRole.map(keycloakRoleMapper::roleRepresentationToDto).orElse(null);
     }
 
     public KeycloakRoleDto getRoleByName(String name) {
@@ -60,5 +52,14 @@ public class RoleService {
                 .findFirst();
 
         return foundRole.map(keycloakRoleMapper::roleRepresentationToDto).orElse(null);
+    }
+
+    private List<KeycloakRoleDto> getFilteredRoles(String filter) {
+        List<RoleRepresentation> roles  = rolesResource.list()
+                .stream()
+                .filter(r -> r.getName().startsWith(filter))
+                .collect(Collectors.toList());
+
+        return keycloakRoleMapper.listRoleRepresentationToDto(roles);
     }
 }

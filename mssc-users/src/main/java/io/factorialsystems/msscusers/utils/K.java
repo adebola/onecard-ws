@@ -13,6 +13,9 @@ public class K {
     private static final String SYSTEM_NAME = "_debug";
     private static final String SYSTEM_PREFERRED_NAME = "adeomoboya@googlemail.com";
 
+    public static final int ACCOUNT_TYPE_PERSONAL = 1;
+    public static final int ACCOUNT_TYPE_CORPORATE = 2;
+
     private static Map<String, Object> getClaims () {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

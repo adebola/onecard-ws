@@ -24,5 +24,4 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                 .oauth2ResourceServer()
                 .jwt().jwtAuthenticationConverter(converter);
     }
-
 }

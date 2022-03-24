@@ -24,4 +24,17 @@ public class K {
 
         return SYSTEM_NAME;
     }
+
+    public static String getIssClaim() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null) {
+            Jwt jwt = (Jwt) authentication.getPrincipal();
+            Map<String, Object> claims = jwt.getClaims();
+
+            return (String) claims.get("iss");
+        }
+
+        return null;
+    }
 }

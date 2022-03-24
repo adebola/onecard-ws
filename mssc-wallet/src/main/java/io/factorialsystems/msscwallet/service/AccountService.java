@@ -76,6 +76,23 @@ public class AccountService {
         return accountMapstructMapper.accountToAccountDto(accountMapper.findAccountByUserId(userId));
     }
 
+    public AccountDto createAccount(CreateAccountDto dto) {
+        String id = UUID.randomUUID().toString();
+
+        Account account = Account.builder()
+                .id(id)
+                .userId(dto.getUserId())
+                .accountType(dto.getAccountType())
+                .createdBy(K.getUserName())
+                .name(dto.getUserName())
+                .activated(true)
+                .build();
+
+        accountMapper.save(account);
+
+        return accountMapstructMapper.accountToAccountDto(accountMapper.findAccountById(id));
+    }
+
     public FundWalletResponseDto initializeFundWallet(FundWalletRequestDto dto) {
         FundWalletRequest request = fundWalletMapstructMapper.dtoToWalletRequest(dto);
         request.setId(UUID.randomUUID().toString());
@@ -149,11 +166,14 @@ public class AccountService {
 
     @Transactional
     public void updateAccountBalance(String id, BalanceDto dto) {
-
         Account account = accountMapper.findAccountByUserId(id);
 
         if (account == null) {
-            throw new RuntimeException(String.format("Unable Load Account for (%s), Account not found please contact support", id));
+            account = accountMapper.findAccountById(id);
+        }
+
+        if (account == null) {
+            throw new RuntimeException(String.format("Unable to Load Account for %s", id));
         }
 
         account.setBalance(dto.getBalance());

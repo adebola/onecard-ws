@@ -9,6 +9,7 @@ import io.factorialsystems.msscwallet.domain.Account;
 import io.factorialsystems.msscwallet.domain.Transaction;
 import io.factorialsystems.msscwallet.domain.User;
 import io.factorialsystems.msscwallet.domain.UserWallet;
+import io.factorialsystems.msscwallet.dto.DeleteAccountDto;
 import io.factorialsystems.msscwallet.dto.RequestTransactionDto;
 import io.factorialsystems.msscwallet.dto.ServiceActionDto;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,14 +66,11 @@ public class WalletServiceJMSListener {
         }
     }
 
-
     @JmsListener(destination = JMSConfig.NEW_TRANSACTION_QUEUE)
     public void listenForTransaction (String jsonData) {
 
         try {
             RequestTransactionDto dto = objectMapper.readValue(jsonData, RequestTransactionDto.class);
-
-            log.info("Received Transaction For Service {}", dto.getServiceId());
 
             Account account =
                     dto.getUserId() == null ? accountMapper.findAnonymousAccount() : accountMapper.findAccountByUserId(dto.getUserId());
@@ -83,21 +82,30 @@ public class WalletServiceJMSListener {
 
             log.info("Retrieved Account for Transaction ID {}, UserName {}", account.getId(), account.getName());
 
-            Optional<ServiceActionDto> actionDto
-                    = Optional.ofNullable(restTemplate.getForObject(baseUrl + "api/v1/serviceprovider/service/" + dto.getServiceId(), ServiceActionDto.class));
+            String action = null;
+            int serviceId = 0;
 
+            if (dto.getServiceId() != null) {
+                Optional<ServiceActionDto> actionDto
+                        = Optional.ofNullable(restTemplate.getForObject(baseUrl + "api/v1/serviceprovider/service/" + dto.getServiceId(), ServiceActionDto.class));
 
-            if (actionDto.isEmpty()) {
-                final String message = "Error Retrieving Service Action for Service Id " + dto.getServiceId();
-                log.error(message);
-                throw new RuntimeException(message);
+                if (actionDto.isEmpty()) {
+                    final String message = "Error Retrieving Service Action for Service Id " + dto.getServiceId();
+                    log.error(message);
+                   return;
+                }
+
+                action = actionDto.get().getServiceName();
+                serviceId = dto.getServiceId();
+            } else {
+                action = "Bulk Recharge";
             }
 
             log.info("Retrieved ServiceAction for Transaction {}", account.getId());
 
             Transaction transaction = Transaction.builder()
-                    .serviceId(dto.getServiceId())
-                    .serviceName(actionDto.get().getServiceName())
+                    .serviceId(serviceId)
+                    .serviceName(action)
                     .accountId(account.getId())
                     .txAmount(dto.getServiceCost())
                     .requestId(dto.getRequestId())
@@ -112,6 +120,25 @@ public class WalletServiceJMSListener {
             e.printStackTrace();
         }
 
+    }
+
+    @JmsListener(destination = JMSConfig.DELETE_ACCOUNT_QUEUE)
+    public void listenForDeleteAccount(String jsonData) {
+
+        try {
+            DeleteAccountDto dto = objectMapper.readValue(jsonData, DeleteAccountDto.class);
+
+            log.info("Deleting Account: {}, Action By {}", dto.getId(), dto.getDeletedBy());
+
+            HashMap<String, String> parameters = new HashMap<>();
+            parameters.put("id", dto.getId());
+            parameters.put("deletedBy", dto.getDeletedBy());
+
+            accountMapper.deleteAccount(parameters);
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     @JmsListener(destination = JMSConfig.NEW_RECHARGE_PROVIDER_WALLET_QUEUE)

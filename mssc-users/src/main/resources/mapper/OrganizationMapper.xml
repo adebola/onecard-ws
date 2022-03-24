@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscusers.dao.OrganizationMapper">
+    <resultMap id="organizationResultMap" type="io.factorialsystems.msscusers.domain.Organization">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="organization_name" property="organizationName" jdbcType="VARCHAR"/>
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="created_date" property="createdDate" jdbcType="TIMESTAMP"/>
+        <result column="wallet_id" property="walletId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="column_list">
+        id, organization_name, created_by, created_date, wallet_id
+    </sql>
+
+    <select id="findAll" resultMap="organizationResultMap">
+        select
+        <include refid="column_list"/>
+        from organizations
+    </select>
+
+    <select id="findUserCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(*) from users where organization_id = #{id}
+    </select>
+
+    <select id="search" parameterType="java.lang.String" resultMap="organizationResultMap">
+        select
+        <include refid="column_list"/>
+        from organizations
+        where organization_name like CONCAT(#{search}, '%')
+    </select>
+
+    <select id="findById" parameterType="java.lang.String" resultMap="organizationResultMap">
+        select
+        <include refid="column_list"/>
+        from organizations where id = #{id}
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscusers.domain.Organization">
+        insert into organizations(id, organization_name, created_by, wallet_id)
+        values (#{id, jdbcType=VARCHAR}, #{organizationName, jdbcType=VARCHAR}, #{createdBy, jdbcType=VARCHAR}, #{walletId, jdbcType=VARCHAR})
+    </insert>
+
+    <update id="update" parameterType="io.factorialsystems.msscusers.domain.Organization">
+        update organizations
+        <set>
+            <if test="organizationName != null">organization_name=#{organizationName},</if>
+            <if test="walletId != null">wallet_id=#{walletId},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="java.lang.String">
+        delete from organizations where id = #{id}
+    </delete>
+</mapper>

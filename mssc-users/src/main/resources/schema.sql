@@ -1,3 +1,12 @@
+create table organizations (
+  id varchar(64),
+  organization_name varchar(128),
+  wallet_id VARCHAR(64),
+  created_date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  created_by varchar(64) NOT NULL,
+  PRIMARY KEY (id)
+);
+
 create table users (
     id VARCHAR(64) NOT NULL,
     user_name VARCHAR(64) NOT NULL,
@@ -8,6 +17,9 @@ create table users (
     email_verified BOOLEAN DEFAULT FALSE,
     created_date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     wallet_id VARCHAR(64),
+    secret varchar(128),
+    organization_id varchar(64),
+    FOREIGN KEY (organization_id) REFERENCES organizations (id),
     UNIQUE idx_user_name(user_name),
     PRIMARY KEY (id)
 );

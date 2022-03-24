@@ -80,4 +80,8 @@
         </set>
         where id = #{id}
     </update>
+
+    <update id="deleteAccount" parameterType="java.util.Map">
+        update accounts set deleted = true, deleted_by = #{deletedBy}, deleted_date = NOW() where id = #{id}
+    </update>
 </mapper>

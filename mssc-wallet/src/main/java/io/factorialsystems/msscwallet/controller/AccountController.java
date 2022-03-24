@@ -73,7 +73,10 @@ public class AccountController {
         return new ResponseEntity<>(accountService.fundWallet(id), HttpStatus.OK);
     }
 
-
+    @PostMapping("/create")
+    public ResponseEntity<AccountDto> createOrganizationAccount(@Valid @RequestBody CreateAccountDto dto) {
+        return new ResponseEntity<>(accountService.createAccount(dto), HttpStatus.CREATED);
+    }
 
 //
 //    @GetMapping("/provider/{id}")

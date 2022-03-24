@@ -26,12 +26,11 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
+    private static final String ADMIN_ROLE = "ROLE_Onecard_Admin";
 
     @GetMapping
      public ResponseEntity<?> getUsers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                        @RequestParam(value = "pageSize", required = false) Integer pageSize) {
-
-        String name = K.getUserName();
 
         if (pageNumber == null || pageNumber < 0) {
             pageNumber = K.DEFAULT_PAGE_NUMBER;
@@ -123,8 +122,10 @@ public class UserController {
 
     private Boolean isAdminOrSelf(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Collection<? extends GrantedAuthority> roles = authentication.getAuthorities();
 
-        return (authentication.getName().equals(id) || roles.stream().anyMatch(r -> r.getAuthority().equals("ROLE_Onecard_Admin")));
+        if (authentication == null) return false;
+
+        Collection<? extends GrantedAuthority> roles = authentication.getAuthorities();
+        return (authentication.getName().equals(id) || roles.stream().anyMatch(r -> r.getAuthority().equals(ADMIN_ROLE)));
     }
 }

@@ -18,6 +18,8 @@ public class User {
     private Boolean emailVerified;
     private String firstName;
     private String lastName;
+    private String organizationId;
+    private String secret;
     private String email;
     private Date createdDate;
     private String walletId;

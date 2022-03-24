@@ -35,6 +35,8 @@ public class ReportController {
             pageSize = K.DEFAULT_PAGE_SIZE;
         }
 
+        log.info("iss claim {}", K.getIssClaim());
+
         return new ResponseEntity<>(reportService.findReports(pageNumber, pageSize), HttpStatus.OK);
     }
 

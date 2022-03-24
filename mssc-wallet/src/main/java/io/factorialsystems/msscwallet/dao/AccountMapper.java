@@ -5,6 +5,7 @@ import io.factorialsystems.msscwallet.domain.Account;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface AccountMapper {
@@ -17,6 +18,7 @@ public interface AccountMapper {
     List<Account> findLowThresholdAccounts();
     void save(Account account);
     void update(Account account);
+    void deleteAccount(Map<String, String> params);
 
 
 }

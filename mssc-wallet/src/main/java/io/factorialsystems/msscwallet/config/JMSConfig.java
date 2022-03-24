@@ -7,4 +7,5 @@ public class JMSConfig {
     public static final String AUDIT_MESSAGE_QUEUE = "audit-message-queue";
     public static final String NEW_TRANSACTION_QUEUE = "new-transaction-queue";
     public static final String NEW_RECHARGE_PROVIDER_WALLET_QUEUE = "new-recharge-provider-wallet";
+    public static final String DELETE_ACCOUNT_QUEUE = "delete-account";
 }

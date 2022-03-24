@@ -8,6 +8,9 @@ create table accounts (
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     createdBy varchar(64) NOT NULL,
     anonymous BOOLEAN DEFAULT FALSE,
+    deleted BOOLEAN DEFAULT FALSE,
+    deleted_date timestamp,
+    deleted_by varchar(64),
     threshold_level decimal(10, 2) NOT NULL DEFAULT 0,
     UNIQUE idx_user_id(user_id),
     PRIMARY KEY (id)
@@ -16,7 +19,7 @@ create table accounts (
 create table transactions (
     id int AUTO_INCREMENT NOT NULL,
     account_id VARCHAR(64),
-    service_id INT NOT NULL,
+    service_id INT NOT NULL DEFAULT 0,
     service_name VARCHAR(64) NOT NULL,
     tx_datetime timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     tx_amount DECIMAL(10,2) NOT NULL,
