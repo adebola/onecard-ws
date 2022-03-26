@@ -54,7 +54,7 @@ public class DstvService {
     public RechargeResponseStatus validateCable(RingoValidateCableRequestDto request){
         RingoValidateCableRequest ringoValidateCableRequest = rechargeMapstructMapper.ringoValidateCableRequest(request);
 
-        switch (request.getCableType()){
+        switch (request.getServiceCode()){
             case "dstv":
                 ringoValidateCableRequest.setCableType(ringoProperties.getDstv());
                 break;
@@ -66,16 +66,10 @@ public class DstvService {
                 break;
         }
 
-        switch (request.getCableServiceCode()){
-            case "verify":
-                ringoValidateCableRequest.setCableServiceCode(ringoProperties.getCableVerification());
-                break;
-            case "pay":
-                ringoValidateCableRequest.setCableServiceCode(ringoProperties.getCablePayment());
-                break;
-        }
+        ringoValidateCableRequest.setCableServiceCode(ringoProperties.getCableVerification());
 
-        log.info("INFO "+ringoValidateCableRequest.toString());
+
+        log.info("INFO "+ringoValidateCableRequest);
 
         try {
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(ringoValidateCableRequest), getHeader());
@@ -191,10 +185,9 @@ public class DstvService {
                 .builder()
                 .serviceCode(singleRechargeRequest.getServiceCode())
                 .requestId(singleRechargeRequest.getId())
-                .code(singleRechargeRequest.getCode())
-                .type(singleRechargeRequest.getType().getValue())
-                .addondetails(singleRechargeRequest.getAddondetails())
-                .period(singleRechargeRequest.getPeriod())
+                .code(singleRechargeRequest.getProductId())
+                .type(singleRechargeRequest.getServiceCode())
+                .period("1")
                 .smartCardNo(singleRechargeRequest.getRecipient())
                 .name(singleRechargeRequest.getName())
                 .build();

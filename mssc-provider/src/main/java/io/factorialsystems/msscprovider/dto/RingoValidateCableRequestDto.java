@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RingoValidateCableRequestDto {
     private String cardNumber;
-    private String cableType;
-    private String cableServiceCode;
+    private String serviceCode;
 }

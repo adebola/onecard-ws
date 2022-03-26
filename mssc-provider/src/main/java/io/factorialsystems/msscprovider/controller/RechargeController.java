@@ -1,10 +1,18 @@
 package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.MessageDto;
+import io.factorialsystems.msscprovider.dto.RingoValidateCableRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeResponseDto;
+import io.factorialsystems.msscprovider.recharge.RechargeResponseStatus;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.recharge.ringo.DstvService;
 import io.factorialsystems.msscprovider.service.SingleRechargeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,6 +27,14 @@ import javax.validation.Valid;
 @RequestMapping("/api/v1/recharge")
 public class RechargeController {
     private final SingleRechargeService rechargeService;
+    private final DstvService dstvService;
+
+    @PostMapping("/validate")
+    @Operation(summary = "Validate Cable TV", description = "It validates users smart card against respective cable tv and returns details of such smart card account.")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Validate/Retrieves Smart Card Details Successfully.", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = RechargeResponseStatus.class))})})
+    public ResponseEntity<RechargeResponseStatus> validateDstv(@Valid @RequestBody RingoValidateCableRequestDto ringoValidateCableRequestDto) {
+        return new ResponseEntity<>(dstvService.validateCable(ringoValidateCableRequestDto), HttpStatus.OK);
+    }
 
     @PostMapping
     public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {

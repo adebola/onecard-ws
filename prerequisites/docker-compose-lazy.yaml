@@ -123,3 +123,20 @@ services:
       - ./prometheus/create-datasource-and-dashboard.sh:/create.sh:ro
     command: /create.sh
   #END ZIPKIN
+
+
+
+
+  EC2-0(
+    resource: 400
+    DOCKER-SWARM{
+      node0(app, 100);
+      node1(app, 100);
+  })
+    
+  EC2-1(
+    resource: 400
+    DOCKER-SWARM{
+      node2(app, 100);
+      node3(app, 100);
+  })
