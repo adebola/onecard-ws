@@ -2,6 +2,7 @@ package io.factorialsystems.msscprovider.recharge.factory;
 
 import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.recharge.DataEnquiry;
+import io.factorialsystems.msscprovider.recharge.ExtraDataEnquiry;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.jed.JedElectricRecharge;
@@ -41,6 +42,11 @@ public class JedRechargeFactory extends AbstractFactory {
     @Override
     public DataEnquiry getPlans(String code) {
        return null;
+    }
+
+    @Override
+    public ExtraDataEnquiry getExtraPlans(String action) {
+        return null;
     }
 
     @Override

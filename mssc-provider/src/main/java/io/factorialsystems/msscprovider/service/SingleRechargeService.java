@@ -11,10 +11,7 @@ import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
-import io.factorialsystems.msscprovider.recharge.DataEnquiry;
-import io.factorialsystems.msscprovider.recharge.ParameterCheck;
-import io.factorialsystems.msscprovider.recharge.Recharge;
-import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
@@ -148,6 +145,23 @@ public class SingleRechargeService {
         return status;
     }
 
+    public ExtraDataPlanDto getExtraDataPlans(ExtraPlanRequestDto dto) {
+        ServiceAction action = serviceActionMapper.findByCode(dto.getServiceCode());
+
+        if (action == null) {
+            throw new RuntimeException(String.format("Unknown Extra Data plan (%s)", dto.getServiceCode()));
+        }
+
+        AbstractFactory factory = getFactory(action.getId());
+
+        if (factory == null) {
+            throw new RuntimeException(String.format("Factory not found for Product with code (%s)", dto.getServiceCode()));
+        }
+
+        ExtraDataEnquiry enquiry = factory.getExtraPlans(dto.getServiceCode());
+        return enquiry.getExtraPlans(dto);
+    }
+
     public List<DataPlanDto> getDataPlans(String code) {
 
         ServiceAction action = serviceActionMapper.findByCode(code);
@@ -213,7 +227,7 @@ public class SingleRechargeService {
                 .paymentMode(request.getPaymentMode())
                 .build();
 
-        String uri;
+        String uri = null;
         RestTemplate restTemplate = new RestTemplate();
 
         if (K.getUserId() == null) { // Anonymous Login
@@ -248,11 +262,18 @@ public class SingleRechargeService {
             throw new RuntimeException(String.format("Unable to get Factory for Request (%s), Please ensure factories are configured appropriately", dto.getServiceCode()));
         }
 
-        if (dto.getServiceCost() == null) { // Service with Fixed Cost
+        if (dto.getProductId() != null) {
             DataEnquiry enquiry = factory.getPlans(serviceAction);
-            DataPlanDto planDto = enquiry.getPlan(request.getProductId());
-            BigDecimal cost = new BigDecimal(planDto.getPrice());
-            request.setServiceCost(cost);
+
+            if (enquiry == null && dto.getServiceCost() != null) {
+                request.setServiceCost(dto.getServiceCost());
+            } else if (enquiry != null && dto.getServiceCost() == null) {
+                DataPlanDto planDto = enquiry.getPlan(request.getProductId());
+                BigDecimal cost = new BigDecimal(planDto.getPrice());
+                request.setServiceCost(cost);
+            } else {
+                throw new RuntimeException("Plan inconsistencies in request");
+            }
         }
 
         ParameterCheck parameterCheck = factory.getCheck(serviceAction);

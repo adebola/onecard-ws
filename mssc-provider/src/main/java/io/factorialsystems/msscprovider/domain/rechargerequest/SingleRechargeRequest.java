@@ -33,4 +33,7 @@ public class SingleRechargeRequest {
     private String accountType;
     private String autoRequestId;
     private String scheduledRequestId;
+
+    private String name;
+
 }

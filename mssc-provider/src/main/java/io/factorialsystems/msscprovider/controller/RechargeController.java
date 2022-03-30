@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.controller;
 
+import io.factorialsystems.msscprovider.dto.ExtraPlanRequestDto;
 import io.factorialsystems.msscprovider.dto.MessageDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeResponseDto;
@@ -39,5 +40,10 @@ public class RechargeController {
     @GetMapping("/plans/{code}")
     public ResponseEntity<?> getDataPlans(@PathVariable("code") String code) {
         return new ResponseEntity<>(rechargeService.getDataPlans(code), HttpStatus.OK);
+    }
+
+    @PostMapping("/plans")
+    public ResponseEntity<?> getExtraDataPlans(@Valid @RequestBody ExtraPlanRequestDto dto) {
+        return new ResponseEntity<>(rechargeService.getExtraDataPlans(dto), HttpStatus.ACCEPTED);
     }
 }

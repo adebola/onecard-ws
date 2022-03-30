@@ -27,4 +27,6 @@ public class SingleRechargeRequestDto {
     private String redirectUrl;
     private String paymentMode;
     private String accountType;
+
+    private String name;
 }

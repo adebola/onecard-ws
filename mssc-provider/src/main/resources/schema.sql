@@ -99,6 +99,7 @@ create table recharge_requests (
     message varchar(64),
     status int,
     account_type varchar(64),
+    name varchar(64),
     closed boolean NOT NULL DEFAULT FALSE,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     payment_mode varchar(32) NOT NULL,
@@ -292,7 +293,10 @@ values('AIRTIME'),
        ('ELECTRICITY'),
        -- Additions
        ('SPECTRANET'),
-       ('SMILE');
+       ('SMILE'),
+       ('DSTV'),
+       ('GOTV'),
+       ('STARTIMES');
 
 insert into provider_categories(category_name, createdBy)
 values('Mobile', 'Adebola Omoboya'),
@@ -307,7 +311,10 @@ values(1, 'MTN', 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya', 'MTN'),
        (2, 'Jos Distribution', 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya', 'JED'),
        -- Additions
        (1, 'SPECTRANET', 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya', 'SPECTRANET'),
-       (1, 'SMILE', 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya', 'SMILE');
+       (1, 'SMILE', 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya', 'SMILE'),
+       (1, 'DSTV', 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya', 'DSTV'),
+       (1, 'GOTV', 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya', 'GOTV'),
+       (1, 'STARTIMES', 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya', 'STARTIMES');
 
 insert into provider_services(provider_id, service_code, service_name, service_cost, action, createdby, activated, activation_date, activatedby)
 values (1, 'MTN-AIRTIME', 'MTN AIRTIME', NULL, 1, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
@@ -322,7 +329,10 @@ values (1, 'MTN-AIRTIME', 'MTN AIRTIME', NULL, 1, 'Adebola Omoboya', true, NOW()
        (6, 'JED', 'Jos Disco Recharge', NULL, 3, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
        -- Additions
        (7, 'SPECTRANET-DATA', 'SPECTRANET DATA', NULL, 4, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
-       (8, 'SMILE-DATA', 'SMILE DATA', NULL, 5, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya');
+       (8, 'SMILE-DATA', 'SMILE DATA', NULL, 5, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (9, 'DSTV', 'DSTV', NULL, 6, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (10, 'GOTV', 'GOTV', NULL, 7, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya'),
+       (11, 'STARTIMES', 'STARTIMES', NULL, 8, 'Adebola Omoboya', true, NOW(), 'Adebola Omoboya');
 
 insert into recharge_providers(name, wallet_id, code, createdBy, activated, activation_date, activatedBy)
 values
@@ -347,7 +357,10 @@ values (1, 1, 1),
        (10, 2, 2),
        -- Additions
        (11, 1, 1),
-       (12, 1, 1);
+       (12, 1, 1),
+       (13, 1, 1),
+       (14, 1, 1),
+       (15, 1, 1);
 
 insert into ringo_data_plans (product_id, network, category, price, code, validity)
 values
