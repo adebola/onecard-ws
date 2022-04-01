@@ -27,4 +27,13 @@ public class RingoProperties {
 
     @Value("${ringo.base.url}")
     private String baseUrl;
+
+    @Value("${ringo.waec.type}")
+    private String waecType;
+
+    @Value("${ringo.waec.validate.code}")
+    private String waecServiceCodeValidate;
+
+    @Value("${ringo.waec.buy.code}")
+    private String waecServiceCodeBuy;
 }

@@ -3,7 +3,9 @@ package io.factorialsystems.msscprovider.controller;
 import io.factorialsystems.msscprovider.dto.MessageDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeResponseDto;
+import io.factorialsystems.msscprovider.recharge.RechargeResponseStatus;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.recharge.ringo.DstvService;
 import io.factorialsystems.msscprovider.service.SingleRechargeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,12 @@ import javax.validation.Valid;
 @RequestMapping("/api/v1/recharge")
 public class RechargeController {
     private final SingleRechargeService rechargeService;
+    private final DstvService dstvService;
+
+    @PostMapping
+    public ResponseEntity<RechargeResponseStatus> waecValidate() {
+        return new ResponseEntity<>(dstvService.validateWaec(), HttpStatus.OK);
+    }
 
     @PostMapping
     public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {

@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.dto.WaecValidateResponseDto;
 import io.factorialsystems.msscprovider.recharge.RechargeResponseStatus;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoFetchDstvAddonRequest;
@@ -20,6 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
@@ -72,6 +76,81 @@ public class DstvService {
         return RechargeResponseStatus.builder()
                 .status(false)
                 .message("Ringo Validate Dstv Failed")
+                .build();
+    }
+
+    public RechargeResponseStatus validateWaec(){
+        try {
+            Map<String, String> payload  = new HashMap<>();
+            payload.put("serviceCode", ringoProperties.getWaecServiceCodeValidate());
+            payload.put("type", ringoProperties.getWaecType());
+
+            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(payload), getHeader());
+
+            WaecValidateResponseDto response = restTemplate.postForObject(ringoProperties.getBaseUrl(), entity, WaecValidateResponseDto.class);
+
+            if(response!=null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
+                return RechargeResponseStatus.builder()
+                        .status(true)
+                        .message("Ringo Validate WAEC Successful")
+                        .data(response)
+                        .build();
+            }
+
+            if(response!=null && !Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
+                return RechargeResponseStatus.builder()
+                        .status(false)
+                        .message("Ringo Validate WAEC Failed")
+                        .data(response)
+                        .build();
+            }
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return RechargeResponseStatus.builder()
+                .status(false)
+                .message("Ringo Validate WAEC Failed")
+                .build();
+    }
+
+    public RechargeResponseStatus buyWaecPin(SingleRechargeRequest singleRechargeRequest){
+        try {
+            Map<String, String> payload  = new HashMap<>();
+            payload.put("serviceCode", ringoProperties.getWaecServiceCodeBuy());
+            payload.put("type", ringoProperties.getWaecType());
+            payload.put("amount", String.valueOf(singleRechargeRequest.getServiceCost()));
+            payload.put("request_id", singleRechargeRequest.getId());
+            payload.put("pinNo", "1");
+
+            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(payload), getHeader());
+
+            String response = restTemplate.postForObject(ringoProperties.getBaseUrl(), entity, String.class);
+
+            if(response!=null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
+                return RechargeResponseStatus.builder()
+                        .status(true)
+                        .message("Ringo Buy WAEC Successful")
+                        .data(response)
+                        .build();
+            }
+
+            if(response!=null && !Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())){
+                return RechargeResponseStatus.builder()
+                        .status(false)
+                        .message("Ringo Buy WAEC Failed")
+                        .data(response)
+                        .build();
+            }
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return RechargeResponseStatus.builder()
+                .status(false)
+                .message("Ringo Buy WAEC Failed")
                 .build();
     }
 
