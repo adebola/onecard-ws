@@ -22,7 +22,7 @@ public class LoadBalancedRoutesConfig {
                         .uri("lb://user-server"))
                 .route("wallet-service", r -> r.path("/api/v1/account", "/api/v1/account/**",
                                 "/api/v1/transaction","/api/v1/transaction/**").uri("lb://wallet-server"))
-                .route("audit-service", r -> r.path("/api/v1/audit", "/api/v1/audit/**")
+                .route("audit-service", r -> r.path("/api/v1/audit", "/api/v1/audit/**", "/api/v1/contact", "/api/v1/contact/**", "/api/v1/contactus", "/api/v1/contactus/**")
                         .uri("lb://audit-server"))
                 .route("report-service", r -> r.path("/api/v1/reports", "/api/v1/reports/**").uri("lb://report-server"))
                 .route("payment-service", r -> r.path("/api/v1/pay", "/api/v1/pay/**", "/api/v1/payment", "/api/v1/payment/**")

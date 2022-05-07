@@ -28,7 +28,7 @@ public class AuditController {
             pageSize = K.DEFAULT_PAGE_SIZE;
         }
 
-        return new ResponseEntity(messageService.findAll(pageNumber, pageSize), HttpStatus.OK);
+        return new ResponseEntity<>(messageService.findAll(pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

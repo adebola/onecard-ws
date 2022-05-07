@@ -19,9 +19,15 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         converter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
 
         http.authorizeRequests()
+                .antMatchers("/api/v1/contactus, /api/v1/contactus/*, /api/v1/contactus/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .oauth2ResourceServer()
                 .jwt().jwtAuthenticationConverter(converter);
+    }
+
+    @Override
+    public void configure(org.springframework.security.config.annotation.web.builders.WebSecurity web) {
+        web.ignoring().antMatchers("/api/v1/contactus", "/api/v1/contactus/**");
     }
 }

@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Date;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 @SpringBootTest
 @CommonsLog
 class MessageServiceTest {
@@ -17,21 +19,23 @@ class MessageServiceTest {
 
     @Test
     void save() {
-        AuditMessageDto dto = AuditMessageDto
-                .builder()
-                .serviceAction("TEST")
-                .serviceName("test-service")
-                .createdDate(new Date())
-                .userName("adebola")
-                .description("Description")
-                .build();
+
+        AuditMessageDto dto = new AuditMessageDto();
+        dto.setServiceAction("TEST");
+        dto.setServiceName("test-service");
+        dto.setCreatedDate(new Date());
+        dto.setUserName("adebola");
+        dto.setDescription("Description");
 
         service.save(dto);
     }
 
     @Test
     void findAll() {
-        service.findAll(0, 20);
+        var x = service.findAll(0, 20);
+        assertNotNull(x);
+        assert(x.getList().size() > 0);
+        log.info(x);
     }
 
     @Test
