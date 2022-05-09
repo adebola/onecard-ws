@@ -5,6 +5,7 @@ create table accounts (
     user_id VARCHAR(64) NOT NULL,
     account_type int NOT NULL DEFAULT 1,
     activated BOOLEAN DEFAULT FALSE,
+    charge_account VARCHAR(64),
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     createdBy varchar(64) NOT NULL,
     anonymous BOOLEAN DEFAULT FALSE,
@@ -12,6 +13,7 @@ create table accounts (
     deleted_date timestamp,
     deleted_by varchar(64),
     threshold_level decimal(10, 2) NOT NULL DEFAULT 0,
+    FOREIGN KEY (charge_account) REFERENCES accounts(id),
     UNIQUE idx_user_id(user_id),
     PRIMARY KEY (id)
 );

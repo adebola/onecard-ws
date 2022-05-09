@@ -14,17 +14,15 @@ import org.springframework.mail.javamail.JavaMailSender;
 
 @Slf4j
 @Configuration
-public class AWSMailConfig {
-
-    @Value("${aws.access-key}")
+public class AWSConfig {
+    @Value("${AWS_ACCESS_KEY_ID}")
     private String awsAccessKey;
 
-    @Value("${aws.secret-key}")
+    @Value("${AWS_SECRET_ACCESS_KEY}")
     private String awsSecretKey;
 
     @Bean
     public AmazonSimpleEmailService amazonSimpleEmailService() {
-
         return AmazonSimpleEmailServiceClientBuilder.standard()
                 .withCredentials(
                         new AWSStaticCredentialsProvider(

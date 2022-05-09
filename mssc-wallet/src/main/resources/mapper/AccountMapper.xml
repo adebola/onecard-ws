@@ -11,10 +11,11 @@
         <result column="activated" property="activated" jdbcType="BOOLEAN"/>
         <result column="createdAt" property="createdDate" jdbcType="TIMESTAMP"/>
         <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
+        <result column="charge_account" property="chargeAccountId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Column_List">
-        id, name, balance, user_id, account_type, activated, createdAt, createdBy
+        id, name, balance, user_id, account_type, activated, createdAt, createdBy, charge_account
     </sql>
 
     <select id="findAccounts" resultMap="accountResultMap">
@@ -83,5 +84,13 @@
 
     <update id="deleteAccount" parameterType="java.util.Map">
         update accounts set deleted = true, deleted_by = #{deletedBy}, deleted_date = NOW() where id = #{id}
+    </update>
+
+    <update id="addOrganizationWallet" parameterType="java.util.Map">
+        update accounts set charge_account = #{organizationId} where user_id = #{userId}
+    </update>
+
+    <update id="removeOrganizationWallet" parameterType="java.lang.String">
+        update accounts set charge_account = null where user_id = #{id}
     </update>
 </mapper>

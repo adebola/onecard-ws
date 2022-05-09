@@ -21,4 +21,5 @@ public class Account {
     private BigDecimal balance;
     private Date createdDate;
     private String createdBy;
+    private String chargeAccountId;
 }

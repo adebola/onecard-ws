@@ -19,6 +19,7 @@ create table users (
     wallet_id VARCHAR(64),
     secret varchar(128),
     organization_id varchar(64),
+    profile_picture varchar(1024),
     FOREIGN KEY (organization_id) REFERENCES organizations (id),
     UNIQUE idx_user_name(user_name),
     PRIMARY KEY (id)

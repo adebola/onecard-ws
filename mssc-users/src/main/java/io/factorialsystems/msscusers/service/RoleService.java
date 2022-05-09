@@ -2,6 +2,7 @@ package io.factorialsystems.msscusers.service;
 
 import io.factorialsystems.msscusers.dto.KeycloakRoleDto;
 import io.factorialsystems.msscusers.mapper.KeycloakRoleMapper;
+import io.factorialsystems.msscusers.utils.K;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RolesResource;
@@ -19,21 +20,18 @@ public class RoleService {
     private final RolesResource rolesResource;
     private final KeycloakRoleMapper keycloakRoleMapper;
 
-    public static final String ROLES_ONECARD = "Onecard";
-    public static final String ROLES_COMPANY = "Company";
-
     @Autowired
     RoleService(Keycloak keycloak, KeycloakRoleMapper keycloakRoleMapper) {
         this.keycloakRoleMapper = keycloakRoleMapper;
-        this.rolesResource = keycloak.realm(ROLES_ONECARD).roles();
+        this.rolesResource = keycloak.realm(K.ROLES_ONECARD).roles();
     }
 
     public List<KeycloakRoleDto> getRoles(){
-        return getFilteredRoles(ROLES_ONECARD);
+        return getFilteredRoles(K.ROLES_ONECARD);
     }
 
     public List<KeycloakRoleDto> getCompanyRoles() {
-        return getFilteredRoles(ROLES_COMPANY);
+        return getFilteredRoles(K.ROLES_COMPANY);
     }
 
     public KeycloakRoleDto getRoleById(String id) {

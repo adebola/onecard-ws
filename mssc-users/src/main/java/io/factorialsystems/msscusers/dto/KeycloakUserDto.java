@@ -20,6 +20,7 @@ public class KeycloakUserDto {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ", shape = JsonFormat.Shape.STRING)
     private Date createdDate;
 
+
     private String username;
 
     private Boolean enabled;
@@ -33,6 +34,14 @@ public class KeycloakUserDto {
 
     @Null(message = "requiredActions cannot be set")
     private String[] requiredActions;
+
+    @Null(message = "token cannot be set")
+    private String token;
+
+    @Null(message = "organizationId cannot be set")
+    private String organizationId;
+
+    private String profilePicture;
 
     private AccountDto account;
 }

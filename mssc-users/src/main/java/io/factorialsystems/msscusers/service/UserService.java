@@ -4,11 +4,14 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.domain.User;
-import io.factorialsystems.msscusers.mapper.KeycloakRoleMapper;
-import io.factorialsystems.msscusers.mapper.KeycloakUserMapper;
 import io.factorialsystems.msscusers.dto.KeycloakRoleDto;
 import io.factorialsystems.msscusers.dto.KeycloakUserDto;
 import io.factorialsystems.msscusers.dto.PagedDto;
+import io.factorialsystems.msscusers.dto.UserSecretDto;
+import io.factorialsystems.msscusers.mapper.KeycloakRoleMapper;
+import io.factorialsystems.msscusers.mapper.KeycloakUserMapper;
+import io.factorialsystems.msscusers.security.RestTemplateInterceptor;
+import io.factorialsystems.msscusers.utils.K;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RolesResource;
@@ -19,9 +22,24 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,42 +54,28 @@ public class UserService {
     @Value("${keycloak.onecard}")
     private String onecardRealm;
 
+    @Value("${api.host.baseurl}")
+    private String url;
+
     @Autowired
     UserService(Keycloak keycloak, KeycloakUserMapper keycloakUserMapper,
                 KeycloakRoleMapper keycloakRoleMapper, UserMapper userMapper) {
+
         this.keycloakUserMapper = keycloakUserMapper;
         this.keycloakRoleMapper = keycloakRoleMapper;
-        this.usersResource =  keycloak.realm("onecard").users();
+        this.usersResource = keycloak.realm("onecard").users();
         this.rolesResource = keycloak.realm("onecard").roles();
         this.userMapper = userMapper;
     }
 
-    public PagedDto<KeycloakUserDto> findUsers(Integer pageNumber, Integer pageSize ) {
+    public PagedDto<KeycloakUserDto> findUsers(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         return createDto(userMapper.findAll());
     }
 
-//    public List<KeycloakUserDto> findRealmUsers() {
-//        return keycloakUserMapper.listUserRepresentationToDto(usersResource.list());
-//    }
-
     public KeycloakUserDto findUserById(String id) {
         User user = userMapper.findUserById(id);
         return keycloakUserMapper.userToDto(user);
-    }
-
-    public KeycloakUserDto findRealmUserById(String id) {
-        return keycloakUserMapper.userRepresentationToDto(getUserRepresentation(id));
-    }
-
-    public UserRepresentation getUserRepresentation(String id) {
-        UserResource user = usersResource.get(id);
-
-        if (user != null) {
-            return user.toRepresentation();
-        }
-
-        return null;
     }
 
     public PagedDto<KeycloakUserDto> searchUser(Integer pageNumber, Integer pageSize, String searchString) {
@@ -79,28 +83,27 @@ public class UserService {
         return createDto(userMapper.search(searchString));
     }
 
-//    public List<KeycloakUserDto> searchUser(String search) {
-//        List<UserRepresentation> users = usersResource.search(search);
-//
-//        if (users != null && users.size() > 0) {
-//            return keycloakUserMapper.listUserRepresentationToDto(users);
-//        }
-//
-//        return null;
-//    }
-
     public void updateUser(String id, KeycloakUserDto dto) {
 
         UserResource user = usersResource.get(id);
+        User u = keycloakUserMapper.userDtoToUser(dto);
 
         if (user != null) {
             UserRepresentation representation = new UserRepresentation();
 
-            representation.setFirstName(dto.getFirstName() == null ? null : dto.getFirstName());
-            representation.setLastName(dto.getLastName() == null ? null : dto.getLastName());
-            representation.setEnabled(dto.getEnabled());
+            if (dto.getFirstName() != null) {
+                representation.setFirstName(dto.getFirstName());
+                u.setFirstName(dto.getFirstName());
+            }
 
-           user.update(representation);
+            if (dto.getLastName() != null) {
+                representation.setLastName(dto.getLastName());
+                u.setLastName(dto.getLastName());
+            }
+
+            u.setId(id);
+            user.update(representation);
+            userMapper.update(u);
         }
     }
 
@@ -119,7 +122,7 @@ public class UserService {
     }
 
     public List<String> getStringUserRoles(String id) {
-        List<RoleRepresentation> roles = getUserRoleRepresentations(id);
+        List<RoleRepresentation> roles = getUserRoleRepresentations(id, K.ROLES_ONECARD);
 
         if (roles != null) {
             return roles.stream()
@@ -131,7 +134,7 @@ public class UserService {
     }
 
     public List<KeycloakRoleDto> getUserRoles(String id) {
-        List<RoleRepresentation> roles = getUserRoleRepresentations(id);
+        List<RoleRepresentation> roles = getUserRoleRepresentations(id, K.ROLES_ONECARD);
 
         if (roles != null) {
             return keycloakRoleMapper.listRoleRepresentationToDto(roles);
@@ -140,7 +143,27 @@ public class UserService {
         return null;
     }
 
-    private List<RoleRepresentation> getUserRoleRepresentations(String id) {
+    public List<KeycloakRoleDto> getUserAssignedCompanyRoles(String id) {
+        List<RoleRepresentation> roles = getUserRoleRepresentations(id, K.ROLES_COMPANY);
+
+        if (roles != null) {
+            return keycloakRoleMapper.listRoleRepresentationToDto(roles);
+        }
+
+        return null;
+    }
+
+    public List<KeycloakRoleDto> getUserAssignableCompanyRoles(String id) {
+        List<KeycloakRoleDto> userRoles = getUserAssignedCompanyRoles(id);
+
+        return rolesResource.list().stream()
+                .filter(r -> r.getName().startsWith(K.ROLES_COMPANY))
+                .filter(r -> userRoles.stream().noneMatch(u -> u.getName().equals(r.getName())))
+                .map(keycloakRoleMapper::roleRepresentationToDto)
+                .collect(Collectors.toList());
+    }
+
+    private List<RoleRepresentation> getUserRoleRepresentations(String id, String roleName) {
         UserResource user = usersResource.get(id);
 
         if (user != null) {
@@ -149,10 +172,59 @@ public class UserService {
                     .getRealmMappings();
 
             return roles.stream()
-                    .filter(r -> r.getName().startsWith("Onecard")).collect(Collectors.toList());
+                    .filter(r -> r.getName().startsWith(roleName)).collect(Collectors.toList());
         }
 
         return null;
+    }
+
+    public void addCompanyRoles(String id, String[] roleIds) {
+        User modUser = userMapper.findUserById(id);
+        User adminUser = userMapper.findUserById(K.getUserId());
+
+        if (modUser == null || adminUser == null || modUser.getOrganizationId() == null || adminUser.getOrganizationId() == null) {
+            final String errorMessage = "Add Roles Error, Null User or Organization Id";
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
+
+        if (modUser.getOrganizationId().equals(adminUser.getOrganizationId())) {
+            addRoles(id, roleIds);
+        } else {
+            final String errorMessage
+                    = String.format("Unable to Modify User Roles Admin OrganisationId (%s), Target OrganisationId  (%s)", adminUser.getOrganizationId(), modUser.getOrganizationId());
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
+    }
+
+    public void removeCompanyRoles(String id, String[] roleIds) {
+        User modUser = userMapper.findUserById(id);
+        User adminUser = userMapper.findUserById(K.getUserId());
+
+        if (modUser == null || adminUser == null || modUser.getOrganizationId() == null || adminUser.getOrganizationId() == null) {
+            final String errorMessage = "Remove Roles Error, Null User or Organization Id";
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
+
+        if (modUser.getOrganizationId().equals(adminUser.getOrganizationId())) {
+            UserResource user = usersResource.get(id);
+            long roleCount = user.roles().getAll().getRealmMappings().stream()
+                    .filter(r -> r.getName().startsWith("ROLE_Company"))
+                    .count();
+
+            if (roleCount == roleIds.length && roleIds.length > 0) {
+                throw new RuntimeException("You cannot remove all Company Roles from a Company User");
+            }
+
+            removeRoles(id, roleIds);
+        } else {
+            final String errorMessage
+                    = String.format("Unable to Modify User Roles Admin OrganisationId (%s), Target OrganisationId  (%s)", adminUser.getOrganizationId(), modUser.getOrganizationId());
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
     }
 
     public void removeRoles(String id, String[] roleIds) {
@@ -164,7 +236,7 @@ public class UserService {
                     .getRealmMappings();
 
             assignedRoles.removeIf(r -> {
-                for (String roleId: roleIds) {
+                for (String roleId : roleIds) {
                     if (roleId.equals(r.getId())) {
                         return false;
                     }
@@ -172,7 +244,6 @@ public class UserService {
 
                 return true;
             });
-
 
             user.roles()
                     .realmLevel()
@@ -187,7 +258,7 @@ public class UserService {
             List<RoleRepresentation> roles = rolesResource.list();
 
             roles.removeIf(r -> {
-                for (String roleId: roleIds) {
+                for (String roleId : roleIds) {
                     if (roleId.equals(r.getId())) {
                         return false;
                     }
@@ -200,6 +271,85 @@ public class UserService {
                     .realmLevel()
                     .add(roles);
         }
+    }
+
+    public PagedDto<KeycloakUserDto> findUserByOrganizationId(String id, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        return createDto(userMapper.findUserByOrganizationId(id));
+    }
+
+    public PagedDto<KeycloakUserDto> findUserForOrganization(Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        return createDto(userMapper.findUserForOrganization());
+    }
+
+    public UserSecretDto generateSecret() {
+        String id = K.getUserId();
+
+        if (id != null) {
+            User user = userMapper.findUserById(id);
+
+            if (user == null) {
+                throw new RuntimeException(String.format("Unable to Load Current User (%s)", id));
+            }
+
+            final String secret = generateString();
+
+            PasswordEncoder encoder = new BCryptPasswordEncoder();
+            user.setSecret(encoder.encode(secret));
+            userMapper.update(user);
+
+            return UserSecretDto.builder()
+                    .secret(secret)
+                    .build();
+        }
+
+        return null;
+    }
+
+    public String saveImageFile(MultipartFile file) {
+
+        if (!file.isEmpty()) {
+            final String fileName = "./" + file.getOriginalFilename();
+            log.info(String.format("Received File %s Sending to UploadServer", fileName));
+
+            try {
+                byte[] bytes = file.getBytes();
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(
+                        new FileOutputStream(new File(fileName))
+                );
+
+                bufferedOutputStream.write(bytes);
+                bufferedOutputStream.close();
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+                MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+                body.add("file", new FileSystemResource(fileName));
+
+                HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+                RestTemplate restTemplate = new RestTemplate();
+                restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+                return restTemplate.postForObject(url + "/api/v1/upload", requestEntity, String.class);
+
+            } catch (IOException ioe) {
+                log.error(ioe.getMessage());
+            }
+        }
+
+        throw new RuntimeException("Error Uploading File");
+    }
+
+    private String generateString() {
+        String chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%&";
+        Random rnd = new Random();
+
+        StringBuilder sb = new StringBuilder(32);
+        for (int i = 0; i < 32; i++)
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+
+        return sb.toString();
     }
 
     private PagedDto<KeycloakUserDto> createDto(Page<User> users) {

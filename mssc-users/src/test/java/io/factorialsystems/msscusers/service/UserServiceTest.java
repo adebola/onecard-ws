@@ -1,5 +1,6 @@
 package io.factorialsystems.msscusers.service;
 
+import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.dto.KeycloakUserDto;
 import io.factorialsystems.msscusers.dto.PagedDto;
 import lombok.extern.apachecommons.CommonsLog;
@@ -7,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @CommonsLog
 @SpringBootTest
@@ -15,6 +16,17 @@ class UserServiceTest {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    UserMapper userMapper;
+
+    @Test
+    void setPassword() {
+//        PasswordEncoder encoder = new BCryptPasswordEncoder();
+//        User user = userMapper.findUserById("28e05596-9ad0-4187-ac11-fd93fb7701af");
+//        user.setSecret(encoder.encode("password"));
+//        userMapper.update(user);
+    }
 
     @Test
     void getUsers() {
@@ -25,7 +37,7 @@ class UserServiceTest {
         log.info(dtos.getList().get(0).getFirstName());
         log.info(dtos.getList().get(0).getAccount());
 
-        assertEquals(null, dtos.getList().get(0).getAccount());
+        assertNull(dtos.getList().get(0).getAccount());
     }
 
     @Test

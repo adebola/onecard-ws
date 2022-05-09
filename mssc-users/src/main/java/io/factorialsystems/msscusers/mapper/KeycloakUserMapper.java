@@ -36,8 +36,27 @@ public interface KeycloakUserMapper {
             @Mapping(source = "emailVerified", target = "emailVerified"),
             @Mapping(source = "firstName", target = "firstName"),
             @Mapping(source = "lastName", target = "lastName"),
-            @Mapping(source = "email", target = "email")
+            @Mapping(source = "email", target = "email"),
+            @Mapping(source = "id", target = "token"),
+            @Mapping(source = "organizationId", target = "organizationId"),
+            @Mapping(source = "profilePicture", target = "profilePicture")
+
     })
     KeycloakUserDto userToDto(User user);
     List<KeycloakUserDto> listUserToDto(List<User> users);
+
+    @Mappings({
+            @Mapping(source = "id", target = "id"),
+            @Mapping(source = "createdDate", target = "createdDate"),
+            @Mapping(source = "username", target = "username"),
+            @Mapping(source = "enabled", target = "enabled"),
+            @Mapping(source = "emailVerified", target = "emailVerified"),
+            @Mapping(source = "firstName", target = "firstName"),
+            @Mapping(source = "lastName", target = "lastName"),
+            @Mapping(source = "email", target = "email"),
+            @Mapping(source = "organizationId", target = "organizationId"),
+            @Mapping(source = "profilePicture", target = "profilePicture")
+    })
+    User userDtoToUser(KeycloakUserDto dto);
+    List<User> listUserDtoToUser(List<KeycloakUserDto> dtos);
 }

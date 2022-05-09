@@ -1,9 +1,11 @@
 package io.factorialsystems.msscusers.mapper;
 
+import io.factorialsystems.msscusers.dao.OrganizationMapper;
+import io.factorialsystems.msscusers.domain.Organization;
 import io.factorialsystems.msscusers.domain.User;
-import io.factorialsystems.msscusers.security.RestTemplateInterceptor;
 import io.factorialsystems.msscusers.dto.AccountDto;
 import io.factorialsystems.msscusers.dto.KeycloakUserDto;
+import io.factorialsystems.msscusers.security.RestTemplateInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import java.util.Optional;
 @Slf4j
 public class KeycloakUserMapperDecorator implements KeycloakUserMapper {
     private KeycloakUserMapper keycloakUserMapper;
+    private OrganizationMapper organizationMapper;
 
     @Value("${api.host.baseurl}")
     private String apiHost;
@@ -25,6 +28,11 @@ public class KeycloakUserMapperDecorator implements KeycloakUserMapper {
     @Autowired
     public void setKeycloakUserMapper(KeycloakUserMapper keycloakUserMapper) {
         this.keycloakUserMapper = keycloakUserMapper;
+    }
+
+    @Autowired
+    public void setOrganizationMapper(OrganizationMapper organizationMapper) {
+       this.organizationMapper = organizationMapper;
     }
 
     @Override
@@ -42,12 +50,21 @@ public class KeycloakUserMapperDecorator implements KeycloakUserMapper {
 
         KeycloakUserDto dto = keycloakUserMapper.userToDto(user);
 
-        if (user.getWalletId() != null) {
+        String walletId = null;
+
+        if (user.getOrganizationId() == null) {
+            walletId = user.getWalletId();
+        } else {
+            Organization organization = organizationMapper.findById(user.getOrganizationId());
+            walletId = organization.getWalletId();
+        }
+
+        if (walletId != null) {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getInterceptors().add(new RestTemplateInterceptor());
 
             Optional<AccountDto> accountDto =
-                    Optional.ofNullable(restTemplate.getForObject(apiHost + ACCOUNT_PATH + "/" + user.getWalletId(), AccountDto.class));
+                    Optional.ofNullable(restTemplate.getForObject(apiHost + ACCOUNT_PATH + "/" + walletId, AccountDto.class));
 
             accountDto.ifPresent(dto::setAccount);
         }
@@ -58,5 +75,15 @@ public class KeycloakUserMapperDecorator implements KeycloakUserMapper {
     @Override
     public List<KeycloakUserDto> listUserToDto(List<User> users) {
         return keycloakUserMapper.listUserToDto(users);
+    }
+
+    @Override
+    public User userDtoToUser(KeycloakUserDto dto) {
+        return keycloakUserMapper.userDtoToUser(dto);
+    }
+
+    @Override
+    public List<User> listUserDtoToUser(List<KeycloakUserDto> dtos) {
+        return keycloakUserMapper.listUserDtoToUser(dtos);
     }
 }

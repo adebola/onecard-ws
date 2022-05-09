@@ -12,10 +12,12 @@
         <result column="email_verified" property="emailVerified" jdbcType="VARCHAR"/>
         <result column="created_date" property="createdDate" jdbcType="TIMESTAMP"/>
         <result column="wallet_id" property="walletId" jdbcType="VARCHAR"/>
+        <result column="organization_id" property="organizationId" jdbcType="VARCHAR"/>
+        <result column="profile_picture" property="profilePicture" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Column_List_Long">
-       id, user_name, first_name, last_name, email, enabled, email_verified, created_date, wallet_id
+       id, user_name, first_name, last_name, email, enabled, email_verified, created_date, wallet_id, organization_id, profile_picture
     </sql>
 
     <sql id="Column_List_Short">
@@ -47,6 +49,18 @@
         from users where id = #{id}
     </select>
 
+    <select id="findUserByOrganizationId" parameterType="java.lang.String" resultMap="userResultMap">
+        select
+        <include refid="Column_List_Long"/>
+        from users where organization_id = #{id}
+    </select>
+
+    <select id="findUserForOrganization" resultMap="userResultMap">
+        select
+        <include refid="Column_List_Short"/>
+        from users where organization_id is null
+    </select>
+
     <insert id="save" parameterType="io.factorialsystems.msscusers.domain.User">
         insert into users(id, user_name, first_name, last_name, email, enabled, email_verified, wallet_id)
         values (
@@ -62,10 +76,19 @@
         <set>
             <if test="firstName != null">first_name=#{firstName},</if>
             <if test="lastName != null">last_name=#{lastName},</if>
-            <if test="enabled != null">enabled=#{enabled},</if>
-            <if test="emailVerified != null">email_verified=#{emailVerified},</if>
             <if test="walletId != null">wallet_id=#{walletId},</if>
+            <if test="secret != null">secret=#{secret},</if>
+            <if test="organizationId != null">organization_id=#{organizationId},</if>
+            <if test="profilePicture != null">profile_picture=#{profilePicture},</if>
         </set>
         where id = #{id}
+    </update>
+
+    <update id="removeOrganization" parameterType="java.lang.String">
+        update users set organization_id = null where id = #{id}
+    </update>
+
+    <update id="updateProfilePicture" parameterType="java.util.Map">
+        update users set profile_picture = #{picture} where id = #{id}
     </update>
 </mapper>

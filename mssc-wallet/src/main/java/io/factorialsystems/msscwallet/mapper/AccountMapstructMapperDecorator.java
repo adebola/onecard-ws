@@ -12,7 +12,7 @@ import java.util.List;
 public class AccountMapstructMapperDecorator implements AccountMapstructMapper {
 
     private AccountMapstructMapper mapper;
-    private static final List<String> accountTypes = Arrays.asList("ACCOUNT_USER", "ACCOUNT_PROVIDER");
+    private static final List<String> accountTypes = Arrays.asList("ACCOUNT_USER", "ACCOUNT_CORPORATE");
 
     @Autowired
     public void setMapstructMapper(AccountMapstructMapper mapper) {

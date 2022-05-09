@@ -23,7 +23,6 @@ public class AccountDto {
     private Boolean activated;
     private BigDecimal balance;
 
-
     @Null(message = "Account creation Date cannot be set it is generated")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ", shape = JsonFormat.Shape.STRING)
     private Date createdDate;

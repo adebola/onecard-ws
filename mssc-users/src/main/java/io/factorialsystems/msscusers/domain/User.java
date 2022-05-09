@@ -23,4 +23,5 @@ public class User {
     private String email;
     private Date createdDate;
     private String walletId;
+    private String profilePicture;
 }

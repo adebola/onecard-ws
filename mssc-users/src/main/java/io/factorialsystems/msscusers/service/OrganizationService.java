@@ -6,7 +6,9 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscusers.config.JMSConfig;
 import io.factorialsystems.msscusers.dao.OrganizationMapper;
+import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.domain.Organization;
+import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.dto.*;
 import io.factorialsystems.msscusers.mapper.OrganizationMapstructMapper;
 import io.factorialsystems.msscusers.security.RestTemplateInterceptor;
@@ -18,16 +20,26 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.security.AccessControlException;
+import java.util.List;
 import java.util.UUID;
+
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrganizationService {
+    private final UserMapper userMapper;
+    private final RoleService roleService;
+    private final UserService userService;
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
     private final OrganizationMapper organizationMapper;
     private final OrganizationMapstructMapper organizationMapstructMapper;
+
+    private static final String COMPANY_USER_ROLE = "Company_User";
+    private static final String COMPANY_ADMIN_ROLE = "Company_Admin";
+    private static final String COMPANY_OPERATOR_ROLE = "Company_Operator";
 
     @Value("${api.host.baseurl}")
     private String baseUrl;
@@ -114,6 +126,132 @@ public class OrganizationService {
         }
 
         throw new RuntimeException("Organization cannot be deleted, it has associated Users");
+    }
+
+    public void addUserToOrganization(String id, List<String> userIds) {
+        KeycloakRoleDto companyRole = roleService.getRoleByName(COMPANY_ADMIN_ROLE);
+
+        if (companyRole == null) {
+            throw new RuntimeException("Unable to get Company Roles, Roles may not have been created");
+        }
+
+        String[] roleArray = new String[1];
+        roleArray[0] = companyRole.getId();
+
+        userIds.forEach(userId -> {
+            User user = userMapper.findUserById(userId);
+
+            if (user == null) {
+                throw new RuntimeException(String.format("Unable to Add User %s not Found", userId));
+            }
+
+            List<KeycloakRoleDto> roles = userService.getUserRoles(userId);
+
+            if (roles != null && !roles.isEmpty()) {
+                if (roles.stream().anyMatch(r -> r.getName().startsWith(K.ROLES_ONECARD))) {
+                    throw new RuntimeException(String.format("User %s is a Onecard Administrator and cannot be added to an organization", user.getEmail()));
+                }
+            }
+
+            if (user.getOrganizationId() != null || roles.stream().anyMatch(r -> r.getName().startsWith(K.ROLES_COMPANY))) {
+                throw new RuntimeException(String.format("User %s belongs to an organization", user.getEmail()));
+            }
+
+            // Add Organization to User and Save
+            user.setOrganizationId(id);
+
+            userMapper.update(user);
+            userService.addRoles(userId, roleArray);
+
+            UserOrganizationAmendDto dto = UserOrganizationAmendDto.builder()
+                    .userId(userId)
+                    .organizationId(id)
+                    .build();
+
+            try {
+                jmsTemplate.convertAndSend(JMSConfig.ADD_ORGANIZATION_ACCOUNT_QUEUE, objectMapper.writeValueAsString(dto));
+            } catch (JsonProcessingException e) {
+                final String errorMessage = "Error Amending User Account : " + e.getMessage();
+                log.error(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
+        });
+    }
+
+    public void removeUserFromOrganization(String id, List<String> userIds) {
+
+        User currentUser = null;
+        List<String> grantedRoles = K.getRoles();
+
+        if (grantedRoles != null && grantedRoles.stream().anyMatch(r -> r.startsWith("Company"))) {
+            currentUser = userMapper.findUserById(K.getUserId());
+        }
+
+        KeycloakRoleDto userRole = roleService.getRoleByName(COMPANY_USER_ROLE);
+        KeycloakRoleDto operatorRole = roleService.getRoleByName(COMPANY_OPERATOR_ROLE);
+        KeycloakRoleDto companyRole = roleService.getRoleByName(COMPANY_ADMIN_ROLE);
+
+        if (companyRole == null) {
+            throw new RuntimeException("Unable to get Company Roles, Roles may not have been created");
+        }
+
+        String[] roleArray = new String[3];
+        roleArray[0] = companyRole.getId();
+        roleArray[1] = operatorRole.getId();
+        roleArray[2] = userRole.getId();
+
+        final User finalCurrentUser = currentUser;
+
+        userIds.forEach(userId -> {
+            User user = userMapper.findUserById(userId);
+
+            if (user == null) {
+                throw new RuntimeException(String.format("Unable to Add User %s not Found", userId));
+            }
+
+            if (K.isAdmin() || (finalCurrentUser != null && !finalCurrentUser.getOrganizationId().equals(user.getOrganizationId()))) {
+                userMapper.removeOrganization(user.getId());
+                userService.removeRoles(userId, roleArray);
+            } else {
+                throw new AccessControlException("Remove User Error");
+            }
+
+            UserOrganizationAmendDto dto = UserOrganizationAmendDto.builder()
+                    .userId(userId)
+                    .organizationId(id)
+                    .build();
+
+            try {
+                jmsTemplate.convertAndSend(JMSConfig.REMOVE_ORGANIZATION_ACCOUNT_QUEUE, objectMapper.writeValueAsString(dto));
+            } catch (JsonProcessingException e) {
+                final String errorMessage = "Error Removing Organization from User Account : " + e.getMessage();
+                log.error(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
+        });
+    }
+
+    public OrganizationAndUsersDto getOrganizationAndUsers(String id) {
+        Organization organization = organizationMapper.findById(id);
+        PagedDto<KeycloakUserDto> users = userService.findUserByOrganizationId(id, 1, 50);
+
+        OrganizationAndUsersDto dto = OrganizationAndUsersDto.builder()
+                .organizationName(organization.getOrganizationName())
+                .id(organization.getId())
+                .users(users.getList())
+                .build();
+
+        if (K.isAdmin()) return dto;
+
+        if (K.isCompanyAdmin()) {
+            User user = userMapper.findUserById(K.getUserId());
+
+            if (user.getOrganizationId().equals(id)) {
+                return dto;
+            }
+        }
+
+        throw new RuntimeException("Access denied to Resource");
     }
 
     private PagedDto<OrganizationDto> createDto(Page<Organization> organizations) {

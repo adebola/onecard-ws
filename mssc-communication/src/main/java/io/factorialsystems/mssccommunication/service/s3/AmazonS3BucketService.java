@@ -28,16 +28,16 @@ public class AmazonS3BucketService {
     private AmazonS3 amazonS3;
     private final FileService fileService;
 
-    @Value("${aws.endpoint}")
+    @Value("${AWS_ENDPOINT}")
     private String endpointUrl;
 
-    @Value("${aws.bucket}")
+    @Value("${AWS_BUCKET}")
     private String bucketName;
 
-    @Value("${aws.access-key}")
+    @Value("${AWS_ACCESS_KEY_ID}")
     private String accessKey;
 
-    @Value("${aws.secret-key}")
+    @Value("${AWS_SECRET_ACCESS_KEY}")
     private String secretKey;
 
     @PostConstruct
@@ -47,7 +47,7 @@ public class AmazonS3BucketService {
 
         this.amazonS3 = AmazonS3ClientBuilder
                 .standard()
-                .withRegion(Regions.EU_WEST_2)
+                .withRegion(Regions.US_EAST_1)
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .build();
     }

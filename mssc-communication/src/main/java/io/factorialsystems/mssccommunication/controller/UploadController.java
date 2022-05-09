@@ -8,11 +8,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/communication")
-public class CommunicationsController {
+@RequestMapping("/api/v1/upload")
+public class UploadController {
     private final AmazonS3BucketService amazonS3BucketService;
 
-    @PostMapping("/uploadfile")
+    @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     public String uploadFile(@RequestPart(value = "file") MultipartFile file) {
         return this.amazonS3BucketService.uploadFile(file);

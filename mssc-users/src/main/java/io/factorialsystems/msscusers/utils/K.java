@@ -1,10 +1,13 @@
 package io.factorialsystems.msscusers.utils;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class K {
     public static final Integer DEFAULT_PAGE_NUMBER = 1;
@@ -15,6 +18,11 @@ public class K {
 
     public static final int ACCOUNT_TYPE_PERSONAL = 1;
     public static final int ACCOUNT_TYPE_CORPORATE = 2;
+
+    public static final String ROLES_ONECARD = "Onecard";
+    public static final String ROLES_COMPANY = "Company";
+    public static final String ROLES_ONECARD_ADMIN = "ROLE_Onecard_Admin";
+    public static final String ROLES_COMPANY_ADMIN = "ROLE_Company_Admin";
 
     private static Map<String, Object> getClaims () {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -59,8 +67,37 @@ public class K {
     }
 
     public static String getAccessToken() {
-//        String secret = "ca8f3fe3-b0da-4528-b0c1-0dae59e5015b";
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return jwt.getTokenValue();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null) {
+            Jwt jwt = (Jwt) authentication.getPrincipal();
+            return jwt.getTokenValue();
+        }
+
+        return null;
+    }
+
+    public static List<String> getRoles() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null) {
+            return authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+        }
+
+        return null;
+    }
+
+    public static Boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream().anyMatch(s -> s.getAuthority().equals(K.ROLES_ONECARD_ADMIN));
+    }
+
+    public static Boolean isCompanyAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream().anyMatch(s -> s.getAuthority().equals(K.ROLES_COMPANY_ADMIN));
     }
 }

@@ -12,6 +12,7 @@ import io.factorialsystems.msscwallet.domain.UserWallet;
 import io.factorialsystems.msscwallet.dto.DeleteAccountDto;
 import io.factorialsystems.msscwallet.dto.RequestTransactionDto;
 import io.factorialsystems.msscwallet.dto.ServiceActionDto;
+import io.factorialsystems.msscwallet.dto.UserOrganizationAmendDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -138,6 +139,58 @@ public class WalletServiceJMSListener {
 
         } catch (JsonProcessingException e) {
             e.printStackTrace();
+        }
+    }
+
+    @JmsListener(destination = JMSConfig.ADD_ORGANIZATION_ACCOUNT_QUEUE)
+    public void listenForAddOrganizationToUser(String jsonData) {
+        try {
+            UserOrganizationAmendDto dto = objectMapper.readValue(jsonData, UserOrganizationAmendDto.class);
+
+            if (dto == null || dto.getOrganizationId() == null || dto.getUserId() == null) {
+                log.error("Error Adding Organization Wallet to User, Null Values Found");
+                return;
+            }
+
+            // Get Organization Account
+            Account orgAccount = accountMapper.findAccountByUserId(dto.getUserId());
+
+            if (orgAccount == null || orgAccount.getId() == null) {
+                log.error(String.format("Error Adding Organization Wallet Organization (%s) Not Found", dto.getOrganizationId()));
+                return;
+            }
+
+            // Get User Account
+            Account userAccount = accountMapper.findAccountByUserId(dto.getUserId());
+
+            if (userAccount == null) {
+                log.error(String.format("Error Adding Organization Wallet User (%s) Not Found", dto.getUserId()));
+                return;
+            }
+
+            HashMap<String, String> parameters = new HashMap<>();
+            parameters.put("organizationId", dto.getOrganizationId());
+            parameters.put("userId", dto.getUserId());
+
+            accountMapper.addOrganizationWallet(parameters);
+        }  catch (JsonProcessingException e) {
+            log.error("Error Adding Organization Wallet to User : " + e.getMessage());
+        }
+    }
+
+    @JmsListener(destination = JMSConfig.REMOVE_ORGANIZATION_ACCOUNT_QUEUE)
+    public void listenForRemoveOrganizationFromUser(String jsonData) {
+        try {
+            UserOrganizationAmendDto dto = objectMapper.readValue(jsonData, UserOrganizationAmendDto.class);
+
+            if (dto == null || dto.getUserId() == null) {
+                log.error("Error Removing Organization Wallet from User, Null Values Found");
+                return;
+            }
+
+            accountMapper.removeOrganizationWallet(dto.getUserId());
+        }  catch (JsonProcessingException e) {
+            log.error("Error Removing Organization Wallet from User : " + e.getMessage());
         }
     }
 
