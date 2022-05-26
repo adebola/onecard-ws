@@ -10,14 +10,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/upload")
-public class UploadController {
+@RequestMapping("/api/v1/upload2")
+public class UploadController2 {
     private final AmazonS3BucketService amazonS3BucketService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     public String uploadFile(@RequestPart(value = "file") MultipartFile file) {
-        log.info("Inside Multipart File");
+        log.info("Inside Multipart File UploadController2");
         return this.amazonS3BucketService.uploadFile(file);
     }
 }
