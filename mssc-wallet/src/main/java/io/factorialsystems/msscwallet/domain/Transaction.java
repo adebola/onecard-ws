@@ -15,7 +15,7 @@ import java.util.Date;
 public class Transaction {
     private Integer id;
     private String accountId;
-    private String chargeToAccountId;
+    private String chargeAccountId;
     private Integer serviceId;
     private String serviceName;
     private String requestId;

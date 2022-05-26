@@ -110,7 +110,7 @@ public class WalletServiceJMSListener {
                     .serviceId(serviceId)
                     .serviceName(action)
                     .accountId(account.getId())
-                    .chargeToAccountId(account.getChargeAccountId())
+                    .chargeAccountId(account.getChargeAccountId())
                     .txAmount(dto.getServiceCost())
                     .requestId(dto.getRequestId())
                     .recipient(dto.getRecipient())
