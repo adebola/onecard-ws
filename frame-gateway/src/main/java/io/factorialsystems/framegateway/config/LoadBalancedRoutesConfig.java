@@ -29,7 +29,7 @@ public class LoadBalancedRoutesConfig {
                         .uri("lb://payment-server"))
                 .route("api-user-service", r -> r.path("/api/v1/api-user", "/api/v1/api-user/**", "/api/v2", "/api/v2/**")
                         .uri("lb://api-user-server"))
-                .route("communication-service", r -> r.path("/api/v1/upload", "/api/v1/upload/**")
+                .route("communication-service", r -> r.path("/api/v1/upload", "/api/v1/upload/**", "/api/v1/upload2", "/api/v1/upload2/**", "/api/v1/sms", "/api/v1/sms/**", "/api/v1/mail", "/api/v1/mail/**")
                         .uri("lb://communication-server"))
 //                .route("test-server", r -> r.path("/api/v1/test", "/api/v1/test/**").uri("lb://test-server"))
                 .build();
