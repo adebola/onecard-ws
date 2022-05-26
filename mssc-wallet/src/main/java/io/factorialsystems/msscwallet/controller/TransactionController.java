@@ -39,6 +39,22 @@ public class TransactionController {
         return new ResponseEntity<>(transactionService.findTransaction(id), HttpStatus.OK);
     }
 
+    @GetMapping("/organization")
+    public ResponseEntity<?> getOrganizationTransactions(@RequestParam(value = "id") String id,
+                                                         @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                         @RequestParam(value = "pageSize", required = false) Integer pageSize ) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(transactionService.findOrganizationTransactionsByAccountId(id, pageNumber, pageSize), HttpStatus.OK);
+    }
+
     @GetMapping
     public ResponseEntity<?> getMyTransactions( @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                 @RequestParam(value = "pageSize", required = false) Integer pageSize) {

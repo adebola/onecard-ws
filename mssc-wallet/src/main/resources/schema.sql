@@ -27,6 +27,7 @@ create table transactions (
     tx_amount DECIMAL(10,2) NOT NULL,
     recharge_request_id VARCHAR(64) NOT NULL,
     recipient varchar(64),
+    charge_account_id varchar(64),
     FOREIGN KEY (account_id) REFERENCES accounts(id),
     PRIMARY KEY (id)
 );

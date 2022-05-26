@@ -13,6 +13,7 @@ import java.util.Date;
 public class TransactionDto {
     private Integer id;
     private String serviceName;
+    private String chargeToAccountId;
     private Date txDate;
     private BigDecimal txAmount;
     private String recipient;

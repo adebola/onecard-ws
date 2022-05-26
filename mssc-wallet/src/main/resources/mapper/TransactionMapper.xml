@@ -5,15 +5,17 @@
     <resultMap id="transactionResultMap" type="io.factorialsystems.msscwallet.domain.Transaction">
         <id column="id" property="id" jdbcType="VARCHAR" />
         <result column="account_id" property="accountId" jdbcType="VARCHAR"/>
+        <result column="charge_account_id" property="chargeAccountId" jdbcType="VARCHAR"/>
         <result column="service_id" property="serviceId" jdbcType="INTEGER"/>
         <result column="service_name" property="serviceName" jdbcType="VARCHAR"/>
         <result column="tx_datetime" property="txDate" jdbcType="TIMESTAMP"/>
         <result column="tx_amount" property="txAmount"  jdbcType="DECIMAL"/>
         <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
+        <result column="charge_account_id" property="chargeAccountId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="column_list">
-        t.id, t.account_id, t.service_id, t.service_name, t.tx_datetime, t.tx_amount, t.recipient
+        t.id, t.account_id, t.charge_account_id, t.service_id, t.service_name, t.tx_datetime, t.tx_amount, t.recipient, t.charge_account_id
     </sql>
 
     <select id="findUserTransactions" parameterType="java.lang.String" resultMap="transactionResultMap">
@@ -24,6 +26,14 @@
         and t.account_id = a.id
     </select>
 
+    <select id="findOrganizationTransactionsByAccountId" parameterType="java.lang.String" resultMap="transactionResultMap">
+        select
+        <include refid="column_list"/>
+        from transactions t
+        where t.charge_account_id = #{id}
+    </select>
+
+
     <select id="findTransaction" parameterType="java.lang.String" resultMap="transactionResultMap">
         select
         <include refid="column_list"/>
@@ -32,8 +42,8 @@
     </select>
 
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.Transaction">
-        insert into transactions(account_id, service_id, service_name, tx_amount, recharge_request_id, recipient)
-        values (#{accountId}, #{serviceId}, #{serviceName}, #{txAmount}, #{requestId}, #{recipient})
+        insert into transactions(account_id, service_id, service_name, tx_amount, recharge_request_id, recipient, charge_account_id)
+        values (#{accountId}, #{serviceId}, #{serviceName}, #{txAmount}, #{requestId}, #{recipient}, #{chargeAccountId})
 
         <selectKey resultType="int" keyProperty="id" order="AFTER">
             select LAST_INSERT_ID()

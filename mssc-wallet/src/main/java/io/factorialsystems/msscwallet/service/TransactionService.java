@@ -4,9 +4,9 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscwallet.dao.TransactionMapper;
 import io.factorialsystems.msscwallet.domain.Transaction;
-import io.factorialsystems.msscwallet.mapper.TransactionMapstructMapper;
 import io.factorialsystems.msscwallet.dto.PagedDto;
 import io.factorialsystems.msscwallet.dto.TransactionDto;
+import io.factorialsystems.msscwallet.mapper.TransactionMapstructMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +24,13 @@ public class TransactionService {
         Page<Transaction> transactions = transactionMapper.findUserTransactions(id);
 
         return createDto(transactions);
+    }
+
+    public PagedDto<TransactionDto> findOrganizationTransactionsByAccountId(String id, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<Transaction> transactions = transactionMapper.findOrganizationTransactionsByAccountId(id);
+
+        return  createDto(transactions);
     }
 
     public TransactionDto findTransaction(String id) {

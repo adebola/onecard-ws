@@ -79,6 +79,8 @@ public class WalletServiceJMSListener {
             if (account == null) {
                 final String message = String.format("Error saving New Transaction, Unable to find Account for User (%s)", dto.getUserId());
                 log.error(message);
+
+                return;
             }
 
             log.info("Retrieved Account for Transaction ID {}, UserName {}", account.getId(), account.getName());
@@ -108,6 +110,7 @@ public class WalletServiceJMSListener {
                     .serviceId(serviceId)
                     .serviceName(action)
                     .accountId(account.getId())
+                    .chargeToAccountId(account.getChargeAccountId())
                     .txAmount(dto.getServiceCost())
                     .requestId(dto.getRequestId())
                     .recipient(dto.getRecipient())
@@ -120,7 +123,6 @@ public class WalletServiceJMSListener {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-
     }
 
     @JmsListener(destination = JMSConfig.DELETE_ACCOUNT_QUEUE)
@@ -148,15 +150,15 @@ public class WalletServiceJMSListener {
             UserOrganizationAmendDto dto = objectMapper.readValue(jsonData, UserOrganizationAmendDto.class);
 
             if (dto == null || dto.getOrganizationId() == null || dto.getUserId() == null) {
-                log.error("Error Adding Organization Wallet to User, Null Values Found");
+                log.error("Error Adding Organization Wallet to User, Null Values received");
                 return;
             }
 
             // Get Organization Account
-            Account orgAccount = accountMapper.findAccountByUserId(dto.getUserId());
+            Account orgAccount = accountMapper.findAccountByUserId(dto.getOrganizationId());
 
             if (orgAccount == null || orgAccount.getId() == null) {
-                log.error(String.format("Error Adding Organization Wallet Organization (%s) Not Found", dto.getOrganizationId()));
+                log.error(String.format("Error Adding Organization Wallet (%s) to User (%s), Organization Not Found", dto.getUserId(), dto.getOrganizationId()));
                 return;
             }
 
@@ -164,15 +166,18 @@ public class WalletServiceJMSListener {
             Account userAccount = accountMapper.findAccountByUserId(dto.getUserId());
 
             if (userAccount == null) {
-                log.error(String.format("Error Adding Organization Wallet User (%s) Not Found", dto.getUserId()));
+                log.error(String.format("Error Adding Organization Wallet (%s) to User (%s), User Not Found", dto.getUserId(), dto.getOrganizationId()));
                 return;
             }
 
+            log.info(String.format("linking User Account %s with Organization %s", userAccount.getName(), orgAccount.getName()));
+
             HashMap<String, String> parameters = new HashMap<>();
-            parameters.put("organizationId", dto.getOrganizationId());
-            parameters.put("userId", dto.getUserId());
+            parameters.put("organizationId", orgAccount.getId());
+            parameters.put("id", userAccount.getId());
 
             accountMapper.addOrganizationWallet(parameters);
+
         }  catch (JsonProcessingException e) {
             log.error("Error Adding Organization Wallet to User : " + e.getMessage());
         }
@@ -187,6 +192,8 @@ public class WalletServiceJMSListener {
                 log.error("Error Removing Organization Wallet from User, Null Values Found");
                 return;
             }
+
+            log.info(String.format("De-linking User Account %s from Organization", dto.getUserId()));
 
             accountMapper.removeOrganizationWallet(dto.getUserId());
         }  catch (JsonProcessingException e) {

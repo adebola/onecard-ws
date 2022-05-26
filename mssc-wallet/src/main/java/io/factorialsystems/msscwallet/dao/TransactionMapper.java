@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface TransactionMapper {
     Page<Transaction> findUserTransactions(String id);
+    Page<Transaction> findOrganizationTransactionsByAccountId(String id);
     Transaction findTransaction(String id);
     void save(Transaction transaction);
 }

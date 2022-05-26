@@ -87,7 +87,7 @@
     </update>
 
     <update id="addOrganizationWallet" parameterType="java.util.Map">
-        update accounts set charge_account = #{organizationId} where user_id = #{userId}
+        update accounts set charge_account = #{organizationId} where id = #{id}
     </update>
 
     <update id="removeOrganizationWallet" parameterType="java.lang.String">
