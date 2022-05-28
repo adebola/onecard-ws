@@ -55,6 +55,7 @@ create table provider_services (
     activation_date timestamp,
     activatedBy varchar(64),
     suspended boolean DEFAULT FALSE,
+    async BOOLEAN default true,
     PRIMARY KEY (id),
     UNIQUE KEY idx_service_code(service_code),
     FOREIGN KEY (action) REFERENCES service_actions(id),
@@ -103,10 +104,13 @@ create table recharge_requests (
     closed boolean NOT NULL DEFAULT FALSE,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     payment_mode varchar(32) NOT NULL,
+    async_request BOOLEAN default true,
     scheduled_request_id varchar(64),
     auto_request_id varchar(64),
+    bulk_request_id varchar(64),
     FOREIGN KEY (scheduled_request_id) REFERENCES scheduled_recharge(id),
     FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
+    FOREIGN KEY (bulk_request_id) REFERENCES bulk_recharge_requests(id),
     FOREIGN KEY (service_id) REFERENCES provider_services(id),
     PRIMARY KEY (id)
 );
@@ -123,27 +127,27 @@ create table ringo_data_plans (
     PRIMARY KEY (product_id)
 );
 
-create table bulk_recharge_requests (
-    id varchar(64),
-    user_id varchar(64),
-    service_id int NOT NULL,
-    service_cost decimal(10,2) NOT NULL,
-    total_service_cost decimal(10,2) NOT NULL,
-    group_id int,
-    product_id varchar(64),
-    payment_id varchar(64),
-    payment_mode varchar(32) NOT NULL,
-    authorization_url varchar(64),
-    redirect_url varchar(64),
-    closed boolean NOT NULL DEFAULT FALSE,
-    createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    scheduled_request_id varchar(64),
-    auto_request_id varchar(64),
-    FOREIGN KEY (scheduled_request_id) REFERENCES scheduled_recharge(id),
-    FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
-    FOREIGN KEY (service_id) REFERENCES provider_services(id),
-    PRIMARY KEY (id)
-);
+# create table bulk_recharge_requests (
+#     id varchar(64),
+#     user_id varchar(64),
+#     service_id int NOT NULL,
+#     service_cost decimal(10,2) NOT NULL,
+#     total_service_cost decimal(10,2) NOT NULL,
+#     group_id int,
+#     product_id varchar(64),
+#     payment_id varchar(64),
+#     payment_mode varchar(32) NOT NULL,
+#     authorization_url varchar(64),
+#     redirect_url varchar(64),
+#     closed boolean NOT NULL DEFAULT FALSE,
+#     createdAt timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+#     scheduled_request_id varchar(64),
+#     auto_request_id varchar(64),
+#     FOREIGN KEY (scheduled_request_id) REFERENCES scheduled_recharge(id),
+#     FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
+#     FOREIGN KEY (service_id) REFERENCES provider_services(id),
+#     PRIMARY KEY (id)
+# );
 
 create table recharge_request_recipients (
     bulk_recharge_request_id varchar(64),
@@ -153,10 +157,51 @@ create table recharge_request_recipients (
     INDEX idx_bulk_recharge_request_id (bulk_recharge_request_id),
     INDEX idx_scheduled_recharge_request_id(scheduled_recharge_request_id),
     INDEX idx_auto_recharge_request_id(auto_recharge_request_id),
-    FOREIGN KEY (auto_recharge_request_id) REFERENCES auto_recharge(id),
-    FOREIGN KEY (scheduled_recharge_request_id) REFERENCES scheduled_recharge (id),
-    FOREIGN KEY (bulk_recharge_request_id) REFERENCES bulk_recharge_requests (id)
+    FOREIGN KEY (auto_recharge_request_id) REFERENCES new_auto_recharge_requests(id),
+    FOREIGN KEY (scheduled_recharge_request_id) REFERENCES new_scheduled_recharge_requests (id),
+    FOREIGN KEY (bulk_recharge_request_id) REFERENCES new_bulk_recharge_requests (id)
 );
+
+create table new_auto_recharge_requests (
+    id varchar (64) NOT NULL,
+    user_id varchar(64),
+    title varchar(128),
+    start_date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    end_date timestamp,
+    recurring_type int NOT NULL,
+    separation_count int default 0,
+    payment_mode varchar(64) NOT NULL,
+    deleted boolean default FALSE,
+    deleted_date timestamp,
+    INDEX idx_user_id(user_id),
+    INDEX idx_recurring_type(recurring_type),
+    PRIMARY KEY (id)
+);
+
+create table auto_recurring_events (
+    id int AUTO_INCREMENT,
+    auto_request_id varchar(64) NOT NULL,
+    day_of_period int NOT NULL,
+    disabled boolean default  FALSE,
+    INDEX idx_auto_request(auto_request_id),
+    INDEX idx_day_of_period(day_of_period),
+    INDEX idx_disabled(disabled),
+    FOREIGN KEY (auto_request_id) REFERENCES new_auto_recharge_requests(id),
+    PRIMARY KEY (id)
+);
+
+create table auto_events_ran(
+    id  int AUTO_INCREMENT,
+    auto_request_id varchar(64) NOT NULL,
+    recurring_event_id int NOT NULL,
+    period_id int NOT NULL,
+    ran_on_date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    INDEX idx_period_id(period_id),
+    FOREIGN KEY (recurring_event_id) REFERENCES auto_recurring_events(id),
+    FOREIGN KEY (auto_request_id) REFERENCES new_auto_recharge_requests(id),
+    PRIMARY KEY (id)
+);
+
 
 create table new_bulk_recharge_requests (
     id varchar(64),
@@ -179,13 +224,17 @@ create table bulk_individual_requests (
     id int AUTO_INCREMENT,
     bulk_request_id varchar(64),
     scheduled_request_id varchar(64),
+    auto_request_id varchar(64),
     service_id int NOT NULL,
     service_cost decimal(10,2) NOT NULL,
     product_id varchar(64),
     telephone varchar(64),
     recipient varchar(64) NOT NULL,
+    failed BOOLEAN default false,
+    failed_message varchar(256),
     FOREIGN KEY (scheduled_request_id) REFERENCES new_scheduled_recharge_requests(id),
     FOREIGN KEY (bulk_request_id) REFERENCES new_bulk_recharge_requests(id),
+    FOREIGN KEY (auto_request_id) REFERENCES new_auto_recharge_requests(id),
     PRIMARY KEY (id)
 );
 
@@ -207,62 +256,49 @@ create table new_scheduled_recharge_requests (
     PRIMARY KEY (id)
 );
 
-create table scheduled_recharge (
-    id varchar(64),
-    user_id varchar(64),
-    request_id int,
-    request_type int DEFAULT 1 NOT NULL,
-    request_scheduled_date timestamp NOT NULL,
-    service_id int NOT NULL,
-    service_cost decimal(10, 2),
-    total_service_cost decimal (10,2),
-    group_id int,
-    recipient varchar(32),
-    product_id varchar(32),
-    telephone varchar (32),
-    redirect_url varchar(64),
-    authorization_url varchar(64),
-    payment_mode varchar(16),
-    payment_id varchar(64),
-    message varchar(64),
-    status int,
-    request_created_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    request_ran_on timestamp,
-    closed boolean NOT NULL DEFAULT FALSE,
-    FOREIGN KEY (service_id) REFERENCES provider_services(id),
-    PRIMARY KEY (id)
-);
+# create table scheduled_recharge (
+#     id varchar(64),
+#     user_id varchar(64),
+#     request_id int,
+#     request_type int DEFAULT 1 NOT NULL,
+#     request_scheduled_date timestamp NOT NULL,
+#     service_id int NOT NULL,
+#     service_cost decimal(10, 2),
+#     total_service_cost decimal (10,2),
+#     group_id int,
+#     recipient varchar(32),
+#     product_id varchar(32),
+#     telephone varchar (32),
+#     redirect_url varchar(64),
+#     authorization_url varchar(64),
+#     payment_mode varchar(16),
+#     payment_id varchar(64),
+#     message varchar(64),
+#     status int,
+#     request_created_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+#     request_ran_on timestamp,
+#     closed boolean NOT NULL DEFAULT FALSE,
+#     FOREIGN KEY (service_id) REFERENCES provider_services(id),
+#     PRIMARY KEY (id)
+# );
 
 
-create table auto_recharge (
-    id varchar(64),
-    user_id varchar(64),
-    request_type int DEFAULT 1 NOT NULL,
-    request_start timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    request_end timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    request_created timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    request_start_date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    request_end_date timestamp,
-    service_id int NOT NULL,
-    group_id int,
-    recipient varchar(32),
-    product_id varchar(32),
-    telephone varchar (32),
-    service_cost decimal(10, 2),
-    redirect_url varchar(64),
-    payment_mode varchar(16),
-    closed boolean NOT NULL DEFAULT FALSE,
-    FOREIGN KEY (service_id) REFERENCES provider_services(id),
-    PRIMARY KEY (id)
-);
+create procedure sp_disable_and_load_events (IN auto_recharge_id VARCHAR(64))
+    BEGIN
+        update auto_recurring_events set disabled = true where auto_request_id = auto_recharge_id;
+        select id, auto_request_id, day_of_period, disabled
+        from auto_recurring_events
+        where auto_request_id = auto_recharge_id;
+    END;
 
 create procedure sp_factory ( IN provider_service_id INT)
 BEGIN
     DECLARE provider_code VARCHAR(64);
     DECLARE service_action VARCHAR(64);
     DECLARE recharge_provider_code VARCHAR(64);
+    DECLARE async BOOLEAN;
 
-    select p.code, sa.action into provider_code, service_action from providers p, provider_services ps, service_actions sa
+    select p.code, sa.action, ps.async into provider_code, service_action, async from providers p, provider_services ps, service_actions sa
     where ps.id = provider_service_id
     and  ps.action = sa.id
     and ps.provider_id = p.id;
@@ -273,7 +309,7 @@ BEGIN
     order by psrp.weight desc
     limit 1;
 
-    select provider_code, recharge_provider_code, service_action;
+    select provider_code, recharge_provider_code, service_action, async;
 END;
 
 create procedure sp_addRechargeProvider(IN provider_id INT, IN service_id INT)

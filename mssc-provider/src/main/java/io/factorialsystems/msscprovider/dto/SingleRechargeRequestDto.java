@@ -6,12 +6,17 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Null;
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SingleRechargeRequestDto {
+    @Null(message = "Id cannot be set")
+    private String id;
+
     @NotEmpty(message = "Code must be specified")
     private String serviceCode;
 
@@ -29,4 +34,7 @@ public class SingleRechargeRequestDto {
     private String accountType;
 
     private String name;
+
+    @Null(message = "Created Date cannot be set")
+    private Date createdAt;
 }

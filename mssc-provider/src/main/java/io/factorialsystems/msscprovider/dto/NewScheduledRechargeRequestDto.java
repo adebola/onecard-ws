@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.util.Date;
 import java.util.List;
 
@@ -15,6 +16,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NewScheduledRechargeRequestDto {
+    @Null(message = "Id cannot be set")
+    private String id;
+
     @NotEmpty(message = "Please specify type either single or bulk recharge")
     private String rechargeType;
 

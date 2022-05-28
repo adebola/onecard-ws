@@ -23,6 +23,18 @@ public interface NewBulkRechargeMapstructMapper {
     NewBulkRechargeRequest rechargeDtoToRecharge(NewBulkRechargeRequestDto dto);
 
     @Mappings({
+            @Mapping(source = "id", target = "id"),
+            @Mapping(source = "createdAt", target = "createdAt"),
+            @Mapping(source = "paymentMode", target = "paymentMode"),
+            @Mapping(source = "redirectUrl", target = "redirectUrl"),
+            @Mapping(source = "totalServiceCost", target = "totalServiceCost"),
+            @Mapping(target = "recipients", ignore = true)
+    })
+    NewBulkRechargeRequestDto rechargeToRechargDto(NewBulkRechargeRequest request);
+
+    List<NewBulkRechargeRequestDto> listRechargeToRechargDto(List<NewBulkRechargeRequest> requests);
+
+    @Mappings({
             @Mapping(source = "productId", target = "productId"),
             @Mapping(source = "serviceCost", target = "serviceCost"),
             @Mapping(source = "telephone", target = "telephone"),
@@ -31,4 +43,16 @@ public interface NewBulkRechargeMapstructMapper {
     })
     IndividualRequest individualDtoToIndividual(IndividualRequestDto dto);
     List<IndividualRequest> listIndividualDtoToIndividual(List<IndividualRequestDto> dtos);
+
+    @Mappings({
+            @Mapping(source = "productId", target = "productId"),
+            @Mapping(source = "serviceCost", target = "serviceCost"),
+            @Mapping(source = "telephone", target = "telephone"),
+            @Mapping(source = "recipient", target = "recipient"),
+            @Mapping(source = "serviceCode", target = "serviceCode"),
+            @Mapping(source = "failed", target = "failed"),
+            @Mapping(source = "failedMessage", target = "failedMessage")
+    })
+    IndividualRequestDto individualToIndividualDto(IndividualRequest request);
+    List<IndividualRequestDto> listIndividualToIndividualDto(List<IndividualRequest> requests);
 }

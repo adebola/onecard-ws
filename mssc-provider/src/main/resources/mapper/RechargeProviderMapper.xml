@@ -40,7 +40,7 @@
 
     <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.RechargeProvider">
         insert into recharge_providers(name, code, createdBy)
-        values(#{name}, #{createdBy}, #{code})
+        values(#{name}, #{code}, #{createdBy})
     </insert>
 
     <update id="update" parameterType="io.factorialsystems.msscprovider.domain.RechargeProvider">
@@ -48,9 +48,6 @@
         <set>
             <if test="name != null">name=#{name},</if>
             <if test="walletId != null">wallet_id=#{walletId},</if>
-            <if test="activated != null">activated=#{activated},</if>
-            <if test="activatedBy != null">activatedBy=#{activatedBy},</if>
-            <if test="activationDate != null">activation_date=#{activationDate},</if>
             <if test="code != null">code=#{code},</if>
             <if test="suspended != null">suspended=#{suspended},</if>
         </set>

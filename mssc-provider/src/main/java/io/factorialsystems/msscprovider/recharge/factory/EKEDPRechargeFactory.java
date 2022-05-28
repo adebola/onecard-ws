@@ -1,10 +1,7 @@
 package io.factorialsystems.msscprovider.recharge.factory;
 
 import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
-import io.factorialsystems.msscprovider.recharge.DataEnquiry;
-import io.factorialsystems.msscprovider.recharge.ExtraDataEnquiry;
-import io.factorialsystems.msscprovider.recharge.ParameterCheck;
-import io.factorialsystems.msscprovider.recharge.Recharge;
+import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.ekedp.EKEDPElectricRecharge;
 
 import java.util.HashMap;
@@ -43,5 +40,10 @@ public class EKEDPRechargeFactory extends AbstractFactory {
     @Override
     public ParameterCheck getCheck(String s) {
         return ApplicationContextProvider.getBean(EKEDPElectricRecharge.class);
+    }
+
+    @Override
+    public Balance getBalance() {
+        return null;
     }
 }

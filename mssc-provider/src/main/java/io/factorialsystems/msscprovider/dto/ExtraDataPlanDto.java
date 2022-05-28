@@ -1,7 +1,10 @@
 package io.factorialsystems.msscprovider.dto;
 
+import io.factorialsystems.msscprovider.recharge.ringo.response.ProductItem;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -10,5 +13,5 @@ public class ExtraDataPlanDto {
    private Integer status;
    private String message;
    private String recipient;
-   private Object object;
+   private List<ProductItem> object;
 }

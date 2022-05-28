@@ -43,6 +43,13 @@
         where id = #{id}
     </select>
 
+    <select id="findRequestByUserId" parameterType="java.lang.String" resultMap="newScheduledRechargeResultMap">
+        select
+        <include refid="column_list"/>
+        from new_scheduled_recharge_requests
+        where user_id = #{id}
+    </select>
+
     <select id="findOpenRequests" resultMap="newScheduledRechargeResultMap">
         select
         <include refid="column_list"></include>

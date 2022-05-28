@@ -17,6 +17,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.request.SmileRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.request.SmileValidityRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.SmileResponse;
 import io.factorialsystems.msscprovider.recharge.ringo.response.SmileValidateResponse;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.http.HttpEntity;
@@ -136,8 +137,8 @@ public class RingoSmileRecharge implements Recharge, DataEnquiry, ParameterCheck
     private HttpHeaders createHeader() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("email", properties.getMail());
-        headers.add("password", properties.getPassword());
+        headers.add(K.HEADER_EMAIL, properties.getMail());
+        headers.add(K.HEADER_PASSWORD, properties.getPassword());
 
         return headers;
     }

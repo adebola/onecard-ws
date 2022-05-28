@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -28,4 +29,6 @@ public class RechargeProviderDto {
     private Boolean activated;
     private String activatedBy;
     private Date activationDate;
+
+    private BigDecimal balance;
 }

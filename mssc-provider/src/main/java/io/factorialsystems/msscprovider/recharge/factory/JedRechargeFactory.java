@@ -1,10 +1,7 @@
 package io.factorialsystems.msscprovider.recharge.factory;
 
 import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
-import io.factorialsystems.msscprovider.recharge.DataEnquiry;
-import io.factorialsystems.msscprovider.recharge.ExtraDataEnquiry;
-import io.factorialsystems.msscprovider.recharge.ParameterCheck;
-import io.factorialsystems.msscprovider.recharge.Recharge;
+import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.jed.JedElectricRecharge;
 
 import java.util.HashMap;
@@ -46,11 +43,21 @@ public class JedRechargeFactory extends AbstractFactory {
 
     @Override
     public ExtraDataEnquiry getExtraPlans(String action) {
+
+        if (action.equalsIgnoreCase("JED")) {
+            return ApplicationContextProvider.getBean(JedElectricRecharge.class);
+        }
+
         return null;
     }
 
     @Override
     public ParameterCheck getCheck(String s) {
         return ApplicationContextProvider.getBean(JedElectricRecharge.class);
+    }
+
+    @Override
+    public Balance getBalance() {
+        return null;
     }
 }

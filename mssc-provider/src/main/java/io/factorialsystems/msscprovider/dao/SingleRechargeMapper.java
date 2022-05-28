@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.dao;
 
+import com.github.pagehelper.Page;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import org.apache.ibatis.annotations.Mapper;
@@ -13,4 +14,6 @@ public interface SingleRechargeMapper {
     List<RechargeFactoryParameters> factory(Integer id);
     void closeRequest(String id);
     void saveRechargeRequests(List<SingleRechargeRequest> requests);
+    Page<SingleRechargeRequest> findRequestsByUserId(String id);
+    Page<SingleRechargeRequest> search(String search);
 }

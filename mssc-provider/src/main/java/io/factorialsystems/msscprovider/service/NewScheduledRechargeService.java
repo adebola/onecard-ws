@@ -1,19 +1,21 @@
 package io.factorialsystems.msscprovider.service;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
 import io.factorialsystems.msscprovider.dao.NewScheduledRechargeMapper;
+import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest;
-import io.factorialsystems.msscprovider.dto.IndividualRequestDto;
-import io.factorialsystems.msscprovider.dto.NewScheduledRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.PaymentRequestDto;
-import io.factorialsystems.msscprovider.dto.ScheduledRechargeResponseDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.helper.PaymentHelper;
 import io.factorialsystems.msscprovider.helper.TransactionHelper;
+import io.factorialsystems.msscprovider.mapper.recharge.NewBulkRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.mapper.recharge.NewScheduledRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,11 +31,11 @@ public class NewScheduledRechargeService {
 
     @Value("${api.local.host.baseurl}")
     private String baseLocalUrl;
-
     private final FileUploader fileUploader;
     private final NewBulkRechargeMapper newBulkRechargeMapper;
     private final NewBulkRechargeService newBulkRechargeService;
     private final NewScheduledRechargeMapper newScheduledRechargeMapper;
+    private final NewBulkRechargeMapstructMapper newBulkRechargeMapstructMapper;
     private final NewScheduledRechargeMapstructMapper newScheduledRechargeMapstructMapper;
 
     public void uploadRecharge(MultipartFile file, Date scheduledDate) {
@@ -151,6 +153,20 @@ public class NewScheduledRechargeService {
         return false;
     }
 
+    public PagedDto<NewScheduledRechargeRequestDto> getUserRecharges(Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.findRequestByUserId(K.getUserId());
+
+        return createDto(requests);
+    }
+
+    public PagedDto<IndividualRequestDto> getBulkIndividualRequests(String id, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<IndividualRequest> requests = newBulkRechargeMapper.findBulkIndividualRequestsByScheduleId(id);
+
+        return createIndividualDto(requests);
+    }
+
     public void runRecharges(List<NewScheduledRechargeRequest> requests) {
 
         requests.forEach(request -> {
@@ -185,4 +201,26 @@ public class NewScheduledRechargeService {
             }
         });
     }
+
+    private PagedDto<IndividualRequestDto> createIndividualDto(Page<IndividualRequest> requests) {
+        PagedDto<IndividualRequestDto> pagedDto = new PagedDto<>();
+        pagedDto.setTotalSize((int) requests.getTotal());
+        pagedDto.setPageNumber(requests.getPageNum());
+        pagedDto.setPageSize(requests.getPageSize());
+        pagedDto.setPages(requests.getPages());
+        pagedDto.setList(newBulkRechargeMapstructMapper.listIndividualToIndividualDto(requests.getResult()));
+        return pagedDto;
+    }
+
+    private PagedDto<NewScheduledRechargeRequestDto> createDto(Page<NewScheduledRechargeRequest> requests) {
+        PagedDto<NewScheduledRechargeRequestDto> pagedDto = new PagedDto<>();
+        pagedDto.setTotalSize((int) requests.getTotal());
+        pagedDto.setPageNumber(requests.getPageNum());
+        pagedDto.setPageSize(requests.getPageSize());
+        pagedDto.setPages(requests.getPages());
+        pagedDto.setList(newScheduledRechargeMapstructMapper.listRechargeToRechargeDto(requests.getResult()));
+        return pagedDto;
+    }
 }
+
+

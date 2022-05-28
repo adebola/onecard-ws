@@ -22,6 +22,12 @@ import java.util.List;
 public class ExcelReader {
     private final UploadFile uploadFile;
 
+    public static final int SERVICE_CODE_COLUMN = 1;
+    public static final int PRODUCT_ID_COLUMN = 2;
+    public static final int SERVICE_COST_COLUMN = 3;
+    public static final int TELEPHONE_COLUMN = 4;
+    public static final int RECIPIENT_COLUMN = 5;
+
     public ExcelReader(UploadFile uploadFile) {
         this.uploadFile = uploadFile;
     }
@@ -54,23 +60,38 @@ public class ExcelReader {
 
                 for (Cell cell : row) {
                     switch (cell.getColumnIndex()) {
-                        case 1:
+                        case SERVICE_CODE_COLUMN:
                             dto.setServiceCode(cell.getStringCellValue());
                             break;
 
-                        case 2:
-                            dto.setProductId(cell.getStringCellValue());
+                        case PRODUCT_ID_COLUMN:
+                            final String productId = cell.getStringCellValue();
+
+                            if (productId != null && productId.trim().length() > 0) {
+                                dto.setProductId(productId.trim());
+                            }
+
                             break;
 
-                        case 3:
-                            dto.setServiceCost(BigDecimal.valueOf(cell.getNumericCellValue()));
+                        case SERVICE_COST_COLUMN:
+                            final double cost = cell.getNumericCellValue();
+
+                            if(cost > 0) {
+                                dto.setServiceCost(BigDecimal.valueOf(cost));
+                            }
+
                             break;
 
-                        case 4:
-                            dto.setTelephone(cell.getStringCellValue());
+                        case TELEPHONE_COLUMN:
+                            final String telephone = cell.getStringCellValue();
+
+                            if (telephone != null && telephone.trim().length() > 0) {
+                                dto.setTelephone(telephone.trim());
+                            }
+
                             break;
 
-                        case 5:
+                        case RECIPIENT_COLUMN:
                             dto.setRecipient(cell.getStringCellValue());
                             break;
 

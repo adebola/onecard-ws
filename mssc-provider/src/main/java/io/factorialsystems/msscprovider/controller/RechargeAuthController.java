@@ -2,7 +2,11 @@ package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
-import io.factorialsystems.msscprovider.service.*;
+import io.factorialsystems.msscprovider.service.AutoRechargeService;
+import io.factorialsystems.msscprovider.service.NewBulkRechargeService;
+import io.factorialsystems.msscprovider.service.NewScheduledRechargeService;
+import io.factorialsystems.msscprovider.service.SingleRechargeService;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,9 +22,8 @@ import javax.validation.Valid;
 @RequestMapping("/api/v1/auth-recharge")
 public class RechargeAuthController {
     private final SingleRechargeService rechargeService;
-    private final BulkRechargeService bulkRechargeService;
+    private final AutoRechargeService autoRechargeService;
     private final NewBulkRechargeService newBulkRechargeService;
-//    private final ScheduledRechargeService scheduledRechargeService;
     private final NewScheduledRechargeService newScheduledRechargeService;
 
     @PostMapping
@@ -39,66 +42,171 @@ public class RechargeAuthController {
         return new ResponseEntity<>(new MessageDto(status.getMessage()), status.getStatus());
     }
 
-    @PostMapping("/bulk")
-    public ResponseEntity<BulkRechargeResponseDto> startBulkRecharge(@Valid @RequestBody BulkRechargeRequestDto dto) {
-        return new ResponseEntity<>(bulkRechargeService.saveService(dto), HttpStatus.OK);
-    }
-
-    @GetMapping("/bulk/{id}")
-    public ResponseEntity<MessageDto> finishBulkRecharge(@PathVariable("id") String id) {
-        bulkRechargeService.asyncBulkRecharge(id);
-        return new ResponseEntity<>(new MessageDto("Request submitted"), HttpStatus.OK);
-    }
-
+    //
+    // Please use /api/v1/auth-recharge/bulk in BulkRechargeAuthController::startNewBulkRecharge
+    //
+    @Deprecated
     @PostMapping("/newbulk")
-    public ResponseEntity<BulkRechargeResponseDto> startNewBulkRecharge(@Valid @RequestBody NewBulkRechargeRequestDto dto) {
+    public ResponseEntity<NewBulkRechargeResponseDto> startNewBulkRecharge(@Valid @RequestBody NewBulkRechargeRequestDto dto) {
         return new ResponseEntity<>(newBulkRechargeService.saveService(dto), HttpStatus.OK);
     }
 
+    //
+    // Please use /api/v1/auth-recharge/bulk/{id} in BulkRechargeAuthController::finishNewBulkRecharge
+    //
+    @Deprecated
     @GetMapping("/newbulk/{id}")
     public ResponseEntity<MessageDto> finishNewBulkRecharge(@PathVariable("id") String id) {
         newBulkRechargeService.asyncRecharge(id);
         return new ResponseEntity<>(new MessageDto("Request submitted successfully"), HttpStatus.OK);
     }
 
-//    @PostMapping("/scheduled")
-//    public ResponseEntity<?> startScheduledRecharge(@Valid @RequestBody ScheduledRechargeRequestDto dto) {
-//        return new ResponseEntity<>(scheduledRechargeService.startRecharge(dto), HttpStatus.OK);
-//    }
-//
-//    @GetMapping("/scheduled/{id}")
-//    public ResponseEntity<MessageDto> finishScheduledRecharge(@PathVariable("id") String id) {
-//
-//      if (scheduledRechargeService.finalizeScheduledRecharge(id)) {
-//          return new ResponseEntity<>(new MessageDto("Scheduled Recharge Request Submitted Successfully"), HttpStatus.ACCEPTED);
-//      } else {
-//          return new ResponseEntity<>(new MessageDto("Payment Failed for Scheduled Request"), HttpStatus.BAD_REQUEST);
-//      }
-//    }
-
-    @PostMapping("/scheduled")
-    public ResponseEntity<?> startNewScheduledRecharge(@Valid @RequestBody NewScheduledRechargeRequestDto dto) {
-        return new ResponseEntity<>(newScheduledRechargeService.startRecharge(dto), HttpStatus.ACCEPTED);
+    //
+    // Please use /api/v1/auth-recharge/auto/list in AutoRechargeAuthController::getUserAutoRecharges
+    //
+    @Deprecated
+    @GetMapping("/getauto")
+    public ResponseEntity<?> getUserAutoRecharges() {
+        return new ResponseEntity<>(autoRechargeService.findUserRecharges(), HttpStatus.OK);
     }
 
-    @GetMapping("/scheduled/{id}")
-    public ResponseEntity<MessageDto> finishNewScheduledRecharge(@PathVariable("id") String id) {
-        if (newScheduledRechargeService.finalizeScheduledRecharge(id)) {
-            return new ResponseEntity<>(new MessageDto("Scheduled Recharge Request Submitted Successfully"), HttpStatus.ACCEPTED);
-        } else {
-            return new ResponseEntity<>(new MessageDto("Payment Failed for Scheduled Request"), HttpStatus.BAD_REQUEST);
-        }
-    }
 
+    //
+    // Please use /api/v1/auth-recharge/bulk/file in BulkRechargeAuthController::uploadBulkFile
+    //
+    @Deprecated
     @PostMapping("/bulkfile")
     public ResponseEntity<?> uploadBulkFile(@RequestPart(value = "file") MultipartFile file) {
         newBulkRechargeService.uploadRecharge(file);
         return new ResponseEntity<>(new MessageDto("Bulk Request has been submitted successfully, results will be mailed to you"), HttpStatus.ACCEPTED);
     }
 
+
+    //
+    // Please use /api/v1/auth-recharge/scheduled/file in ScheduledRechargeAuthController::uploadScheduleFile
+    //
+    @Deprecated
     @PostMapping("/schedulefile")
-    public ResponseEntity<?> uploadScheduleFile(@RequestPart(value = "date") DateDto dto,  @RequestPart(value = "file") MultipartFile file) {
+    public ResponseEntity<?> uploadScheduleFile(@RequestPart(value = "date") DateDto dto, @RequestPart(value = "file") MultipartFile file) {
         newScheduledRechargeService.uploadRecharge(file, dto.getScheduledDate());
         return new ResponseEntity<>(new MessageDto("Scheduled Request has been submitted successfully, results will be mailed to you"), HttpStatus.ACCEPTED);
+    }
+
+
+    //
+    // Please use /api/v1/auth-recharge/auto/file in AutoRechargeAuthController::uploadAutoFile
+    //
+    @Deprecated
+    @PostMapping("/autofile")
+    public ResponseEntity<?> uploadAutoFile(@RequestPart(value = "auto") AutoUploadFileRechargeRequestDto dto, @RequestPart(value = "file") MultipartFile file) {
+        return new ResponseEntity<>(autoRechargeService.uploadRecharge(dto, file), HttpStatus.ACCEPTED);
+    }
+
+    //
+    // Please use /api/v1/auth-recharge/auto/list in AutoRechargeAuthController::getUserBulkRecharges
+    //
+    @Deprecated
+    @GetMapping("/bulklist")
+    public ResponseEntity<?> getUserBulkRecharges(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                  @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newBulkRechargeService.getUserRecharges(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/singlelist")
+    public ResponseEntity<?> getUserSingleRecharges(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+        return new ResponseEntity<>(rechargeService.getUserRecharges(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @Deprecated
+    @GetMapping("/individual/{id}")
+    public ResponseEntity<?> getBulkIndividualRequest(@PathVariable("id") String id,
+                                                      @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                      @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newBulkRechargeService.getBulkIndividualRequests(id, pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/single/{id}")
+    public ResponseEntity<?> getSingleRequest(@PathVariable("id") String id) {
+        return new ResponseEntity<>(rechargeService.getRecharge(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/single/searchrecipient")
+    public ResponseEntity<?> searchSingleByRecipient(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize,
+                                                     @RequestParam(value = "searchString") String searchString) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(rechargeService.search(searchString, pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    //
+    // Please use /api/v1/auth-recharge/scheduled/list in ScheduledRechargeAuthController::getUserScheduleRecharges
+    //
+    @Deprecated
+    @GetMapping("/schedulelist")
+    public ResponseEntity<?> getUserScheduleRecharges(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                      @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newScheduledRechargeService.getUserRecharges(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    //
+    // Please use /api/v1/auth-recharge/scheduled/individual/{id} in ScheduledRechargeAuthController::getScheduleBulkIndividualRequest
+    //
+    @Deprecated
+    @GetMapping("/schedule/{id}")
+    public ResponseEntity<?> getScheduleBulkIndividualRequest(@PathVariable("id") String id,
+                                                              @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                              @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newScheduledRechargeService.getBulkIndividualRequests(id, pageNumber, pageSize), HttpStatus.OK);
     }
 }

@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BulkRechargeResponseDto {
+public class NewBulkRechargeResponseDto {
     private String id;
     private Integer status;
     private String message;

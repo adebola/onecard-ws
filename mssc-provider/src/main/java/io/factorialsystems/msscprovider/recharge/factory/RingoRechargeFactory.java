@@ -1,10 +1,7 @@
 package io.factorialsystems.msscprovider.recharge.factory;
 
 import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
-import io.factorialsystems.msscprovider.recharge.DataEnquiry;
-import io.factorialsystems.msscprovider.recharge.ExtraDataEnquiry;
-import io.factorialsystems.msscprovider.recharge.ParameterCheck;
-import io.factorialsystems.msscprovider.recharge.Recharge;
+import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.ringo.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +47,7 @@ public class RingoRechargeFactory extends AbstractFactory {
     public static final String STARTIMES_LABEL = "STARTIMES";
     public static final String AIRTIME_LABEL = "AIRTIME";
     public static final String ELECTRICITY_LABEL = "ELECTRICITY";
+    public static final String EKEDP_LABEL = "EKEDP";
 
     @Override
     public Recharge getRecharge(String action) {
@@ -94,6 +92,9 @@ public class RingoRechargeFactory extends AbstractFactory {
             case STARTIMES_LABEL:
                 extraEnquiry =  ApplicationContextProvider.getBean(RingoDstvRecharge.class);
                 break;
+
+            case EKEDP_LABEL:
+                extraEnquiry = ApplicationContextProvider.getBean(RingoElectricRecharge.class);
         }
 
         return extraEnquiry;
@@ -108,6 +109,11 @@ public class RingoRechargeFactory extends AbstractFactory {
         }
 
         return (ParameterCheck) recharge;
+    }
+
+    @Override
+    public Balance getBalance() {
+        return ApplicationContextProvider.getBean(RingoAirtimeRecharge.class);
     }
 
     private Recharge getClass(String action) {

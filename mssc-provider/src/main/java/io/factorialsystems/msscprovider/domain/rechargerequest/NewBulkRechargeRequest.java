@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.List;
 
 @Data
@@ -21,5 +22,6 @@ public class NewBulkRechargeRequest {
     private Boolean closed;
     private String autoRequestId;
     private String scheduledRequestId;
+    private Timestamp createdAt;
     private List<IndividualRequest> recipients;
 }

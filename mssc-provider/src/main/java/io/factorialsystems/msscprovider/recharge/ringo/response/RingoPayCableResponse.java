@@ -15,10 +15,12 @@ public class RingoPayCableResponse {
 	private String status;
 	private String type;
 	private String date;
-	private String transref;
+
+	@JsonProperty("transref")
+	private String transRef;
 	
 	@JsonProperty("package")
-	private String pckg;
+	private String cablePackage;
 	
 	private BigDecimal amount;
 	private BigDecimal amountCharged;

@@ -22,6 +22,9 @@ public class RingoProperties {
     @Value("${ringo.electric.servicecode}")
     private String electricServiceCode;
 
+    @Value("${ringo.electric.verify.servicecode}")
+    private String electricVerifyServiceCode;
+
     @Value("${ringo.airtime.url}")
     private String airtimeUrl;
 

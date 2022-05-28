@@ -24,14 +24,6 @@ public class ProviderController {
     private final Environment environment;
     private final ProviderService providerService;
 
-    @GetMapping("/status")
-    public String status() {
-        final String status = K.SERVICE_STATUS + environment.getProperty("local.server.port");
-
-        log.info(status);
-        return status;
-    }
-
     @GetMapping
     public ResponseEntity<?> getProviderList(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                              @RequestParam(value = "pageSize", required = false) Integer pageSize) {

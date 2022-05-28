@@ -7,16 +7,22 @@ import io.factorialsystems.msscprovider.domain.RechargeProvider;
 import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.RechargeProviderDto;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeProviderMapstructMapper;
+import io.factorialsystems.msscprovider.recharge.Balance;
+import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
+import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RechargeProviderService {
+    private final FactoryProducer factoryProducer;
     private final RechargeProviderMapper rechargeMapper;
     private final RechargeProviderMapstructMapper rechargeMapstructMapper;
 
@@ -27,7 +33,20 @@ public class RechargeProviderService {
     }
 
     public RechargeProviderDto findById(Integer id) {
-        return rechargeMapstructMapper.rechargeToRechargeDto(rechargeMapper.findById(id));
+        RechargeProviderDto dto = rechargeMapstructMapper.rechargeToRechargeDto(rechargeMapper.findById(id));
+        dto.setBalance(new BigDecimal(0));
+
+        AbstractFactory abstractFactory = factoryProducer.getFactory(dto.getCode());
+
+        if (abstractFactory != null) {
+            Balance balance = abstractFactory.getBalance();
+
+            if (balance != null) {
+                dto.setBalance(balance.getBalance());
+            }
+        }
+
+        return dto;
     }
 
     public List<RechargeProviderDto> findByServiceId(Integer id) {
@@ -36,17 +55,15 @@ public class RechargeProviderService {
 
     public RechargeProviderDto save(RechargeProviderDto dto) {
         RechargeProvider rechargeProvider = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
+        rechargeProvider.setCreatedBy(K.getUserName());
         rechargeMapper.save(rechargeProvider);
-
-        if (rechargeProvider.getId() == null) {
-            throw new RuntimeException("Error saving Recharge Provider");
-        }
 
         return rechargeMapstructMapper.rechargeToRechargeDto(rechargeMapper.findById(rechargeProvider.getId()));
     }
 
     public RechargeProviderDto update(Integer id, RechargeProviderDto dto) {
         RechargeProvider rechargeProvider = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
+        rechargeProvider.setId(id);
         rechargeMapper.update(rechargeProvider);
         return rechargeMapstructMapper.rechargeToRechargeDto(rechargeMapper.findById(rechargeProvider.getId()));
     }

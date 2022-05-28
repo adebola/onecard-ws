@@ -12,4 +12,5 @@ public class RechargeFactoryParameters {
     private String providerCode;
     private String rechargeProviderCode;
     private String serviceAction;
+    private Boolean async;
 }

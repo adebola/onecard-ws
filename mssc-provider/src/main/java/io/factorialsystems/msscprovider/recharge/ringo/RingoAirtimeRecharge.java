@@ -9,7 +9,10 @@ import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.factory.RingoRechargeFactory;
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoAirtimeRequest;
+import io.factorialsystems.msscprovider.recharge.ringo.request.RingoInfoRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoAirtimeResponse;
+import io.factorialsystems.msscprovider.recharge.ringo.response.info.RingoInfoResponse;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -34,8 +37,8 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("email", ringoProperties.getMail());
-        headers.add("password", ringoProperties.getPassword());
+        headers.add(K.HEADER_EMAIL, ringoProperties.getMail());
+        headers.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
 
         int cost = (int)request.getServiceCost().doubleValue();
 
@@ -60,20 +63,27 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance {
                         .build();
             }
 
+            String errorMessage = null;
+
             if (response != null && response.getMessage() != null) {
-                log.error("Ringo Airtime Recharge failure for {} cost {}, Reason {}", airtimeRequest.getMsisdn(), cost, response.getMessage());
+                errorMessage = String.format("Ringo Airtime Recharge failure for %s cost %d, Reason: %s", airtimeRequest.getMsisdn(), cost, response.getMessage());
+                log.error(errorMessage);
             } else {
-                log.error("Ringo Airtime Recharge failure for {} cost {}, NULL Response", airtimeRequest.getMsisdn(), cost);
+                errorMessage = String.format("Ringo Airtime Recharge failure for %s cost %d, NULL Response", airtimeRequest.getMsisdn(), cost);
+                log.error(errorMessage);
             }
 
             return RechargeStatus.builder()
                     .status(HttpStatus.BAD_REQUEST)
-                    .message("Ringo Recharge Failure")
+                    .message(errorMessage)
                     .build();
 
         } catch (JsonProcessingException e) {
             log.error("Ringo Recharge Exception {}", e.getMessage());
-           throw new RuntimeException(e.getMessage());
+            return RechargeStatus.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build();
         }
     }
 
@@ -84,6 +94,36 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance {
 
     @Override
     public BigDecimal getBalance() {
-        return new BigDecimal(0);
+
+        RingoInfoRequest request = RingoInfoRequest.builder()
+                .serviceCode("INFO")
+                .build();
+
+        HttpHeaders headers = getHeader();
+
+        try {
+            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+            RingoInfoResponse response =
+                    restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoInfoResponse.class);
+
+            if (response != null && response.getStatus() != null && response.getStatus().equals("200")) {
+                return new BigDecimal(response.getWallet().getWallet().getBalance());
+            }
+
+            return new BigDecimal(0);
+
+        } catch (JsonProcessingException e) {
+            log.error("Ringo Recharge Exception {}", e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    private HttpHeaders getHeader() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add(K.HEADER_EMAIL, ringoProperties.getMail());
+        headers.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
+
+        return headers;
     }
 }

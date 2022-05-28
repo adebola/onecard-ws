@@ -16,15 +16,4 @@ public class RingoValidateCableResponse {
 	private String type;
 	private String customerName;
 	private String status;
-
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	public static class ProductItem {
-		private int period;
-		private String code;
-		private int month;
-		private int price;
-		private String name;
-	}
 }

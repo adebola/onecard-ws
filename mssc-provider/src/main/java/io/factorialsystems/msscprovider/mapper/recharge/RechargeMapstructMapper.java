@@ -4,15 +4,20 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRecharge
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
+import io.factorialsystems.msscprovider.mapper.DateMapper;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 
-@Mapper
+import java.util.List;
+
+@Mapper(uses = {DateMapper.class})
 @DecoratedWith(RechargeMapstructMapperDecorator.class)
 public interface RechargeMapstructMapper {
     @Mappings({
+            @Mapping(source = "id", target = "id"),
+            @Mapping(source = "createdAt", target = "createdAt"),
             @Mapping(source = "serviceCost", target = "serviceCost"),
             @Mapping(source = "serviceCode", target = "serviceCode"),
             @Mapping(source = "recipient", target = "recipient"),
@@ -22,6 +27,7 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "name", target = "name"),
     })
     SingleRechargeRequestDto rechargeToRechargeDto(SingleRechargeRequest request);
+    List<SingleRechargeRequestDto> listRechargeToRechargeDto(List<SingleRechargeRequest> requests);
 
     @Mappings({
             @Mapping(source = "serviceCost", target = "serviceCost"),

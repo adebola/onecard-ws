@@ -21,12 +21,15 @@
         <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>
         <result column="name" property="name" jdbcType="VARCHAR"/>
         <result column="scheduled_request_id" property="scheduledRequestId" jdbcType="VARCHAR"/>
+        <result column="bulk_request_id" property="bulkRequestId" jdbcType="VARCHAR"/>
+        <result column="async_request" property="asyncRequest" jdbcType="BOOLEAN"/>
     </resultMap>
 
     <resultMap id="factoryResultMap" type="io.factorialsystems.msscprovider.domain.RechargeFactoryParameters">
         <result column="provider_code" property="providerCode" jdbcType="VARCHAR"/>
         <result column="recharge_provider_code" property="rechargeProviderCode" jdbcType="VARCHAR"/>
         <result column="service_action" property="serviceAction" jdbcType="VARCHAR"/>
+        <result column="async" property="async" jdbcType="BOOLEAN"/>
     </resultMap>
 
     <sql id="Column_List">
@@ -47,7 +50,10 @@
         r.name,
         r.auto_request_id,
         r.scheduled_request_id,
-        r.account_type
+        r.bulk_request_id,
+        r.account_type,
+        r.async_request,
+        r.createdAt
     </sql>
 
     <select id="findById" parameterType="java.lang.String" resultMap="rechargeResultMap">
@@ -55,6 +61,14 @@
         <include refid="Column_List"/>
         from recharge_requests r, provider_services p
         where r.id = #{id}
+        and r.service_id = p.id
+    </select>
+
+    <select id="search" parameterType="java.lang.String" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.recipient like CONCAT(#{search}, '%')
         and r.service_id = p.id
     </select>
 
@@ -67,20 +81,28 @@
     </update>
 
     <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest" >
-        insert into recharge_requests(id, user_id, service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url, redirect_url, payment_mode, status, name, message, account_type, auto_request_id, scheduled_request_id)
-        values(#{id}, #{userId}, #{serviceId}, #{serviceCost}, #{recipient}, #{paymentId}, #{telephone}, #{productId}, #{authorizationUrl}, #{redirectUrl}, #{paymentMode}, #{status}, #{name}, #{message}, #{accountType}, #{autoRequestId}, #{scheduledRequestId})
+        insert into recharge_requests(id, user_id, service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url, redirect_url, payment_mode, status, name, async_request, message, account_type, auto_request_id, scheduled_request_id, bulk_request_id)
+        values(#{id}, #{userId}, #{serviceId}, #{serviceCost}, #{recipient}, #{paymentId}, #{telephone}, #{productId}, #{authorizationUrl}, #{redirectUrl}, #{paymentMode}, #{status}, #{name}, #{asyncRequest}, #{message}, #{accountType}, #{autoRequestId}, #{scheduledRequestId}, #{bulkRequestId})
     </insert>
 
     <insert id="saveRechargeRequests" parameterType="java.util.List">
         insert into recharge_requests(id, user_id, service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url,
-                                      redirect_url, payment_mode, status, name, message, account_type, auto_request_id, scheduled_request_id)
+                                      redirect_url, payment_mode, status, name, async_request, message, account_type, auto_request_id, scheduled_request_id)
         values
         <foreach item="item" index="index" collection="list"  separator=",">
             (#{item.id, jdbcType=VARCHAR}, #{item.user_id, jdbcType=VARCHAR}, #{item.serviceId, jdbcType=INTEGER}, #{item.serviceCost, jdbcType=VARCHAR},
-             #{item.recipient, jdbcType=VARCHAR}, #{item.paymentId, jdbcTypw=VARCHAR}, #{item.telephone, jdbcType=VARCHAR},
+             #{item.recipient, jdbcType=VARCHAR}, #{item.paymentId, jdbcType=VARCHAR}, #{item.telephone, jdbcType=VARCHAR},
              #{item.productId, jdbcType=VARCHAR}, #{item.authorizationUrl, jdbcType=VARCHAR}, #{item.redirectUrl, jdbcType=VARCHAR},
-             #{item.paymentMode, jdbcType=VARCHAR}, #{item.status, jdbcType=INTEGER},  #{item.name, jdbcType=VARCHAR}, #{item.message, jdbcType=VARCHAR},
-             #{item.accountType, jdbcType=VARCHAR}, #{item.autoRequestId, jdbcType=VARCHAR}, #{item.scheduledRequestId, jdbcType=VARCHAR} )
+             #{item.paymentMode, jdbcType=VARCHAR}, #{item.status, jdbcType=INTEGER},  #{item.name, jdbcType=VARCHAR}, #{item.asyncRequest, jdbcType=BOOLEAN},
+             #{item.message, jdbcType=VARCHAR}, #{item.accountType, jdbcType=VARCHAR}, #{item.autoRequestId, jdbcType=VARCHAR}, #{item.scheduledRequestId, jdbcType=VARCHAR} )
         </foreach>
     </insert>
+
+    <select id="findRequestsByUserId" parameterType="java.lang.String" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.user_id = #{id}
+        and r.service_id = p.id
+    </select>
 </mapper>

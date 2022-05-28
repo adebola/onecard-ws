@@ -10,6 +10,7 @@ import io.factorialsystems.msscprovider.utils.K;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper {
     private ServiceActionMapper serviceActionMapper;
@@ -28,6 +29,11 @@ public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper
     @Override
     public SingleRechargeRequestDto rechargeToRechargeDto(SingleRechargeRequest request) {
         return rechargeMapstructMapper.rechargeToRechargeDto(request);
+    }
+
+    @Override
+    public List<SingleRechargeRequestDto> listRechargeToRechargeDto(List<SingleRechargeRequest> requests) {
+        return rechargeMapstructMapper.listRechargeToRechargeDto(requests);
     }
 
     @Override

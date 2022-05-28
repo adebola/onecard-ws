@@ -13,6 +13,7 @@
         <result column="closed" property="closed" jdbcType="BOOLEAN"/>
         <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>
         <result column="scheduled_request_id" property="scheduledRequestId" jdbcType="VARCHAR"/>
+        <result column="createdAt" property="createdAt" jdbcType="TIMESTAMP" />
     </resultMap>
 
     <resultMap id="individualRequestResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest">
@@ -23,15 +24,16 @@
         <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
         <result column="product_id" property="productId" jdbcType="VARCHAR"/>
         <result column="telephone" property="telephone" jdbcType="VARCHAR"/>
-        <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
+        <result column="failed" property="failed" jdbcType="BOOLEAN"/>
+        <result column="failed_message" property="failedMessage" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="bulk_column_list">
-        id, user_id, total_service_cost, payment_id, closed, authorization_url, redirect_url, payment_mode, auto_request_id, scheduled_request_id
+        id, user_id, total_service_cost, payment_id, closed, authorization_url, redirect_url, payment_mode, auto_request_id, scheduled_request_id, createdAt
     </sql>
 
     <sql id="individual_column_list">
-        b.id, b.bulk_request_id, b.recipient, b.service_id, p.service_code, b.service_cost, b.product_id, b.telephone
+        b.id, b.bulk_request_id, b.recipient, b.service_id, p.service_code, b.service_cost, b.product_id, b.telephone, b.failed, b.failed_message
     </sql>
 
     <select id="findBulkRechargeById" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">
@@ -42,6 +44,22 @@
     </select>
 
     <select id="findBulkIndividualRequests"  parameterType="java.lang.String" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, provider_services p
+        where b.bulk_request_id = #{id}
+        and   b.service_id = p.id
+    </select>
+
+    <select id="findBulkIndividualRequestsByScheduleId"  parameterType="java.lang.String" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, provider_services p
+        where b.scheduled_request_id = #{id}
+        and   b.service_id = p.id
+    </select>
+
+    <select id="findPagedBulkIndividualRequests"  parameterType="java.lang.String" resultMap="individualRequestResultMap">
         select
         <include refid="individual_column_list"/>
         from bulk_individual_requests b, provider_services p
@@ -67,4 +85,22 @@
              #{item.productId, jdbcType=VARCHAR},  #{item.telephone, jdbcType=VARCHAR}, #{item.recipient, jdbcType=VARCHAR})
         </foreach>
     </insert>
+
+    <update id="failIndividualRequest" parameterType="io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification">
+        update bulk_individual_requests set failed = true, failed_message = #{errorMsg} where id = #{id}
+    </update>
+
+    <select id="findBulkRequestByUserId" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_column_list"/>
+        from providerdb.new_bulk_recharge_requests
+        where user_id = #{id}
+    </select>
+
+    <select id="searchByDate" parameterType="java.sql.Timestamp" resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_column_list"/>
+        from new_bulk_recharge_requests
+        where date(createdAt) = date(#{ts})
+    </select>
 </mapper>

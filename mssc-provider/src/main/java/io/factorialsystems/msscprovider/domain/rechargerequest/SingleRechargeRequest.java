@@ -33,7 +33,8 @@ public class SingleRechargeRequest {
     private String accountType;
     private String autoRequestId;
     private String scheduledRequestId;
-
+    private String bulkRequestId;
+    private Boolean asyncRequest;
     private String name;
-
+    private Timestamp createdAt;
 }

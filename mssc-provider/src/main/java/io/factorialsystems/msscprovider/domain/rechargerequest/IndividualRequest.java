@@ -16,8 +16,11 @@ public class IndividualRequest {
     private String serviceCode;
     private String bulkRequestId;
     private String scheduledRequestId;
+    private String autoRequestId;
     private String productId;
     private BigDecimal serviceCost;
     private String telephone;
     private String recipient;
+    private Boolean failed;
+    private String failedMessage;
 }

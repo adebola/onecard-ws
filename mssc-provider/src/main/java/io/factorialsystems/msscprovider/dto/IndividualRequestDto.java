@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Null;
 import java.math.BigDecimal;
 
 @Data
@@ -21,5 +22,13 @@ public class IndividualRequestDto {
     private BigDecimal serviceCost;
 
     private String telephone;
+
+    @NotEmpty
     private String recipient;
+
+    @Null(message = "Failed cannot be set")
+    private Boolean failed;
+
+    @Null(message = "Failure message cannot be set")
+    private String failedMessage;
 }

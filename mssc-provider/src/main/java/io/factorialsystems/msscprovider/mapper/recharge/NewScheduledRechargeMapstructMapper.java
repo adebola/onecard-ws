@@ -8,6 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 
+import java.util.List;
+
 @Mapper
 @DecoratedWith(NewScheduledRechargeMapstructMapperDecorator.class)
 public interface NewScheduledRechargeMapstructMapper {
@@ -19,6 +21,15 @@ public interface NewScheduledRechargeMapstructMapper {
             @Mapping(target = "paymentMode", ignore = true)
     })
     NewScheduledRechargeRequest rechargeDtoToRecharge(NewScheduledRechargeRequestDto dto);
+
+    @Mappings({
+            @Mapping(source = "id", target = "id"),
+            @Mapping(source = "redirectUrl", target = "redirectUrl"),
+            @Mapping(source = "scheduledDate", target = "scheduledDate"),
+            @Mapping(source = "paymentMode", target = "paymentMode")
+    })
+    NewScheduledRechargeRequestDto rechargeToRechargeDto(NewScheduledRechargeRequest request);
+    List<NewScheduledRechargeRequestDto> listRechargeToRechargeDto(List<NewScheduledRechargeRequest> requests);
 
     @Mappings({
             @Mapping(source = "recipients", target = "recipients"),
