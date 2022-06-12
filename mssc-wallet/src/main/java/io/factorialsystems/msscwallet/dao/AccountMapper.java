@@ -17,7 +17,8 @@ public interface AccountMapper {
     Account findAnonymousAccount();
     List<Account> findLowThresholdAccounts();
     void save(Account account);
-    void update(Account account);
+//    void update(Account account);
+    void changeBalance(Account account);
     void deleteAccount(Map<String, String> params);
     void addOrganizationWallet(Map<String, String> params);
     void removeOrganizationWallet(String id);

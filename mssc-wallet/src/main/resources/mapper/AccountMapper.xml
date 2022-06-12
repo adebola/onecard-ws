@@ -45,7 +45,6 @@
         where anonymous = true
     </select>
 
-
     <select id="findAccountByCorporateId" parameterType="java.lang.String" resultMap="accountResultMap">
         select
         <include refid="Column_List"/>
@@ -76,8 +75,15 @@
         update accounts
         <set>
             <if test="name != null">name=#{name},</if>
-            <if test="balance != null">balance=#{balance},</if>
             <if test="activated != null">activated=#{activated},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="changeBalance" parameterType="io.factorialsystems.msscwallet.domain.Account">
+        update accounts
+        <set>
+            <if test="balance != null">balance=#{balance},</if>
         </set>
         where id = #{id}
     </update>

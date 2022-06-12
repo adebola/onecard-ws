@@ -9,6 +9,7 @@ import io.factorialsystems.msscwallet.domain.Account;
 import io.factorialsystems.msscwallet.domain.FundWalletRequest;
 import io.factorialsystems.msscwallet.domain.Transaction;
 import io.factorialsystems.msscwallet.dto.*;
+import io.factorialsystems.msscwallet.exception.ResourceNotFoundException;
 import io.factorialsystems.msscwallet.mapper.AccountMapstructMapper;
 import io.factorialsystems.msscwallet.mapper.FundWalletMapstructMapper;
 import io.factorialsystems.msscwallet.security.RestTemplateInterceptor;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -34,11 +36,11 @@ public class AccountService {
     private final AccountMapstructMapper accountMapstructMapper;
     private final FundWalletMapstructMapper fundWalletMapstructMapper;
 
-    private static final String[] AccountType = {"USER", "CORPORATE", "PROVIDER"};
+    private static final String ACCOUNT_CHARGED = "Account Charged";
     private static final String ACCOUNT_CREATED = "Account Created";
-    private static final String ACCOUNT_UPDATED = "Account Updated";
-    private static final String ACCOUNT_BALANCE_UPDATED = "Account Balance Updated";
+    private static final String ACCOUNT_WALLET_FUNDED = "Wallet Funded";
     private static final String ACCOUNT_BALANCE_FUNDED = "Account Balance Funded";
+    private static final String ACCOUNT_BALANCE_UPDATED = "Account Balance Updated";
 
     @Value("${api.host.baseurl}")
     private String baseLocalUrl;
@@ -51,23 +53,26 @@ public class AccountService {
     }
 
     public BalanceDto findAccountBalance() {
-        Account account = getActiveUserAccount(K.getUserId());
+        Account account = Optional.ofNullable(getActiveUserAccount(K.getUserId()))
+                .orElseThrow(() -> new ResourceNotFoundException("ActiveUserAccountByUserId", "id", K.getUserId()));
 
-        if (account != null) {
-            return BalanceDto.builder()
-                    .balance(account.getBalance())
-                    .build();
-        }
-
-        throw new RuntimeException("Unable to retrieve Organization Account");
+        return BalanceDto.builder()
+                .balance(account.getBalance())
+                .build();
     }
 
     public AccountDto findAccountById(String id) {
-        return accountMapstructMapper.accountToAccountDto(accountMapper.findAccountById(id));
+        Account account = Optional.ofNullable(accountMapper.findAccountById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
+
+        return accountMapstructMapper.accountToAccountDto(account);
     }
 
     public AccountDto findAccountByUserId(String userId) {
-        return accountMapstructMapper.accountToAccountDto(getActiveUserAccount(userId));
+        Account account = Optional.ofNullable(getActiveUserAccount(K.getUserId()))
+                .orElseThrow(() -> new ResourceNotFoundException("ActiveUserAccountByUserId", "id", userId));
+
+        return accountMapstructMapper.accountToAccountDto(account);
     }
 
     public AccountDto createAccount(CreateAccountDto dto) {
@@ -84,13 +89,22 @@ public class AccountService {
 
         accountMapper.save(account);
 
+        final String message = String.format("Account Created %s by %s", dto.getUserName(), K.getUserName());
+        log.info(message);
+        auditService.auditEvent(message, ACCOUNT_CREATED);
+
         return accountMapstructMapper.accountToAccountDto(accountMapper.findAccountById(id));
     }
 
     public FundWalletResponseDto initializeFundWallet(FundWalletRequestDto dto) {
+        final String id = UUID.randomUUID().toString();
+        final String userId = K.getUserId();
+
         FundWalletRequest request = fundWalletMapstructMapper.dtoToWalletRequest(dto);
-        request.setId(UUID.randomUUID().toString());
-        request.setUserId(K.getUserId());
+        request.setId(id);
+        request.setUserId(userId);
+
+        log.info(String.format("Initializing Wallet Funding id %s, for User %s, amount %.2f", id, userId, request.getAmount()));
 
         PaymentRequestDto paymentRequest = PaymentRequestDto.builder()
                 .amount(request.getAmount())
@@ -102,93 +116,106 @@ public class AccountService {
         restTemplate.getInterceptors().add(new RestTemplateInterceptor());
 
         PaymentRequestDto newDto =
-                restTemplate.postForObject(baseLocalUrl + "api/v1/payment", paymentRequest, PaymentRequestDto.class);
+                Optional.ofNullable(restTemplate.postForObject(baseLocalUrl + "api/v1/pay", paymentRequest, PaymentRequestDto.class))
+                        .orElseThrow(() -> new RuntimeException("Error Initializing Payment Engine in Wallet Topup"));
 
-        if (newDto != null) {
-            request.setPaymentId(newDto.getId());
-            request.setAuthorizationUrl(newDto.getAuthorizationUrl());
-            request.setMessage(newDto.getMessage());
-            request.setStatus(newDto.getStatus());
-            fundWalletMapper.save(request);
+        request.setPaymentId(newDto.getId());
+        request.setAuthorizationUrl(newDto.getAuthorizationUrl());
+        request.setMessage(newDto.getMessage());
+        request.setStatus(newDto.getStatus());
+        fundWalletMapper.save(request);
 
-            return FundWalletResponseDto.builder()
-                    .id(request.getId())
-                    .authorizationUrl(newDto.getAuthorizationUrl())
-                    .redirectUrl(newDto.getRedirectUrl())
-                    .build();
-        }
-
-        throw new RuntimeException("Error Initializing Payment Engine in Wallet Topup");
+        return FundWalletResponseDto.builder()
+                .id(request.getId())
+                .authorizationUrl(newDto.getAuthorizationUrl())
+                .redirectUrl(newDto.getRedirectUrl())
+                .build();
     }
 
     @Transactional
     public MessageDto fundWallet(String id) {
         FundWalletRequest request = fundWalletMapper.findById(id);
 
-        if (request != null) {
-            if (request.getClosed()) {
-                throw new RuntimeException("Request has been fulfilled");
-            }
+        if (request == null) {
+            log.info("Unable to find FundWalletRequest Sleeping...........");
 
-            if (request.getPaymentId() != null && checkPayment(request.getPaymentId())) {
-                Account account = getActiveUserAccount(request.getUserId());
-
-                if (account == null) {
-                    throw new RuntimeException(String.format("Account for User Id (%s) Not Found", request.getUserId()));
-                }
-
-                account.setBalance(account.getBalance().add(request.getAmount()));
-                accountMapper.update(account);
-
-                request.setClosed(true);
-                request.setPaymentVerified(true);
-                fundWalletMapper.update(request);
-
-                saveTransaction(request, account.getId());
-
-                final String auditMessage =
-                            String.format("Account (%s / %s) Successfully Funded By %.2f", account.getId(), account.getName(), request.getAmount().doubleValue());
-                log.info(auditMessage);
-                auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_FUNDED);
-
-                return new MessageDto("Wallet Successfully Funded");
+            try {
+                Thread.sleep(500);
+                request = Optional.ofNullable(fundWalletMapper.findById(id))
+                        .orElseThrow(() -> new ResourceNotFoundException("FundWalletRequest", "id",id ));
+            } catch (InterruptedException ie) {
+                log.error(ie.getMessage());
+                return new MessageDto(String.format("Unknown Error Funding Wallet: %s", id));
             }
         }
 
-        final String message = String.format("Wallet Funding Unsuccessful, Funding request (%s) not found", id);
-        log.error(message);
-        throw new RuntimeException(message);
+        if (request.getClosed()) {
+            final String errorMessage = String.format("Request (%s) has been fulfilled", id);
+            log.error(errorMessage);
+            return new MessageDto(errorMessage);
+        }
+
+        if (request.getPaymentId() != null && checkPayment(request.getPaymentId())) {
+            final String userId = request.getUserId();
+
+            Account account = Optional.ofNullable(getActiveUserAccount(userId))
+                    .orElseThrow(() -> new ResourceNotFoundException("ActiveUserAccountByUserId", "id", userId));
+
+            BigDecimal newBalance = account.getBalance().add(request.getAmount());
+            account.setBalance(newBalance);
+            accountMapper.changeBalance(account);
+            log.info(String.format("Completing Fund Wallet Request %s Added %.2f, New Balance %.2f", id, request.getAmount(), account.getBalance()));
+
+            request.setClosed(true);
+            request.setPaymentVerified(true);
+            fundWalletMapper.update(request);
+
+            saveTransaction(request, account.getId());
+
+            final String auditMessage =
+                        String.format("Account (%s / %s) Successfully Funded By %.2f", account.getId(), account.getName(), request.getAmount().doubleValue());
+            log.info(auditMessage);
+            auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_FUNDED);
+
+            return new MessageDto("Wallet Successfully Funded");
+        }
+
+        throw new RuntimeException(String.format("Request (%s) has no Payment", id));
     }
 
     @Transactional
     public void updateAccountBalance(String id, BalanceDto dto) {
-        Account account = accountMapper.findAccountById(id);
+        Account account = Optional.ofNullable(accountMapper.findAccountById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
 
-        if (account == null) {
-            throw new RuntimeException(String.format("Unable to Load Account for %s", id));
-        }
+        account.setBalance(account.getBalance().add(dto.getBalance()));
+        accountMapper.changeBalance(account);
 
-        account.setBalance(dto.getBalance());
-        accountMapper.update(account);
-
-        String auditMessage = String.format("Account (%s / %s) Balance updated updated to %.2f by (%s)",account.getId(), account.getName(), account.getBalance().doubleValue(), K.getUserName());
+        String auditMessage = String.format("Account (%s / %s) Balance increased by %.2f to %.2f by (%s)",account.getId(), account.getName(), dto.getBalance(), account.getBalance(), K.getUserName());
         log.info(auditMessage);
         auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_UPDATED);
     }
 
     @Transactional
     public WalletResponseDto chargeAccount(WalletRequestDto dto) {
+        final String userId = K.getUserId();
+        final String message = String.format("Charging %.2f to User %s", dto.getAmount(), userId);
 
-        Account account = getActiveUserAccount(K.getUserId());
+        log.info(message);
+        auditService.auditEvent(message, ACCOUNT_CHARGED);
 
-        if (account == null) {
-            throw new RuntimeException(String.format("Unable to retrieve Account for (%s) for the Database, please contact support", K.getUserId()));
-        }
+        Account account = Optional.ofNullable(getActiveUserAccount(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "UserId", userId));
 
         if (account.getBalance().compareTo(dto.getAmount()) >= 0)  {
             BigDecimal newValue = account.getBalance().subtract(dto.getAmount());
             account.setBalance(newValue);
-            accountMapper.update(account);
+            accountMapper.changeBalance(account);
+
+            final String successMsg = String.format("Updated Balance for Account %s is %.2f", account.getId(), newValue);
+
+            log.info(successMsg);
+            auditService.auditEvent(successMsg, ACCOUNT_CHARGED);
 
             return WalletResponseDto.builder()
                     .message("Successful")
@@ -203,18 +230,14 @@ public class AccountService {
     }
 
     private Account getActiveUserAccount(String id) {
-
-        log.info("Get Active User Account For User : " + id);
+        log.info("Getting Active User Account For User : " + id);
 
         Account account = accountMapper.findAccountByUserId(id);
-
         if (account == null) return null;
 
         if (account.getChargeAccountId() == null) {
-            log.info("Account.getChargeAccount is null hence returning self account");
             return account;
         } else {
-            log.info ("Returning Organization Account loading from Database");
             return accountMapper.findAccountById(account.getChargeAccountId());
         }
     }
@@ -238,12 +261,11 @@ public class AccountService {
     }
 
     private void saveTransaction(FundWalletRequest request, String accountId) {
-
         Transaction transaction = Transaction.builder()
                 .accountId(accountId)
                 .recipient(accountId)
                 .serviceId(100)
-                .serviceName("Wallet Funded")
+                .serviceName(ACCOUNT_WALLET_FUNDED)
                 .txAmount(request.getAmount())
                 .requestId("NOT APPLICABLE")
                 .build();
