@@ -5,6 +5,7 @@ import io.factorialsystems.msscusers.domain.Organization;
 import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.dto.AccountDto;
 import io.factorialsystems.msscusers.dto.KeycloakUserDto;
+import io.factorialsystems.msscusers.dto.SimpleUserDto;
 import io.factorialsystems.msscusers.security.RestTemplateInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -70,6 +71,11 @@ public class KeycloakUserMapperDecorator implements KeycloakUserMapper {
         }
 
         return dto;
+    }
+
+    @Override
+    public SimpleUserDto userToSimpleDto(User user) {
+        return keycloakUserMapper.userToSimpleDto(user);
     }
 
     @Override

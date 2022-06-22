@@ -2,6 +2,7 @@ package io.factorialsystems.msscusers.mapper;
 
 import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.dto.KeycloakUserDto;
+import io.factorialsystems.msscusers.dto.SimpleUserDto;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
@@ -43,6 +44,15 @@ public interface KeycloakUserMapper {
 
     })
     KeycloakUserDto userToDto(User user);
+
+    @Mappings({
+            @Mapping(source = "id", target = "id"),
+            @Mapping(source = "username", target = "userName"),
+            @Mapping(source = "firstName", target = "firstName"),
+            @Mapping(source = "lastName", target = "lastName"),
+            @Mapping(source = "email", target = "email"),
+    })
+    SimpleUserDto userToSimpleDto(User user);
     List<KeycloakUserDto> listUserToDto(List<User> users);
 
     @Mappings({

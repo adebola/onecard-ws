@@ -57,6 +57,12 @@ public class UserController {
         return new ResponseEntity<>(userService.findUserById(id), HttpStatus.OK);
     }
 
+    @GetMapping("/simple/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> getSimpleUserById(@PathVariable("id") String id) {
+        return new ResponseEntity<>(userService.findSimpleUserById(id), HttpStatus.OK);
+    }
+
     @GetMapping("/roles/{id}")
     ResponseEntity<?> getUserRoles(@PathVariable("id") String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

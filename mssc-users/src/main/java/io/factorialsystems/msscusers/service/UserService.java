@@ -4,13 +4,9 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.domain.User;
-import io.factorialsystems.msscusers.dto.KeycloakRoleDto;
-import io.factorialsystems.msscusers.dto.KeycloakUserDto;
-import io.factorialsystems.msscusers.dto.PagedDto;
-import io.factorialsystems.msscusers.dto.UserSecretDto;
+import io.factorialsystems.msscusers.dto.*;
 import io.factorialsystems.msscusers.mapper.KeycloakRoleMapper;
 import io.factorialsystems.msscusers.mapper.KeycloakUserMapper;
-import io.factorialsystems.msscusers.security.RestTemplateInterceptor;
 import io.factorialsystems.msscusers.utils.K;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -76,6 +72,11 @@ public class UserService {
     public KeycloakUserDto findUserById(String id) {
         User user = userMapper.findUserById(id);
         return keycloakUserMapper.userToDto(user);
+    }
+
+    public SimpleUserDto findSimpleUserById(String id) {
+        User user = userMapper.findUserById(id);
+        return keycloakUserMapper.userToSimpleDto(user);
     }
 
     public PagedDto<KeycloakUserDto> searchUser(Integer pageNumber, Integer pageSize, String searchString) {
@@ -324,14 +325,16 @@ public class UserService {
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+//                headers.setBearerAuth(Objects.requireNonNull(K.getAccessToken()));
 
                 MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
                 body.add("file", new FileSystemResource(fileName));
 
                 HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
                 RestTemplate restTemplate = new RestTemplate();
-                restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-                return restTemplate.postForObject(url + "/api/v1/upload", requestEntity, String.class);
+                // restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+
+                return restTemplate.postForObject(url + "api/v1/upload2", requestEntity, String.class);
 
             } catch (IOException ioe) {
                 log.error(ioe.getMessage());

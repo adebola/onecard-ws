@@ -149,7 +149,7 @@ public class OrganizationService {
 
             if (roles != null && !roles.isEmpty()) {
                 if (roles.stream().anyMatch(r -> r.getName().startsWith(K.ROLES_ONECARD))) {
-                    throw new RuntimeException(String.format("User %s is a Onecard Administrator and cannot be added to an organization", user.getEmail()));
+                    throw new RuntimeException(String.format("User %s is a Onecard User / Administrator and cannot be added to an organization", user.getEmail()));
                 }
             }
 
