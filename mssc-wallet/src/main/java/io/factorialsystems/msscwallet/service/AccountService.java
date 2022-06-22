@@ -1,7 +1,10 @@
 package io.factorialsystems.msscwallet.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import io.factorialsystems.msscwallet.config.JMSConfig;
 import io.factorialsystems.msscwallet.dao.AccountMapper;
 import io.factorialsystems.msscwallet.dao.FundWalletMapper;
 import io.factorialsystems.msscwallet.dao.TransactionMapper;
@@ -17,6 +20,7 @@ import io.factorialsystems.msscwallet.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -29,7 +33,10 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
+    private final JmsTemplate jmsTemplate;
+    private final MailService mailService;
     private final AuditService auditService;
+    private final ObjectMapper objectMapper;
     private final AccountMapper accountMapper;
     private final FundWalletMapper fundWalletMapper;
     private final TransactionMapper transactionMapper;
@@ -38,7 +45,8 @@ public class AccountService {
 
     private static final String ACCOUNT_CHARGED = "Account Charged";
     private static final String ACCOUNT_CREATED = "Account Created";
-    private static final String ACCOUNT_WALLET_FUNDED = "Wallet Funded";
+    private static final String ACCOUNT_WALLET_SELF_FUNDED = "Wallet Self-Funded";
+    public static final String  ACCOUNT_WALLET_ADMIN_FUNDED = "Wallet Funded By Admin";
     private static final String ACCOUNT_BALANCE_FUNDED = "Account Balance Funded";
     private static final String ACCOUNT_BALANCE_UPDATED = "Account Balance Updated";
 
@@ -170,17 +178,28 @@ public class AccountService {
             request.setPaymentVerified(true);
             fundWalletMapper.update(request);
 
-            saveTransaction(request, account.getId());
+            saveTransaction(request.getAmount(), account.getId(), ACCOUNT_WALLET_SELF_FUNDED);
 
             final String auditMessage =
                         String.format("Account (%s / %s) Successfully Funded By %.2f", account.getId(), account.getName(), request.getAmount().doubleValue());
             log.info(auditMessage);
             auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_FUNDED);
 
+            MailMessageDto mailMessageDto = MailMessageDto.builder()
+                    .body(auditMessage)
+                    .to(K.getEmail())
+                    .subject("Fund Wallet report")
+                    .build();
+
+            pushMailMessage(mailMessageDto);
+
             return new MessageDto("Wallet Successfully Funded");
         }
 
-        throw new RuntimeException(String.format("Request (%s) has no Payment", id));
+        final String errorMessage = String.format("Request (%s) No Payment Made User %s", id, K.getUserName());
+        log.error(errorMessage);
+
+        return new MessageDto(errorMessage);
     }
 
     @Transactional
@@ -191,9 +210,29 @@ public class AccountService {
         account.setBalance(account.getBalance().add(dto.getBalance()));
         accountMapper.changeBalance(account);
 
-        String auditMessage = String.format("Account (%s / %s) Balance increased by %.2f to %.2f by (%s)",account.getId(), account.getName(), dto.getBalance(), account.getBalance(), K.getUserName());
+        String auditMessage =
+                String.format("Account (%s / %s) Balance increased by %.2f to %.2f by (%s)",account.getId(), account.getName(), dto.getBalance(), account.getBalance(), K.getUserName());
         log.info(auditMessage);
         auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_UPDATED);
+        saveTransaction(dto.getBalance(), account.getId(), ACCOUNT_WALLET_ADMIN_FUNDED);
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+        SimpleUserDto simpleUserDto =
+                restTemplate.getForObject(baseLocalUrl + "/api/v1/user/simple/" + account.getUserId(), SimpleUserDto.class);
+
+        if (simpleUserDto == null) {
+            log.error(String.format("Unable to retrieve User For Account %s", account.getId()));
+            return;
+        }
+
+        MailMessageDto mailMessageDto = MailMessageDto.builder()
+                .to(simpleUserDto.getEmail())
+                .body(auditMessage)
+                .subject("Wallet Funded")
+                .build();
+
+        pushMailMessage(mailMessageDto);
     }
 
     @Transactional
@@ -242,12 +281,41 @@ public class AccountService {
         }
     }
 
+    public PagedDto<FundWalletRequestDto> findWalletFunding(Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber,pageSize);
+        Page<FundWalletRequest> requests = fundWalletMapper.findByUserId(K.getUserId());
+
+        return createFundDto(requests);
+    }
+
     private Boolean checkPayment(String id) {
         RestTemplate restTemplate = new RestTemplate();
         PaymentRequestDto dto
                 = restTemplate.getForObject(baseLocalUrl + "api/v1/pay/" + id, PaymentRequestDto.class);
 
         return dto != null ? dto.getVerified() : false;
+    }
+
+    public void sendMailMessage(MailMessageDto dto) {
+        mailService.sendMailWithOutAttachment(dto);
+    }
+
+    private void pushMailMessage(MailMessageDto dto) {
+        try {
+            jmsTemplate.convertAndSend(JMSConfig.SEND_MAIL_QUEUE, objectMapper.writeValueAsString(dto));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private PagedDto<FundWalletRequestDto> createFundDto(Page<FundWalletRequest> requests) {
+        PagedDto<FundWalletRequestDto> pagedDto = new PagedDto<>();
+        pagedDto.setTotalSize((int) requests.getTotal());
+        pagedDto.setPageNumber(requests.getPageNum());
+        pagedDto.setPageSize(requests.getPageSize());
+        pagedDto.setPages(requests.getPages());
+        pagedDto.setList(fundWalletMapstructMapper.listRequestToRequestDto(requests.getResult()));
+        return pagedDto;
     }
 
     private PagedDto<AccountDto> createDto(Page<Account> accounts) {
@@ -260,13 +328,13 @@ public class AccountService {
         return pagedDto;
     }
 
-    private void saveTransaction(FundWalletRequest request, String accountId) {
+    private void saveTransaction(BigDecimal amount, String accountId, String narrative) {
         Transaction transaction = Transaction.builder()
                 .accountId(accountId)
                 .recipient(accountId)
                 .serviceId(100)
-                .serviceName(ACCOUNT_WALLET_FUNDED)
-                .txAmount(request.getAmount())
+                .serviceName(narrative)
+                .txAmount(amount)
                 .requestId("NOT APPLICABLE")
                 .build();
 

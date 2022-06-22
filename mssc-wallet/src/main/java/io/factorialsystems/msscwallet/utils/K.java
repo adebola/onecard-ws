@@ -55,13 +55,8 @@ public class K {
         return null;
     }
 
-//    public static String getEmail() {
-//        Map<String, Object> claims = K.getClaims();
-//
-//        if (claims != null) {
-//            return (String) claims.get("email");
-//        }
-//
-//        return SYSTEM_EMAIL;
-//    }
+    public static String getEmail() {
+        Map<String, Object> claims = K.getClaims();
+        return claims != null ? (String) claims.get("email") : SYSTEM_EMAIL;
+    }
 }

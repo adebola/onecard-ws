@@ -27,6 +27,13 @@
         where id = #{id}
     </select>
 
+    <select id="findByUserId" parameterType="java.lang.String" resultMap="fundWalletResultMap">
+        select
+        <include refid="column_list"/>
+        from fund_wallet_request
+        where user_id = #{id}
+    </select>
+
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.FundWalletRequest">
         insert into fund_wallet_request(id, user_id, authorization_url, redirect_url, amount, status, message, payment_id) values
             (#{id},  #{userId}, #{authorizationUrl}, #{redirectUrl}, #{amount}, #{status},#{message},#{paymentId})

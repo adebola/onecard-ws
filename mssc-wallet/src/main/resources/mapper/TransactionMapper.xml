@@ -41,6 +41,16 @@
         where t.id = #{id}
     </select>
 
+    <select id="findUserTransactionByDateRange" parameterType="io.factorialsystems.msscwallet.domain.query.SearchByDateRange" resultMap="transactionResultMap">
+        select
+        <include refid="column_list"/>
+        from transactions t, accounts a
+        where a.user_id = #{userId}
+        and t.account_id = a.id
+        and t.tx_datetime between #{fromTs} and #{toTs}
+        order by t.tx_datetime
+    </select>
+
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.Transaction">
         insert into transactions(account_id, service_id, service_name, tx_amount, recharge_request_id, recipient, charge_account_id)
         values (#{accountId}, #{serviceId}, #{serviceName}, #{txAmount}, #{requestId}, #{recipient}, #{chargeAccountId})

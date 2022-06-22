@@ -1,14 +1,23 @@
 package io.factorialsystems.msscwallet.controller;
 
+import io.factorialsystems.msscwallet.dto.DateRangeDto;
 import io.factorialsystems.msscwallet.dto.MessageDto;
+import io.factorialsystems.msscwallet.dto.RefundTransactionDto;
 import io.factorialsystems.msscwallet.service.TransactionService;
 import io.factorialsystems.msscwallet.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.RandomStringUtils;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @Slf4j
 @RestController
@@ -73,5 +82,24 @@ public class TransactionController {
         }
 
         return new ResponseEntity<>(new MessageDto("You must be logged in to use this resource"), HttpStatus.BAD_REQUEST);
+    }
+
+    @PostMapping("/print")
+    public ResponseEntity<Resource>  printUserTransactions(@Valid @RequestBody DateRangeDto dto) {
+        String fileName = String.format("%s.%s", RandomStringUtils.randomAlphanumeric(8), "xlsx");
+
+        InputStreamResource file = new InputStreamResource(transactionService.generateExcelTransactionFile(dto));
+        log.info(String.format("Generated Transaction File %s", fileName));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(file);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> refundTransaction(@Valid @RequestBody RefundTransactionDto dto) {
+        return new ResponseEntity<>(transactionService.refundTransaction(dto), HttpStatus.OK);
     }
 }

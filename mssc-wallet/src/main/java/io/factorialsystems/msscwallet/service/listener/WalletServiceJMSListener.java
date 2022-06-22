@@ -9,10 +9,8 @@ import io.factorialsystems.msscwallet.domain.Account;
 import io.factorialsystems.msscwallet.domain.Transaction;
 import io.factorialsystems.msscwallet.domain.User;
 import io.factorialsystems.msscwallet.domain.UserWallet;
-import io.factorialsystems.msscwallet.dto.DeleteAccountDto;
-import io.factorialsystems.msscwallet.dto.RequestTransactionDto;
-import io.factorialsystems.msscwallet.dto.ServiceActionDto;
-import io.factorialsystems.msscwallet.dto.UserOrganizationAmendDto;
+import io.factorialsystems.msscwallet.dto.*;
+import io.factorialsystems.msscwallet.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +31,7 @@ public class WalletServiceJMSListener {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final AccountMapper accountMapper;
+    private final AccountService accountService;
     private final TransactionMapper transactionMapper;
 
     @Value("${api.host.baseurl}")
@@ -198,6 +197,17 @@ public class WalletServiceJMSListener {
             accountMapper.removeOrganizationWallet(dto.getUserId());
         }  catch (JsonProcessingException e) {
             log.error("Error Removing Organization Wallet from User : " + e.getMessage());
+        }
+    }
+
+    @JmsListener(destination = JMSConfig.SEND_MAIL_QUEUE)
+    public void listenForMailMessage(String jsonData) {
+
+        try {
+            MailMessageDto mailMessageDto = objectMapper.readValue(jsonData, MailMessageDto.class);
+            accountService.sendMailMessage(mailMessageDto);
+        } catch (JsonProcessingException e) {
+            log.error("Error Processing JMS Message to send E-mail Reason : " + e.getMessage());
         }
     }
 

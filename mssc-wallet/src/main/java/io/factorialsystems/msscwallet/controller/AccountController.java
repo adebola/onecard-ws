@@ -78,6 +78,20 @@ public class AccountController {
         return new ResponseEntity<>(accountService.createAccount(dto), HttpStatus.CREATED);
     }
 
+    @GetMapping("/wallet")
+    public ResponseEntity<?> getWalletFunding(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                              @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(accountService.findWalletFunding(pageNumber, pageSize), HttpStatus.OK);
+    }
+
 //
 //    @GetMapping("/provider/{id}")
 //    public ResponseEntity<AccountDto> findAccountByProviderId(@PathVariable("id") String id) {
