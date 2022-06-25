@@ -186,7 +186,7 @@ public class AccountService {
             auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_FUNDED);
 
             MailMessageDto mailMessageDto = MailMessageDto.builder()
-                    .body(auditMessage)
+                    .body(String.format("You have Successfully funded your wallet by %.2f New Balance is %.2f", request.getAmount(), newBalance))
                     .to(K.getEmail())
                     .subject("Fund Wallet report")
                     .build();
@@ -207,7 +207,9 @@ public class AccountService {
         Account account = Optional.ofNullable(accountMapper.findAccountById(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
 
-        account.setBalance(account.getBalance().add(dto.getBalance()));
+        BigDecimal newBalance = account.getBalance().add(dto.getBalance());
+
+        account.setBalance(newBalance);
         accountMapper.changeBalance(account);
 
         String auditMessage =
@@ -226,9 +228,11 @@ public class AccountService {
             return;
         }
 
+        log.info(String.format("Sending Notification of Admin Wallet Update to %s", simpleUserDto.getEmail()));
+
         MailMessageDto mailMessageDto = MailMessageDto.builder()
                 .to(simpleUserDto.getEmail())
-                .body(auditMessage)
+                .body(String.format("Your account Balance has been funded by Onecard Admin by %.2f Your New Balance is Now %.2f", dto.getBalance(), newBalance))
                 .subject("Wallet Funded")
                 .build();
 
@@ -329,6 +333,8 @@ public class AccountService {
     }
 
     private void saveTransaction(BigDecimal amount, String accountId, String narrative) {
+        log.info(String.format("Wallet Transaction Narrative: %s", narrative));
+
         Transaction transaction = Transaction.builder()
                 .accountId(accountId)
                 .recipient(accountId)
