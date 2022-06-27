@@ -32,4 +32,9 @@ public class PaymentRequestDto {
     private Boolean verified;
 
     private String paymentMode;
+
+    private String action;
+    private BigDecimal serviceCost;
+    private String recipient;
+    private String userId;
 }

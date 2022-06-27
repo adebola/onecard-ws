@@ -11,14 +11,18 @@
         <result column="authorization_url" property="authorizationUrl" jdbcType="VARCHAR"/>
         <result column="redirect_url" property="redirectUrl" jdbcType="VARCHAR"/>
         <result column="closed" property="closed" jdbcType="BOOLEAN"/>
+        <result column="running" property="running" jdbcType="BOOLEAN"/>
         <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>
         <result column="scheduled_request_id" property="scheduledRequestId" jdbcType="VARCHAR"/>
+        <result column="email_id" property="emailId" jdbcType="VARCHAR"/>
         <result column="createdAt" property="createdAt" jdbcType="TIMESTAMP" />
     </resultMap>
 
     <resultMap id="individualRequestResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest">
         <id column="id" property="id" jdbcType="INTEGER" />
         <result column="bulk_request_id" property="bulkRequestId" jdbcType="VARCHAR"/>
+        <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>
+        <result column="external_request_id" property="externalRequestId" jdbcType="VARCHAR"/>
         <result column="service_id" property="serviceId" jdbcType="INTEGER"/>
         <result column="service_code" property="serviceCode" jdbcType="VARCHAR"/>
         <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
@@ -33,8 +37,18 @@
     </sql>
 
     <sql id="individual_column_list">
-        b.id, b.bulk_request_id, b.recipient, b.service_id, p.service_code, b.service_cost, b.product_id, b.telephone, b.failed, b.failed_message
+        b.id, b.bulk_request_id, b.auto_request_id, b.external_request_id, b.recipient, b.service_id, p.service_code, b.service_cost, b.product_id, b.telephone, b.failed, b.failed_message
     </sql>
+
+    <select id="findIndividualRequestById" parameterType="io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, new_bulk_recharge_requests n, provider_services p
+        where n.user_id = #{userId}
+        and b.bulk_request_id = n.id
+        and b.service_id = p.id
+        and b.id = #{id}
+    </select>
 
     <select id="findBulkRechargeById" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">
         select
@@ -43,11 +57,27 @@
         where id = #{id}
     </select>
 
+    <select id="findBulkRequestByAutoId" parameterType="java.util.Map" resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_column_list"/>
+        from new_bulk_recharge_requests
+        where user_id = #{userId}
+        and auto_request_id = #{id}
+    </select>
+
     <select id="findBulkIndividualRequests"  parameterType="java.lang.String" resultMap="individualRequestResultMap">
         select
         <include refid="individual_column_list"/>
         from bulk_individual_requests b, provider_services p
         where b.bulk_request_id = #{id}
+        and   b.service_id = p.id
+    </select>
+
+    <select id="findPagedBulkIndividualRequestsByScheduleId"  parameterType="java.lang.String" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, provider_services p
+        where b.scheduled_request_id = #{id}
         and   b.service_id = p.id
     </select>
 
@@ -67,23 +97,44 @@
         and   b.service_id = p.id
     </select>
 
-
     <insert id="saveBulkRecharge" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest" >
         insert into new_bulk_recharge_requests(id, user_id, total_service_cost, payment_id, payment_mode, authorization_url, redirect_url, auto_request_id, scheduled_request_id)
         values(#{id}, #{userId}, #{totalServiceCost},  #{paymentId},  #{paymentMode}, #{authorizationUrl}, #{redirectUrl}, #{autoRequestId}, #{scheduledRequestId})
     </insert>
 
     <update id="closeRequest" parameterType="java.lang.String">
-        update new_bulk_recharge_requests set closed = true where id = #{id}
+        update new_bulk_recharge_requests set closed = true, running = false where id = #{id}
     </update>
 
+    <update id="setIndividualRequestSuccess" parameterType="java.lang.Integer">
+        update providerdb.bulk_individual_requests set failed = false where id = #{id}
+    </update>
+
+    <update id="setRunning" parameterType="java.lang.String">
+        update providerdb.new_bulk_recharge_requests set running = true where id = #{id}
+    </update>
+
+    <update id="setEmailId" parameterType="java.util.Map">
+        update providerdb.new_bulk_recharge_requests set email_id = #{emailId} where id = #{id}
+    </update>
 
     <insert id="saveBulkIndividualRequests" parameterType="java.util.List">
-        insert into bulk_individual_requests (bulk_request_id, service_id, service_cost, product_id, telephone, recipient) values
+        insert into bulk_individual_requests (bulk_request_id, service_id, service_cost, product_id, telephone, recipient, auto_request_id, external_request_id) values
         <foreach item="item" index="index" collection="list"  separator=",">
-            (#{item.bulkRequestId, jdbcType=VARCHAR}, #{item.serviceId, jdbcType=INTEGER}, #{item.serviceCost, jdbcType=DECIMAL},
-             #{item.productId, jdbcType=VARCHAR},  #{item.telephone, jdbcType=VARCHAR}, #{item.recipient, jdbcType=VARCHAR})
+            (#{item.bulkRequestId, jdbcType=VARCHAR}, #{item.serviceId, jdbcType=INTEGER},
+             #{item.serviceCost, jdbcType=DECIMAL}, #{item.productId, jdbcType=VARCHAR},
+             #{item.telephone, jdbcType=VARCHAR}, #{item.recipient, jdbcType=VARCHAR},
+             #{item.autoRequestId, jdbcType=VARCHAR}, #{item.externalRequestId, jdbcType=VARCHAR})
         </foreach>
+    </insert>
+
+    <insert id="saveRequestRetry" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry">
+        insert into bulk_individual_request_retries(bulk_individual_request_id, successful, status_message, payment_id)
+        values (#{bulkIndividualRequestId}, #{successful}, #{statusMessage}, #{paymentId})
+
+        <selectKey resultType="int" keyProperty="id" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
     </insert>
 
     <update id="failIndividualRequest" parameterType="io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification">
@@ -97,10 +148,30 @@
         where user_id = #{id}
     </select>
 
-    <select id="searchByDate" parameterType="java.sql.Timestamp" resultMap="newBulkRechargeResultMap">
+    <select id="searchByDate" parameterType="io.factorialsystems.msscprovider.domain.query.SearchByDate" resultMap="newBulkRechargeResultMap">
         select
         <include refid="bulk_column_list"/>
         from new_bulk_recharge_requests
         where date(createdAt) = date(#{ts})
+        and user_id = #{userId}
+    </select>
+
+    <select id="searchIndividual" parameterType="io.factorialsystems.msscprovider.dto.SearchIndividualDto" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, provider_services p
+        where b.bulk_request_id = #{bulkId}
+        and b.service_id = p.id
+        <if test="recipient != null">
+            and b.recipient like CONCAT(#{recipient}, '%')
+        </if>
+
+        <if test="status != null">
+            and b.failed = #{status}
+        </if>
+
+        <if test="product != null">
+            and p.service_code like CONCAT(#{product}, '%')
+        </if>
     </select>
 </mapper>

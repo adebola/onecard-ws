@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AutoRechargeRequestDto {
+
     private String paymentMode;
 
     @NotEmpty(message = "Title must be specified")
@@ -29,5 +30,5 @@ public class AutoRechargeRequestDto {
     private List<Integer> daysOfMonth;
 
     @NotEmpty
-    private List<@Valid IndividualRequestDto> recipients;
+    private List<@Valid AutoIndividualRequestDto> recipients;
 }

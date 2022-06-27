@@ -36,5 +36,6 @@ public class SingleRechargeRequest {
     private String bulkRequestId;
     private Boolean asyncRequest;
     private String name;
+    private String emailId;
     private Timestamp createdAt;
 }

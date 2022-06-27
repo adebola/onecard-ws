@@ -1,9 +1,6 @@
 package io.factorialsystems.msscprovider.controller;
 
-import io.factorialsystems.msscprovider.dto.ExtraPlanRequestDto;
-import io.factorialsystems.msscprovider.dto.MessageDto;
-import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.SingleRechargeResponseDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.service.SingleRechargeService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +25,11 @@ public class RechargeController {
 
     @GetMapping("/{id}")
     public ResponseEntity<MessageDto> finishRecharge(@PathVariable("id") String id) {
-        RechargeStatus status = rechargeService.finishRecharge(id);
+        RechargeStatus status = rechargeService.finishRecharge(
+                AsyncRechargeDto.builder()
+                        .id(id)
+                        .build()
+        );
 
         if (status == null || status.getMessage() == null) {
             return new ResponseEntity<>(new MessageDto("Recharge Failed"), HttpStatus.BAD_REQUEST);

@@ -8,7 +8,11 @@ import io.factorialsystems.msscprovider.service.NewScheduledRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -72,4 +76,30 @@ public class ScheduleRechargeAuthController {
         return new ResponseEntity<>(newScheduledRechargeService.getBulkIndividualRequests(id, pageNumber, pageSize), HttpStatus.OK);
     }
 
+    @PostMapping("/searchdate")
+    public ResponseEntity<?> searchScheduledDate(@Valid @RequestBody DateDto dto,
+                                                 @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                 @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newScheduledRechargeService.searchByDate(dto.getScheduledDate(), pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/download/{id}")
+    public ResponseEntity<Resource> generateExcelFile(@PathVariable("id") String id) {
+        final String filename = String.format("%s.%s", id, "xlsx");
+
+        InputStreamResource file = new InputStreamResource(newScheduledRechargeService.generateExcelFile(id));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(file);
+
+    }
 }

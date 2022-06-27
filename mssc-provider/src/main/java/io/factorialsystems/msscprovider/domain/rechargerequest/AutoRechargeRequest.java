@@ -19,5 +19,5 @@ public class AutoRechargeRequest {
     private Integer recurringType;
     private Integer separationCount;
     private String paymentMode;
-    private List<IndividualRequest> recipients;
+    private List<AutoIndividualRequest> recipients;
 }

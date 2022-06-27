@@ -18,7 +18,8 @@ public interface NewBulkRechargeMapstructMapper {
     @Mappings({
             @Mapping(target = "paymentMode", ignore = true),
             @Mapping(source = "redirectUrl", target = "redirectUrl"),
-            @Mapping(source = "recipients", target = "recipients")
+            @Mapping(source = "recipients", target = "recipients"),
+            @Mapping(source = "autoRequestId", target = "autoRequestId"),
     })
     NewBulkRechargeRequest rechargeDtoToRecharge(NewBulkRechargeRequestDto dto);
 
@@ -28,6 +29,7 @@ public interface NewBulkRechargeMapstructMapper {
             @Mapping(source = "paymentMode", target = "paymentMode"),
             @Mapping(source = "redirectUrl", target = "redirectUrl"),
             @Mapping(source = "totalServiceCost", target = "totalServiceCost"),
+            @Mapping(source = "autoRequestId", target = "autoRequestId"),
             @Mapping(target = "recipients", ignore = true)
     })
     NewBulkRechargeRequestDto rechargeToRechargDto(NewBulkRechargeRequest request);

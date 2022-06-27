@@ -8,7 +8,6 @@ drop table provider_categories;
 drop table recharge_providers;
 drop table service_actions;
 
-
 create table provider_categories (
     id int AUTO_INCREMENT,
     category_name varchar(32) NOT NULL,
@@ -220,11 +219,24 @@ create table new_bulk_recharge_requests (
     PRIMARY KEY (id)
 );
 
+create table auto_individual_requests (
+    id int AUTO_INCREMENT,
+    auto_request_id varchar(64) NOT NULL,
+    service_id int NOT NULL,
+    service_cost decimal(10,2) NOT NULL,
+    product_id varchar(64),
+    telephone varchar(64),
+    recipient varchar(64) NOT NULL,
+    FOREIGN KEY (auto_request_id) REFERENCES new_auto_recharge_requests(id),
+    PRIMARY KEY (id)
+);
+
 create table bulk_individual_requests (
     id int AUTO_INCREMENT,
     bulk_request_id varchar(64),
     scheduled_request_id varchar(64),
     auto_request_id varchar(64),
+    external_request_id varchar(64) NOT NULL,
     service_id int NOT NULL,
     service_cost decimal(10,2) NOT NULL,
     product_id varchar(64),
@@ -235,6 +247,16 @@ create table bulk_individual_requests (
     FOREIGN KEY (scheduled_request_id) REFERENCES new_scheduled_recharge_requests(id),
     FOREIGN KEY (bulk_request_id) REFERENCES new_bulk_recharge_requests(id),
     FOREIGN KEY (auto_request_id) REFERENCES new_auto_recharge_requests(id),
+    PRIMARY KEY (id)
+);
+
+create table bulk_individual_request_retries(
+    id int AUTO_INCREMENT,
+    bulk_individual_request_id int,
+    retried_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    successful boolean default FALSE NOT NULL,
+    status_message varchar(256),
+    FOREIGN KEY (bulk_individual_request_id) REFERENCES bulk_individual_requests(id),
     PRIMARY KEY (id)
 );
 

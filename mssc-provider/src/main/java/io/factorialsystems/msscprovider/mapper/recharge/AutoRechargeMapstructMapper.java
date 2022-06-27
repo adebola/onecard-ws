@@ -1,10 +1,10 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
+import io.factorialsystems.msscprovider.domain.rechargerequest.AutoIndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.AutoRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
-import io.factorialsystems.msscprovider.dto.AutoRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.AutoUploadFileRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.IndividualRequestDto;
+import io.factorialsystems.msscprovider.domain.rechargerequest.ShortAutoRechargeRequest;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.mapper.DateMapper;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
@@ -34,15 +34,6 @@ public interface AutoRechargeMapstructMapper {
     })
     AutoRechargeRequestDto requestToDto(AutoRechargeRequest request);
 
-    @Mappings({
-            @Mapping(source = "productId", target = "productId"),
-            @Mapping(source = "serviceCost", target = "serviceCost"),
-            @Mapping(source = "telephone", target = "telephone"),
-            @Mapping(source = "recipient", target = "recipient"),
-            @Mapping(source = "serviceCode", target = "serviceCode"),
-    })
-    IndividualRequest individualDtoToIndividual(IndividualRequestDto dto);
-    List<IndividualRequest> listIndividualDtoToIndividual(List<IndividualRequestDto> dtos);
 
     @Mappings({
             @Mapping(source = "productId", target = "productId"),
@@ -51,8 +42,41 @@ public interface AutoRechargeMapstructMapper {
             @Mapping(source = "recipient", target = "recipient"),
             @Mapping(source = "serviceCode", target = "serviceCode"),
     })
-    IndividualRequestDto individualToIndividualDto(IndividualRequest request);
-    List<IndividualRequestDto> listIndividualToIndividualDto(List<IndividualRequest> requests);
+    AutoIndividualRequest individualDtoToIndividual(AutoIndividualRequestDto dto);
+    List<AutoIndividualRequest> listIndividualDtoToIndividual(List<AutoIndividualRequestDto> dtos);
+
+    @Mappings({
+            @Mapping(source = "productId", target = "productId"),
+            @Mapping(source = "serviceCost", target = "serviceCost"),
+            @Mapping(source = "telephone", target = "telephone"),
+            @Mapping(source = "recipient", target = "recipient"),
+            @Mapping(source = "serviceCode", target = "serviceCode"),
+    })
+    AutoIndividualRequestDto individualToIndividualDto(AutoIndividualRequest request);
+    List<AutoIndividualRequestDto> listIndividualToIndividualDto(List<AutoIndividualRequest> requests);
+
+
+
+    @Mappings({
+            @Mapping(source = "productId", target = "productId"),
+            @Mapping(source = "serviceCost", target = "serviceCost"),
+            @Mapping(source = "telephone", target = "telephone"),
+            @Mapping(source = "recipient", target = "recipient"),
+            @Mapping(source = "serviceCode", target = "serviceCode"),
+    })
+    AutoIndividualRequestDto autoToNonAuto(IndividualRequest request);
+    List<AutoIndividualRequestDto> listAutoToNonAuto(List<IndividualRequestDto> requests);
+
+    @Mappings({
+            @Mapping(source = "productId", target = "productId"),
+            @Mapping(source = "serviceCost", target = "serviceCost"),
+            @Mapping(source = "telephone", target = "telephone"),
+            @Mapping(source = "recipient", target = "recipient"),
+            @Mapping(source = "serviceCode", target = "serviceCode"),
+    })
+    IndividualRequestDto nonAutoToAuto(AutoIndividualRequest request);
+    List<IndividualRequestDto> listNonAutoToAuto(List<AutoIndividualRequest> requests);
+
 
     @Mappings({
             @Mapping(source = "paymentMode", target = "paymentMode"),
@@ -64,4 +88,15 @@ public interface AutoRechargeMapstructMapper {
             @Mapping(target = "recipients",ignore = true),
     })
     AutoRechargeRequestDto uploadToRechargeRequestDto(AutoUploadFileRechargeRequestDto dto);
+
+
+    @Mappings({
+            @Mapping(source = "id", target = "id"),
+            @Mapping(source = "title", target = "title"),
+            @Mapping(source = "startDate", target = "startDate"),
+            @Mapping(source = "endDate", target = "endDate"),
+            @Mapping(target = "recurringType", ignore = true),
+    })
+    ShortAutoRechargeRequestDto shortDtoToShort(ShortAutoRechargeRequest request);
+    List<ShortAutoRechargeRequestDto> listShortDtoToShort(List<ShortAutoRechargeRequest> requests);
 }

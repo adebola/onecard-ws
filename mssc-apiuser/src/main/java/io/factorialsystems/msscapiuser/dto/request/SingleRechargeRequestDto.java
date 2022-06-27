@@ -1,4 +1,4 @@
-package io.factorialsystems.msscprovider.dto;
+package io.factorialsystems.msscapiuser.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,19 +11,23 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BulkRechargeRequestDto {
+public class SingleRechargeRequestDto {
     @NotEmpty(message = "Code must be specified")
     private String serviceCode;
 
-    private Integer groupId;
-    private String[] recipients;
+    @NotEmpty(message = "Recipient must be specified")
+    private String recipient;
 
     private String productId;
-    private String redirectUrl;
+    private String telephone;
 
     @Digits(integer = 9, fraction = 2)
     private BigDecimal serviceCost;
 
-    private String paymentId;
+    private String redirectUrl;
     private String paymentMode;
+    private String accountType;
+
+    private String name;
 }
+

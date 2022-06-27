@@ -1,17 +1,16 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
+import io.factorialsystems.msscprovider.domain.rechargerequest.AutoIndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.AutoRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
-import io.factorialsystems.msscprovider.dto.AutoRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.AutoUploadFileRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.IndividualRequestDto;
+import io.factorialsystems.msscprovider.domain.rechargerequest.ShortAutoRechargeRequest;
+import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.service.AutoRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class AutoRechargeMapstructMapperDecorator implements AutoRechargeMapstructMapper {
     private IndividualRequestHelper individualRequestHelper;
@@ -34,7 +33,7 @@ public class AutoRechargeMapstructMapperDecorator implements AutoRechargeMapstru
 
         List<Integer> daysOfWeek = dto.getDaysOfWeek();
         List<Integer> daysOfMonth = dto.getDaysOfMonth();
-        List<IndividualRequestDto> recipients = dto.getRecipients();
+        List<AutoIndividualRequestDto> recipients = dto.getRecipients();
 
         if ((daysOfMonth == null || daysOfMonth.isEmpty()) && (daysOfWeek == null || daysOfWeek.isEmpty())) {
             throw new RuntimeException("You must specify either Days of the Week or Month for the recharges to run");
@@ -67,7 +66,7 @@ public class AutoRechargeMapstructMapperDecorator implements AutoRechargeMapstru
         Timestamp start_ts = new Timestamp(zeroTime(dto.getStartDate()).getTime());
         request.setStartDate(start_ts);
 
-        individualRequestHelper.checkRequests(request.getRecipients());
+        individualRequestHelper.checkAutoRequests(request.getRecipients());
         return request;
     }
 
@@ -77,28 +76,81 @@ public class AutoRechargeMapstructMapperDecorator implements AutoRechargeMapstru
     }
 
     @Override
-    public IndividualRequest individualDtoToIndividual(IndividualRequestDto dto) {
+    public AutoIndividualRequest individualDtoToIndividual(AutoIndividualRequestDto dto) {
         return mapstructMapper.individualDtoToIndividual(dto);
     }
 
     @Override
-    public List<IndividualRequest> listIndividualDtoToIndividual(List<IndividualRequestDto> dtos) {
+    public List<AutoIndividualRequest> listIndividualDtoToIndividual(List<AutoIndividualRequestDto> dtos) {
         return mapstructMapper.listIndividualDtoToIndividual(dtos);
     }
 
     @Override
-    public IndividualRequestDto individualToIndividualDto(IndividualRequest request) {
+    public AutoIndividualRequestDto individualToIndividualDto(AutoIndividualRequest request) {
         return mapstructMapper.individualToIndividualDto(request);
     }
 
     @Override
-    public List<IndividualRequestDto> listIndividualToIndividualDto(List<IndividualRequest> requests) {
+    public List<AutoIndividualRequestDto> listIndividualToIndividualDto(List<AutoIndividualRequest> requests) {
         return mapstructMapper.listIndividualToIndividualDto(requests);
+    }
+
+    @Override
+    public AutoIndividualRequestDto autoToNonAuto(IndividualRequest request) {
+        return mapstructMapper.autoToNonAuto(request);
+    }
+
+    @Override
+    public List<AutoIndividualRequestDto> listAutoToNonAuto(List<IndividualRequestDto> requests) {
+        return mapstructMapper.listAutoToNonAuto(requests);
+    }
+
+    @Override
+    public IndividualRequestDto nonAutoToAuto(AutoIndividualRequest request) {
+        return mapstructMapper.nonAutoToAuto(request);
+    }
+
+    @Override
+    public List<IndividualRequestDto> listNonAutoToAuto(List<AutoIndividualRequest> requests) {
+        return mapstructMapper.listNonAutoToAuto(requests);
     }
 
     @Override
     public AutoRechargeRequestDto uploadToRechargeRequestDto(AutoUploadFileRechargeRequestDto dto) {
         return mapstructMapper.uploadToRechargeRequestDto(dto);
+    }
+
+    @Override
+    public ShortAutoRechargeRequestDto shortDtoToShort(ShortAutoRechargeRequest request) {
+        ShortAutoRechargeRequestDto dto = mapstructMapper.shortDtoToShort(request);
+
+        switch (request.getRecurringType()) {
+            case AutoRechargeService.AUTO_RECURRING_WEEKLY_TYPE:
+                dto.setRecurringType("Weekly");
+                break;
+
+            case AutoRechargeService.AUTO_RECURRING_MONTHLY_TYPE:
+                dto.setRecurringType("Monthly");
+                break;
+        }
+
+        return dto;
+    }
+
+    @Override
+    public List<ShortAutoRechargeRequestDto> listShortDtoToShort(List<ShortAutoRechargeRequest> requests) {
+
+        if (requests == null) {
+            return null;
+        } else {
+            List<ShortAutoRechargeRequestDto> list = new ArrayList(requests.size());
+
+            for (ShortAutoRechargeRequest shortAutoRechargeRequest : requests) {
+                list.add(this.shortDtoToShort(shortAutoRechargeRequest));
+            }
+
+            return list;
+        }
     }
 
     private Date zeroTime(Date date) {

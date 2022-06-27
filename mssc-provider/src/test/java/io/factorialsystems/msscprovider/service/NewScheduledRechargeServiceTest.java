@@ -7,9 +7,18 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.InputStreamResource;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @CommonsLog
@@ -42,4 +51,49 @@ class NewScheduledRechargeServiceTest {
         log.info(x);
         log.info(x.getTotalSize());
     }
+
+    @Test
+    void searchByDate() throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss", Locale.ENGLISH);
+        final String dateString = "08-03-2022 10:15:55 AM";
+
+        Date d = formatter.parse(dateString);
+
+
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            var x = service.searchByDate(d, 1, 20);
+            log.info(x);
+            log.info(x.getTotalSize());
+        }
+    }
+
+    @Test
+    void generateExcelFile() throws IOException {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String bulkId = "158f4d0b-19be-4d8d-8c83-398383890188";
+        final String scheduledId = "41cd5d1c-ce7e-4023-84c5-d67657880c8b";
+
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            InputStreamResource resource = new InputStreamResource(service.generateExcelFile(scheduledId));
+            File targetFile = new File("test4.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = resource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+
+            log.info(targetFile.getAbsolutePath());
+        }
+    }
+
 }

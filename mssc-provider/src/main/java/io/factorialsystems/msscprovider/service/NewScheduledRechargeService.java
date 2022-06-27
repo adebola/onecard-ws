@@ -7,11 +7,14 @@ import io.factorialsystems.msscprovider.dao.NewScheduledRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest;
+import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.helper.PaymentHelper;
 import io.factorialsystems.msscprovider.helper.TransactionHelper;
 import io.factorialsystems.msscprovider.mapper.recharge.NewBulkRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.mapper.recharge.NewScheduledRechargeMapstructMapper;
+import io.factorialsystems.msscprovider.service.file.BulkRequestExcelWriter;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
@@ -22,6 +25,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Slf4j
@@ -32,6 +37,7 @@ public class NewScheduledRechargeService {
     @Value("${api.local.host.baseurl}")
     private String baseLocalUrl;
     private final FileUploader fileUploader;
+    private final BulkRequestExcelWriter excelWriter;
     private final NewBulkRechargeMapper newBulkRechargeMapper;
     private final NewBulkRechargeService newBulkRechargeService;
     private final NewScheduledRechargeMapper newScheduledRechargeMapper;
@@ -102,6 +108,7 @@ public class NewScheduledRechargeService {
 
         request.getRecipients().forEach(recipient -> {
             recipient.setScheduledRequestId(id);
+            recipient.setExternalRequestId(UUID.randomUUID().toString());
         });
 
         newScheduledRechargeMapper.saveRecipients(request.getRecipients());
@@ -128,6 +135,13 @@ public class NewScheduledRechargeService {
                 .status(paymentRequestDto.getStatus())
                 .id(id)
                 .build();
+    }
+
+    public PagedDto<NewScheduledRechargeRequestDto> searchByDate(Date date, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.searchByDate(new SearchByDate(date));
+
+        return createDto(requests);
     }
 
     public Boolean finalizeScheduledRecharge(String id) {
@@ -162,7 +176,7 @@ public class NewScheduledRechargeService {
 
     public PagedDto<IndividualRequestDto> getBulkIndividualRequests(String id, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
-        Page<IndividualRequest> requests = newBulkRechargeMapper.findBulkIndividualRequestsByScheduleId(id);
+        Page<IndividualRequest> requests = newBulkRechargeMapper.findPagedBulkIndividualRequestsByScheduleId(id);
 
         return createIndividualDto(requests);
     }
@@ -192,7 +206,13 @@ public class NewScheduledRechargeService {
                 recipientMap.put("scheduledId", request.getId());
 
                 newScheduledRechargeMapper.setBulkRequestId(recipientMap);
-                newBulkRechargeService.runBulkRecharge(id);
+
+                AsyncRechargeDto rechargeDto = AsyncRechargeDto.builder()
+                        .id(id)
+                        .email(request.getUserEmail())
+                        .build();
+
+                newBulkRechargeService.runBulkRecharge(rechargeDto);
 
             } else {
                 final String errorMessage
@@ -200,6 +220,26 @@ public class NewScheduledRechargeService {
                 log.error(errorMessage);
             }
         });
+    }
+
+    public ByteArrayInputStream generateExcelFile(String id) {
+        NewScheduledRechargeRequest request = newScheduledRechargeMapper.findById(id);
+
+        if (request == null) {
+            throw new ResourceNotFoundException("NewScheduledRechargeRequest", "id", id);
+        }
+
+        List<IndividualRequest> individualRequests = newBulkRechargeMapper.findBulkIndividualRequestsByScheduleId(id);
+
+        if (individualRequests == null || individualRequests.isEmpty()) {
+            throw new ResourceNotFoundException("ScheduledRequest-IndividualRequests", "id", id);
+        }
+
+        String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedOn());
+
+        final String title = String.format("ScheduledRecharge Request (%s) Created On (%s)", id, s);
+
+        return excelWriter.bulkRequestToExcel(individualRequests, title);
     }
 
     private PagedDto<IndividualRequestDto> createIndividualDto(Page<IndividualRequest> requests) {

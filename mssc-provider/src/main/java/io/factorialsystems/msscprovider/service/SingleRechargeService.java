@@ -31,21 +31,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SingleRechargeService {
+    private final MailService mailService;
     private final JmsTemplate jmsTemplate;
-    private final ObjectMapper objectMapper;
     private final FactoryProducer producer;
-    private final ParameterCache parameterCache;
+    private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
-    private final SingleRechargeMapper singleRechargeMapper;
+    private final ParameterCache parameterCache;
     private final ServiceActionMapper serviceActionMapper;
+    private final SingleRechargeMapper singleRechargeMapper;
     private final RechargeMapstructMapper rechargeMapstructMapper;
 
     private static String BASE_LOCAL_STATIC;
@@ -59,11 +58,8 @@ public class SingleRechargeService {
         SingleRechargeRequest request = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
 
         if (checkParameters(request, dto)) {
-            PaymentRequestDto paymentRequest = initializePayment(request);
-
-            if (paymentRequest == null) {
-                throw new RuntimeException("Error Initializing Payment Please contact OneCard Support");
-            }
+            PaymentRequestDto paymentRequest = Optional.ofNullable(initializePayment(request))
+                    .orElseThrow(() -> new RuntimeException("Error Initializing Payment Please contact OneCard Support"));
 
             request.setPaymentId(paymentRequest.getId());
             request.setAuthorizationUrl(paymentRequest.getAuthorizationUrl());
@@ -84,7 +80,11 @@ public class SingleRechargeService {
             if (request.getPaymentMode().equals("wallet") && request.getAsyncRequest()) {
                 if (request.getStatus() == 200) {
                     try {
-                        jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(request.getId()));
+                        AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
+                                .id(request.getId())
+                                .email(K.getEmail())
+                                .build();
+                        jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(asyncRechargeDto));
                     } catch (JsonProcessingException e) {
                         log.error("Error sending Single Recharge Service to Self {}", e.getMessage());
                         throw new RuntimeException(e.getMessage());
@@ -115,7 +115,12 @@ public class SingleRechargeService {
                         .redirectUrl(paymentRequest.getRedirectUrl())
                         .build();
             } else {
-                RechargeStatus status = finishLocalRecharge(request);
+                AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
+                        .id(dto.getId())
+                        .email(K.getEmail())
+                        .build();
+
+                RechargeStatus status = finishLocalRecharge(request, asyncRechargeDto);
 
                 if (status.getStatus() == HttpStatus.OK) {
                     return SingleRechargeResponseDto.builder()
@@ -132,7 +137,26 @@ public class SingleRechargeService {
         throw new RuntimeException(message);
     }
 
-    private RechargeStatus finishLocalRecharge(SingleRechargeRequest request) {
+    public RechargeStatus finishRecharge(AsyncRechargeDto dto) {
+        final String id = dto.getId();
+
+        log.info(String.format("Fulfilling Recharge Request %s", id));
+        SingleRechargeRequest request = singleRechargeMapper.findById(id);
+
+        if (request == null || request.getClosed()) {
+            final String errorMessage = String.format("Recharge Request (%s) is %s", id, request == null ? "NOT AVAILABLE" : "CLOSED");
+            log.error(errorMessage);
+
+            return RechargeStatus.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(errorMessage)
+                    .build();
+        }
+
+        return finishLocalRecharge(request, dto);
+    }
+
+    private RechargeStatus finishLocalRecharge(SingleRechargeRequest request, AsyncRechargeDto dto) {
 
         RechargeStatus status = null;
 
@@ -157,27 +181,42 @@ public class SingleRechargeService {
                     saveTransaction(request);
                 }
             }
+
+            sendMail(request, dto, status);
         }
 
         return status;
-
     }
 
-    public RechargeStatus finishRecharge(String id) {
+    private void sendMail(SingleRechargeRequest request, AsyncRechargeDto dto, RechargeStatus status) {
 
-        log.info(String.format("Fulfilling Recharge Request %s", id));
-
-        if (id == null) {
-            throw new RuntimeException("Recharge ID NULL Set it Cannot be NULL");
+        if (dto.getEmail() == null) {
+            log.info("Unable to Send E-mail for Transaction, No E-mail Address found");
         }
 
-        SingleRechargeRequest request = singleRechargeMapper.findById(id);
+        String result = null;
 
-        if (request == null || request.getClosed()) {
-            throw new RuntimeException(String.format("Recharge Request (%s) is either NOT AVAILABLE or CLOSED", id));
+        if (status.getStatus() == HttpStatus.OK) {
+            result = "Succeeded";
+        } else {
+            result = String.format("Failed:, Reason %s", status.getMessage());
         }
 
-        return finishLocalRecharge(request);
+        final String message =
+                String.format("The Recharge of %s to %s for %.2f %s", request.getServiceCode(), request.getRecipient(), request.getServiceCost(), result);
+
+        MailMessageDto mailMessageDto = MailMessageDto.builder()
+                .body(message)
+                .to(dto.getEmail())
+                .subject("Recharge Report")
+                .build();
+
+        final String emailId = mailService.sendMailWithOutAttachment(mailMessageDto);
+
+        Map<String, String> emailMap = new HashMap<>();
+        emailMap.put("id", dto.getId());
+        emailMap.put("emailId", emailId);
+        singleRechargeMapper.setEmailId(emailMap);
     }
 
     public ExtraDataPlanDto getExtraDataPlans(ExtraPlanRequestDto dto) {
@@ -255,7 +294,7 @@ public class SingleRechargeService {
         return rechargeMapstructMapper.rechargeToRechargeDto(request);
     }
 
-    private void saveTransaction(SingleRechargeRequest request) {
+    public void saveTransaction(SingleRechargeRequest request) {
 
         log.info("Saving Transaction for User : {}", request.getUserId());
 

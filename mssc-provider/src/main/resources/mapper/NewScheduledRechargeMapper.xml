@@ -5,6 +5,7 @@
     <resultMap id="newScheduledRechargeResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest">
         <id column="id" property="id" jdbcType="VARCHAR" />
         <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="user_email" property="userEmail" jdbcType="VARCHAR"/>
         <result column="request_type" property="requestType" jdbcType="INTEGER" />
         <result column="request_scheduled_date" property="scheduledDate" jdbcType="TIMESTAMP" />
         <result column="total_service_cost" property="totalServiceCost" jdbcType="DECIMAL"/>
@@ -22,6 +23,7 @@
     <sql id="column_list">
         id,
         user_id,
+        user_email,
         request_type,
         request_scheduled_date,
         total_service_cost,
@@ -60,8 +62,8 @@
 
 
     <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest" >
-        insert into new_scheduled_recharge_requests(id, user_id, request_scheduled_date, request_type, total_service_cost, payment_mode, authorization_url, redirect_url, payment_id, message, status)
-        values(#{id}, #{userId}, #{scheduledDate}, #{requestType}, #{totalServiceCost}, #{paymentMode}, #{authorizationUrl}, #{redirectUrl}, #{paymentId}, #{message}, #{status})
+        insert into new_scheduled_recharge_requests(id, user_id, user_email, request_scheduled_date, request_type, total_service_cost, payment_mode, authorization_url, redirect_url, payment_id, message, status)
+        values(#{id}, #{userId}, #{userEmail}, #{scheduledDate}, #{requestType}, #{totalServiceCost}, #{paymentMode}, #{authorizationUrl}, #{redirectUrl}, #{paymentId}, #{message}, #{status})
     </insert>
 
     <update id="closeRequest" parameterType="java.lang.String">
@@ -73,11 +75,20 @@
     </update>
 
     <insert id="saveRecipients" parameterType="java.util.List">
-        insert into bulk_individual_requests(service_id, service_cost, product_id, telephone, recipient, scheduled_request_id)
+        insert into bulk_individual_requests(service_id, service_cost, product_id, telephone, recipient, scheduled_request_id, external_request_id)
         values
         <foreach item="item" index="index" collection="list"  separator=",">
             (#{item.serviceId, jdbcType=INTEGER}, #{item.serviceCost, jdbcType=DECIMAL}, #{item.productId, jdbcType=VARCHAR},
-             #{item.telephone, jdbcType=VARCHAR}, #{item.recipient, jdbcType=VARCHAR}, #{item.scheduledRequestId, jdbcType=VARCHAR})
+             #{item.telephone, jdbcType=VARCHAR}, #{item.recipient, jdbcType=VARCHAR}, #{item.scheduledRequestId, jdbcType=VARCHAR},
+             #{item.externalRequestId, jdbcType=VARCHAR})
         </foreach>
     </insert>
+
+    <select id="searchByDate" parameterType="io.factorialsystems.msscprovider.domain.query.SearchByDate" resultMap="newScheduledRechargeResultMap">
+        select
+        <include refid="column_list"/>
+        from new_scheduled_recharge_requests
+        where date(request_created_on) = date(#{ts})
+        and user_id = #{userId}
+    </select>
 </mapper>

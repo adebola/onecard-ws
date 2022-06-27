@@ -14,6 +14,7 @@ public class IndividualRequest {
     private Integer id;
     private Integer serviceId;
     private String serviceCode;
+    private String externalRequestId;
     private String bulkRequestId;
     private String scheduledRequestId;
     private String autoRequestId;

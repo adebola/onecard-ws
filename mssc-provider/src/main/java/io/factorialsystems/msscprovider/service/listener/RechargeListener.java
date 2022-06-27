@@ -2,6 +2,7 @@ package io.factorialsystems.msscprovider.service.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.JMSConfig;
+import io.factorialsystems.msscprovider.dto.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.service.NewBulkRechargeService;
 import io.factorialsystems.msscprovider.service.SingleRechargeService;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +29,11 @@ public class RechargeListener {
     public void listenForNewBulkRechargeRequest(String jsonData) throws IOException {
 
         if (jsonData != null) {
-            String requestId = objectMapper.readValue(jsonData, String.class);
+            AsyncRechargeDto dto = objectMapper.readValue(jsonData, AsyncRechargeDto.class);
             NewBulkRechargeService rechargeService = applicationContext.getBean(NewBulkRechargeService.class);
             try {
                 Thread.sleep(sleepValue);
-                rechargeService.runBulkRecharge(requestId);
+                rechargeService.runBulkRecharge(dto);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -43,12 +44,12 @@ public class RechargeListener {
     public void listenForSingleRechargeRequest(String jsonData) throws IOException {
 
         if (jsonData != null) {
-            String id = objectMapper.readValue(jsonData, String.class);
+            AsyncRechargeDto dto = objectMapper.readValue(jsonData, AsyncRechargeDto.class);
             SingleRechargeService rechargeService = applicationContext.getBean(SingleRechargeService.class);
 
             try {
                 Thread.sleep(sleepValue);
-                rechargeService.finishRecharge(id);
+                rechargeService.finishRecharge(dto);
             } catch (InterruptedException ie) {
                 ie.printStackTrace();
             }

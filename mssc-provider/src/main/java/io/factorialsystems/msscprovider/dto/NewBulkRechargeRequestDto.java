@@ -28,6 +28,9 @@ public class NewBulkRechargeRequestDto {
     @Null(message = "date cannot be set")
     private Date createdAt;
 
+    @Null(message = "AutoRequestId cannot be set")
+    private String autoRequestId;
+
     @NotEmpty
     private List<@Valid IndividualRequestDto> recipients;
 }

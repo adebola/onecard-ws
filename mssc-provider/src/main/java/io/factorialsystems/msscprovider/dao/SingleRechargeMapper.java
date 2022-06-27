@@ -6,6 +6,7 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeReq
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface SingleRechargeMapper {
@@ -16,4 +17,5 @@ public interface SingleRechargeMapper {
     void saveRechargeRequests(List<SingleRechargeRequest> requests);
     Page<SingleRechargeRequest> findRequestsByUserId(String id);
     Page<SingleRechargeRequest> search(String search);
+    Boolean setEmailId(Map<String, String> parameters);
 }

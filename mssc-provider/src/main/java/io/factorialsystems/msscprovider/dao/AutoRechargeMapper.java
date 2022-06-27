@@ -1,6 +1,9 @@
 package io.factorialsystems.msscprovider.dao;
 
+import com.github.pagehelper.Page;
 import io.factorialsystems.msscprovider.domain.rechargerequest.*;
+import io.factorialsystems.msscprovider.domain.query.SearchByDate;
+import io.factorialsystems.msscprovider.domain.query.SearchByString;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -11,11 +14,11 @@ public interface AutoRechargeMapper {
     void saveAutoRecharge(AutoRechargeRequest request);
     void saveAutoRecurringEvents(List<AutoRecurringEvent> events);
     void updateAutoRecurringEvents(List<AutoRecurringEvent> events);
-    void saveRecipients(List<IndividualRequest> requests);
+    void saveRecipients(List<AutoIndividualRequest> requests);
     AutoRechargeRequest findAutoRechargeById(String id);
     List<AutoRecurringEvent> findEnabledRecurringEventsByAutoId(String id);
-    List<IndividualRequest> findBulkIndividualRequests(String id);
-    List<ShortAutoRechargeRequest> findAutoRechargeByUserId(String id);
+    List<AutoIndividualRequest> findBulkIndividualRequests(String id);
+    Page<ShortAutoRechargeRequest> findAutoRechargeByUserId(String id);
     void updateAutoRecharge(AutoRechargeRequest request);
     void deleteAutoRecharge(String id);
     List<AutoRunEvent> todaysWeeklyRuns(Map<String, String> params);
@@ -23,8 +26,6 @@ public interface AutoRechargeMapper {
     List<AutoRunEvent> lastDayMonthlyRuns (Map<String, String> params);
     void saveRanEvent(AutoEventRan autoEventRan);
     List<AutoRecurringEvent>  disableAndLoadRecurringEventsByAutoId(String id);
-
-    //    List<AutoRecurringEvent> findRecurringEventsByAutoId(String id);
-    //    void disableRecurringEventsByAutoId(String id);
-    //    void removeRecurringEvents(String id);
+    Page<ShortAutoRechargeRequest> searchByDate(SearchByDate s);
+    Page<ShortAutoRechargeRequest> searchByName(SearchByString s);
 }

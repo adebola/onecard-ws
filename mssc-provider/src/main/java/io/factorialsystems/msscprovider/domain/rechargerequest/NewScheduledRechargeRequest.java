@@ -14,6 +14,7 @@ import java.util.List;
 public class NewScheduledRechargeRequest {
     private String id;
     private String userId;
+    private String userEmail;
     private Integer requestType;
     private Timestamp scheduledDate;
     private BigDecimal totalServiceCost;

@@ -1,8 +1,8 @@
 package io.factorialsystems.msscprovider.service;
 
+import io.factorialsystems.msscprovider.dto.AutoIndividualRequestDto;
 import io.factorialsystems.msscprovider.dto.AutoRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.AutoRechargeResponseDto;
-import io.factorialsystems.msscprovider.dto.IndividualRequestDto;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
@@ -12,9 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -47,17 +50,17 @@ class AutoRechargeServiceTest {
 
 //        days.add(4);
 //        days.add(2);
-            days.add(7);
+            days.add(4);
 
-            List<IndividualRequestDto> requests = new ArrayList<>();
+            List<AutoIndividualRequestDto> requests = new ArrayList<>();
 
-            IndividualRequestDto individualRequest = new IndividualRequestDto();
+            AutoIndividualRequestDto individualRequest = new AutoIndividualRequestDto();
             individualRequest.setServiceCost(new BigDecimal(100));
             individualRequest.setRecipient("08188111333");
             individualRequest.setServiceCode("9-AIRTIME");
             requests.add(individualRequest);
 
-            IndividualRequestDto individualRequest2 = new IndividualRequestDto();
+            AutoIndividualRequestDto individualRequest2 = new AutoIndividualRequestDto();
             individualRequest2.setServiceCost(new BigDecimal(155));
             individualRequest2.setRecipient("08055572307");
             individualRequest2.setServiceCode("GLO-AIRTIME");
@@ -93,9 +96,9 @@ class AutoRechargeServiceTest {
 
             days.add(8);
 
-            List<IndividualRequestDto> requests = new ArrayList<>();
+            List<AutoIndividualRequestDto> requests = new ArrayList<>();
 
-            IndividualRequestDto individualRequest = new IndividualRequestDto();
+            AutoIndividualRequestDto individualRequest = new AutoIndividualRequestDto();
             individualRequest.setServiceCost(new BigDecimal(100));
             individualRequest.setRecipient("08188111333");
             individualRequest.setServiceCode("9-AIRTIME");
@@ -115,9 +118,9 @@ class AutoRechargeServiceTest {
     @Test
     void getSingleService() {
 //        final String id = "35090c90-5b3c-41d9-a784-686e135358ca";
-        final String id = "2c8ce5e7-f350-4e7c-a5ff-4dba62ba5e50";
-        AutoRechargeRequestDto dto = autoRechargeService.getSingleService(id);
-        log.info(dto);
+//        final String id = "2c8ce5e7-f350-4e7c-a5ff-4dba62ba5e50";
+//        AutoRechargeRequestDto dto = autoRechargeService.getSingleService(id);
+//        log.info(dto);
     }
 
     @Test
@@ -130,15 +133,15 @@ class AutoRechargeServiceTest {
         days.add(4);
 //        days.add(7);
 
-        List<IndividualRequestDto> requests = new ArrayList<>();
+        List<AutoIndividualRequestDto> requests = new ArrayList<>();
 
-        IndividualRequestDto individualRequest = new IndividualRequestDto();
+        AutoIndividualRequestDto individualRequest = new AutoIndividualRequestDto();
         individualRequest.setServiceCost(new BigDecimal(100));
         individualRequest.setRecipient("08188111333");
         individualRequest.setServiceCode("9-AIRTIME");
         requests.add(individualRequest);
 
-        IndividualRequestDto individualRequest2 = new IndividualRequestDto();
+        AutoIndividualRequestDto individualRequest2 = new AutoIndividualRequestDto();
         individualRequest2.setServiceCost(new BigDecimal(155));
         individualRequest2.setRecipient("08055572307");
         individualRequest2.setServiceCode("GLO-AIRTIME");
@@ -164,10 +167,10 @@ class AutoRechargeServiceTest {
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
 
-            var x = autoRechargeService.findUserRecharges();
+            var x = autoRechargeService.findUserRecharges(1, 20);
             assertNotNull(x);
-            assert(x.size() > 0);
-            log.info(x.size());
+//            assert(x.size() > 0);
+//            log.info(x.size());
             log.info(x);
         }
 
@@ -193,7 +196,37 @@ class AutoRechargeServiceTest {
     }
 
     @Test
-    void lastDayOfMonth() {
+    void searchByName() {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            var x = autoRechargeService.searchByName("t", 1, 20);
+            log.info(x);
+            log.info(x.getTotalSize());
+        }
+    }
+
+    @Test
+    void searchByDate() throws ParseException {
+
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss", Locale.ENGLISH);
+        final String dateString = "30-05-2022 10:15:55 AM";
+
+        Date d = formatter.parse(dateString);
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            var x = autoRechargeService.searchByDate(d, 1, 20);
+            log.info(x);
+            log.info(x.getTotalSize());
+        }
     }
 }

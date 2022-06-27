@@ -20,8 +20,10 @@ public class NewBulkRechargeRequest {
     private String paymentMode;
     private String paymentId;
     private Boolean closed;
+    private Boolean running;
     private String autoRequestId;
     private String scheduledRequestId;
+    private String emailId;
     private Timestamp createdAt;
     private List<IndividualRequest> recipients;
 }

@@ -1,8 +1,13 @@
 package io.factorialsystems.msscprovider.service;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscprovider.dao.AutoRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.*;
+import io.factorialsystems.msscprovider.domain.query.SearchByDate;
+import io.factorialsystems.msscprovider.domain.query.SearchByString;
 import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.AutoRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
@@ -29,10 +34,11 @@ public class AutoRechargeService {
     public static final int AUTO_RECURRING_WEEKLY_TYPE = 1;
     public static final int AUTO_RECURRING_MONTHLY_TYPE = 2;
 
-    private static final String[] days = {"SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"};
+    private static final String[] days = {
+            "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
+    };
     private static final String[] months = {
-            "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
-            "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+            "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
     };
 
     public AutoRechargeResponseDto uploadRecharge(AutoUploadFileRechargeRequestDto dto, MultipartFile file) {
@@ -40,7 +46,7 @@ public class AutoRechargeService {
         ExcelReader excelReader = new ExcelReader(uploadFile);
         List<IndividualRequestDto> individualRequests = excelReader.readContents();
         AutoRechargeRequestDto autoRechargeRequestDto = autoRechargeMapstructMapper.uploadToRechargeRequestDto(dto);
-        autoRechargeRequestDto.setRecipients(individualRequests);
+        autoRechargeRequestDto.setRecipients(autoRechargeMapstructMapper.listAutoToNonAuto(individualRequests));
         return saveService(autoRechargeRequestDto);
     }
 
@@ -144,16 +150,16 @@ public class AutoRechargeService {
         AutoRechargeRequest request = autoRechargeMapper.findAutoRechargeById(id);
 
         if (request == null) {
-            throw new RuntimeException(String.format("AutoRecharge with id (%s) not found", id));
+            throw new ResourceNotFoundException("AutoRechargeService", "Id", id);
         }
 
         List<AutoRecurringEvent> events = autoRechargeMapper.findEnabledRecurringEventsByAutoId(id);
 
         if (events == null || events.isEmpty()) {
-            throw new RuntimeException(String.format("No days found for AutoRecharge (%s)", id));
+            throw new ResourceNotFoundException("Event Days/Month", "AutoRecharge", id);
         }
 
-        List<IndividualRequest> individualRequests = autoRechargeMapper.findBulkIndividualRequests(id);
+        List<AutoIndividualRequest> individualRequests = autoRechargeMapper.findBulkIndividualRequests(id);
 
         if (individualRequests == null || individualRequests.isEmpty()) {
             throw new RuntimeException(String.format("No Individual Requests found for AutoRecharge (%s)", id));
@@ -176,8 +182,19 @@ public class AutoRechargeService {
         return dto;
     }
 
-    public List<ShortAutoRechargeRequest> findUserRecharges() {
-        return autoRechargeMapper.findAutoRechargeByUserId(K.getUserId());
+    public PagedDto<ShortAutoRechargeRequestDto> findUserRecharges(Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        return createShortDto(autoRechargeMapper.findAutoRechargeByUserId(K.getUserId()));
+    }
+
+    public PagedDto<NewBulkRechargeRequestDto> getBulkRecharges(String id, Integer pageNumber, Integer pageSize) {
+        AutoRechargeRequest request = autoRechargeMapper.findAutoRechargeById(id);
+
+        if (request == null || request.getUserId() == null) {
+            throw new ResourceNotFoundException("AutoRechargeRequest", "id or userId", id);
+        }
+
+        return newBulkRechargeService.getUserRechargesByAutoRequestId(request.getUserId(), pageNumber, pageSize);
     }
 
     public void deleteService(String id) {
@@ -204,6 +221,7 @@ public class AutoRechargeService {
         weeklyMap.put("userId", K.getUserId());
 
         log.info(String.format("Running Weekly Recharge for %s of  Week (%d) of the Year", days[dayOfWeek - 1], weekOfYear));
+
         runEvents(autoRechargeMapper.todaysWeeklyRuns(weeklyMap), weekOfYear);
 
         Map<String, String> monthlyMap = new HashMap<>();
@@ -220,14 +238,37 @@ public class AutoRechargeService {
         }
     }
 
+    public PagedDto<ShortAutoRechargeRequestDto> searchByDate(Date date, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<ShortAutoRechargeRequest> requests = autoRechargeMapper.searchByDate(new SearchByDate(date));
+
+        return createShortDto(requests);
+    }
+
+    public PagedDto<ShortAutoRechargeRequestDto> searchByName(String name, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<ShortAutoRechargeRequest> requests = autoRechargeMapper.searchByName(new SearchByString(name));
+
+        return createShortDto(requests);
+    }
+
+    private PagedDto<ShortAutoRechargeRequestDto> createShortDto(Page<ShortAutoRechargeRequest> requests) {
+        PagedDto<ShortAutoRechargeRequestDto> pagedDto = new PagedDto<>();
+        pagedDto.setTotalSize((int) requests.getTotal());
+        pagedDto.setPageNumber(requests.getPageNum());
+        pagedDto.setPageSize(requests.getPageSize());
+        pagedDto.setPages(requests.getPages());
+        pagedDto.setList(autoRechargeMapstructMapper.listShortDtoToShort(requests.getResult()));
+        return pagedDto;
+    }
+
     private void runEvents(List<AutoRunEvent> events, Integer periodId) {
         if (events != null && !events.isEmpty()) {
            log.info(String.format("Auto Recharge has %d Events", events.size()));
             events.forEach(event -> {
 
                 // Load IndividualRequest and create NewBulkRechargeDto Object
-                List<IndividualRequestDto> individualRequest =
-                        autoRechargeMapstructMapper.listIndividualToIndividualDto(autoRechargeMapper.findBulkIndividualRequests(event.getAutoRequestId()));
+                List<AutoIndividualRequest> individualRequest = autoRechargeMapper.findBulkIndividualRequests(event.getAutoRequestId());
 
                 if (individualRequest == null || individualRequest.isEmpty()) {
                     log.error(String.format("No IndividualRequests in AutoRecharge Request %s", event.getAutoRequestId()));
@@ -236,7 +277,8 @@ public class AutoRechargeService {
 
                     try {
                         NewBulkRechargeRequestDto requestDto = new NewBulkRechargeRequestDto();
-                        requestDto.setRecipients(individualRequest);
+                        requestDto.setRecipients(autoRechargeMapstructMapper.listNonAutoToAuto(individualRequest));
+                        requestDto.setAutoRequestId(event.getAutoRequestId());
                         requestDto.setPaymentMode("wallet");
 
                         newBulkRechargeService.saveService(requestDto);

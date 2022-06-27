@@ -42,6 +42,7 @@ public class NewScheduledRechargeMapstructMapperDecorator implements NewSchedule
     public NewScheduledRechargeRequest rechargeDtoToRecharge(NewScheduledRechargeRequestDto dto) {
         NewScheduledRechargeRequest request = mapstructMapper.rechargeDtoToRecharge(dto);
         request.setUserId(K.getUserId());
+        request.setUserEmail(K.getEmail());
         request.setPaymentMode(paymentModeHelper.checkPaymentMode(dto.getPaymentMode()));
 
         // RequestType 'single' or 'bulk'

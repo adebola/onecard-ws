@@ -47,6 +47,10 @@ public class ServiceHelper {
         throw new RuntimeException("Error Initializing Payment Please contact OneCard Support");
     }
 
+    public void reversePayment(String id) {
+        log.info(String.format("Reversing Payment %s", id));
+    }
+
     public Boolean checkPayment(String id) {
         RestTemplate restTemplate = new RestTemplate();
 

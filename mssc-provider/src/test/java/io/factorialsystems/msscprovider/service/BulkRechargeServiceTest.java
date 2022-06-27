@@ -1,6 +1,10 @@
 package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
+import io.factorialsystems.msscprovider.dto.AsyncRechargeDto;
+import io.factorialsystems.msscprovider.dto.IndividualRequestDto;
+import io.factorialsystems.msscprovider.dto.NewBulkRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.SearchIndividualDto;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
@@ -13,12 +17,22 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,16 +42,59 @@ import static org.mockito.ArgumentMatchers.any;
 @SpringBootTest
 @CommonsLog
 class BulkRechargeServiceTest {
-
     @Autowired
     private NewBulkRechargeService service;
 
     @Autowired
     NewBulkRechargeMapper newBulkRechargeMapper;
 
+    final String client_id = "public-client";
+    final String realmPassword = "password";
+    final String realmUser = "realm-admin";
+    final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
+
+
     @Test
     void saveService() {
 
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+        final String accessToken = getUserToken(id);
+
+        String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
+        log.info (s);
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            k.when(K::getAccessToken).thenReturn(accessToken);
+            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+
+            List<IndividualRequestDto> list = new ArrayList<>(1);
+
+            IndividualRequestDto individualRequestDto = new IndividualRequestDto();
+            individualRequestDto.setServiceCode("GLO-AIRTIME");
+            individualRequestDto.setServiceCost(new BigDecimal(1000));
+            individualRequestDto.setRecipient("08055572307");
+
+            list.add(individualRequestDto);
+
+//            IndividualRequestDto individualRequestDto2 = new IndividualRequestDto();
+//            individualRequestDto2.setServiceCode("GLO-AIRTIME");
+//            individualRequestDto2.setServiceCost(new BigDecimal(300));
+//            individualRequestDto2.setRecipient("09055572307");
+//
+//            list.add(individualRequestDto2);
+
+            NewBulkRechargeRequestDto dto = new NewBulkRechargeRequestDto();
+            dto.setRecipients(list);
+            dto.setPaymentMode("wallet");
+            dto.setTotalServiceCost(new BigDecimal(1000));
+
+//            var x = service.saveService(dto);
+//            log.info(x);
+        }
     }
 
     @Test
@@ -47,9 +104,18 @@ class BulkRechargeServiceTest {
 
         Date d = formatter.parse(dateString);
 
-        var x = service.searchByDate(d, 1, 20);
-        log.info(x);
-        log.info(x.getPageSize());
+
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            var x = service.searchByDate(d, 1, 20);
+            log.info(x);
+            log.info(x.getTotalSize());
+        }
     }
 
     @Test
@@ -89,7 +155,12 @@ class BulkRechargeServiceTest {
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
 
-            service.runBulkRecharge(id);
+            AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
+                        .id(id)
+                        .email(K.getEmail())
+                        .build();
+
+            service.runBulkRecharge(asyncRechargeDto);
 
             var y = service.getBulkIndividualRequests(id, 1, 20);
             assertNotNull(y);
@@ -98,8 +169,6 @@ class BulkRechargeServiceTest {
             assert(y.getList().get(0).getFailed().equals(true));
 
             log.info(y);
-
-
         }
     }
 
@@ -133,5 +202,137 @@ class BulkRechargeServiceTest {
 
         UploadFile uploadFile = new UploadFile(file, fileName);
         ExcelReader excelReader = new ExcelReader(uploadFile);
+    }
+
+    @Test
+    void generateExcelFile() throws IOException {
+
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String bulkId = "158f4d0b-19be-4d8d-8c83-398383890188";
+        final String bulkId = "268c0450-172c-4cbd-aad5-9368ace533a6";
+
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            InputStreamResource resource = new InputStreamResource(service.generateExcelFile(bulkId));
+            File targetFile = new File("test2.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = resource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
+        }
+    }
+
+    @Test
+    public void searchIndividual() {
+        SearchIndividualDto dto = new SearchIndividualDto();
+
+        dto.setBulkId("158f4d0b-19be-4d8d-8c83-398383890188");
+//        dto.setRecipient("08055");
+        //dto.setStatus(false);
+        dto.setProduct("9");
+        var x = service.searchIndividual(dto, 1, 20);
+
+        log.info("Size of Request is " + x.getTotalSize());
+        log.info(x);
+    }
+
+    @Test
+    public void getUserRechargesByAutoRequestId() {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+        final String autoId = "02d06cda-64dd-4dbf-8dbe-ffd90dbb1f36";
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            var x = service.getUserRechargesByAutoRequestId(autoId, 1, 20);
+            log.info("Size " + x.getTotalSize());
+        }
+
+    }
+
+
+    @Test
+    void retryFailedRecharge() {
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String accessToken = getUserToken(id);
+//
+//        RechargeStatus rechargeStatus = new RechargeStatus("Recharge Failed", HttpStatus.INTERNAL_SERVER_ERROR);
+//        Recharge recharge = Mockito.mock(Recharge.class);
+//        Mockito.when(recharge.recharge(any())).thenReturn(rechargeStatus);
+//
+//        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+//            k.when(K::getUserId).thenReturn(id);
+//            assertThat(K.getUserId()).isEqualTo(id);
+//
+//            k.when(K::getAccessToken).thenReturn(accessToken);
+//            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+//
+//            log.info(K.getUserId());
+//            log.info(K.getAccessToken());
+//
+//            var x = service.retryFailedRecharge(1);
+//            log.info(x.getMessage());
+//        }
+    }
+
+    private String getUserToken(String userId) {
+
+        String realmToken = getRealmAdminToken();
+
+        if (realmToken == null) {
+            return null;
+        }
+
+        // Now Get the User Token
+        return getUserToken(userId, realmToken);
+    }
+
+    private String getRealmAdminToken() {
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
+        requestBody.add("client_id", client_id);
+        requestBody.add("grant_type", "password");
+        requestBody.add("password", realmPassword);
+        requestBody.add("username", realmUser);
+        requestBody.add("scope", "openid");
+
+        // Get the Realm Administrator Token
+        return getToken(requestBody);
+    }
+
+    private String getUserToken(String userId, String realmToken) {
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
+        requestBody.add("client_id", client_id);
+        requestBody.add("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
+        requestBody.add("subject_token", realmToken);
+        requestBody.add("requested_subject", userId);
+
+        return getToken(requestBody);
+    }
+
+    private String getToken(MultiValueMap<String, String> requestBody) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> formEntity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<TokenResponseDto> response =
+                restTemplate.exchange (authUrl, HttpMethod.POST, formEntity, TokenResponseDto.class);
+
+        TokenResponseDto token = response.getBody();
+
+        if (token == null || token.getAccess_token() == null || token.getAccess_token().length() < 1) {
+            return null;
+        }
+
+        return  token.getAccess_token();
     }
 }

@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.advice;
 
 import io.factorialsystems.msscprovider.dto.MessageDto;
+import io.factorialsystems.msscprovider.exception.FileFormatException;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -42,5 +43,11 @@ public class ProviderControllerAdvice {
     public ResponseEntity<MessageDto> handleResourceNotFoundException(ResourceNotFoundException exception) {
         log.error(exception.getMessage(), exception);
         return new ResponseEntity<>(new MessageDto(exception.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(FileFormatException.class)
+    public ResponseEntity<MessageDto> handleFileFormatException(FileFormatException exception) {
+        log.error(exception.getMessage(), exception);
+        return new ResponseEntity<>(new MessageDto(exception.getMessage()), HttpStatus.BAD_REQUEST);
     }
 }

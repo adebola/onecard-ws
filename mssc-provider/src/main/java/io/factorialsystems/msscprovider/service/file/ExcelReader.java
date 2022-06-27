@@ -1,6 +1,8 @@
 package io.factorialsystems.msscprovider.service.file;
 
 import io.factorialsystems.msscprovider.dto.IndividualRequestDto;
+import io.factorialsystems.msscprovider.exception.FileFormatException;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -125,11 +127,11 @@ public class ExcelReader {
                 throw new RuntimeException(errorMessage);
             }
         } catch (Exception ex) {
-                final String errorMessage = String.format("File format error: %s", ex.getMessage());
+                final String errorMessage = String.format("File %s format error: %s Uploaded By (%s)", uploadFile.getFileName(), ex.getMessage(), K.getUserName());
                 log.error(errorMessage);
-                throw new RuntimeException(errorMessage);
+                throw new FileFormatException(errorMessage);
             } finally {
-                uploadFile.getFile().delete();
+                // uploadFile.getFile().delete();
             }
         }
     }
