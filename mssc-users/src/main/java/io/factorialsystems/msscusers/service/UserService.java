@@ -5,6 +5,7 @@ import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.dto.*;
+import io.factorialsystems.msscusers.exceptions.ResourceNotFoundException;
 import io.factorialsystems.msscusers.mapper.KeycloakRoleMapper;
 import io.factorialsystems.msscusers.mapper.KeycloakUserMapper;
 import io.factorialsystems.msscusers.utils.K;
@@ -34,7 +35,10 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -46,6 +50,7 @@ public class UserService {
     private final KeycloakUserMapper keycloakUserMapper;
     private final KeycloakRoleMapper keycloakRoleMapper;
     private final UserMapper userMapper;
+    private final MailService mailService;
 
     @Value("${keycloak.onecard}")
     private String onecardRealm;
@@ -55,13 +60,14 @@ public class UserService {
 
     @Autowired
     UserService(Keycloak keycloak, KeycloakUserMapper keycloakUserMapper,
-                KeycloakRoleMapper keycloakRoleMapper, UserMapper userMapper) {
+                KeycloakRoleMapper keycloakRoleMapper, UserMapper userMapper, MailService mailService) {
 
         this.keycloakUserMapper = keycloakUserMapper;
         this.keycloakRoleMapper = keycloakRoleMapper;
         this.usersResource = keycloak.realm("onecard").users();
         this.rolesResource = keycloak.realm("onecard").roles();
         this.userMapper = userMapper;
+        this.mailService = mailService;
     }
 
     public PagedDto<KeycloakUserDto> findUsers(Integer pageNumber, Integer pageSize) {
@@ -152,6 +158,22 @@ public class UserService {
         }
 
         return null;
+    }
+
+    public String sendLoginMessage(String id) {
+        User user = Optional.ofNullable(userMapper.findUserById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+
+        final String date = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
+        final String message = String.format("You logged on to Onecard at %s", date);
+
+        MailMessageDto mailMessageDto = MailMessageDto.builder()
+                .subject("Onecard Login Alert")
+                .to(user.getEmail())
+                .body(message)
+                .build();
+
+        return mailService.sendMailWithOutAttachment(mailMessageDto);
     }
 
     public List<KeycloakRoleDto> getUserAssignableCompanyRoles(String id) {

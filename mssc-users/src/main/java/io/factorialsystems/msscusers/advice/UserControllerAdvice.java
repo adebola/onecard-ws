@@ -2,6 +2,7 @@ package io.factorialsystems.msscusers.advice;
 
 import io.factorialsystems.msscusers.dto.MessageDto;
 import io.factorialsystems.msscusers.exceptions.NoPermissionException;
+import io.factorialsystems.msscusers.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -29,5 +30,11 @@ public class UserControllerAdvice {
     public ResponseEntity<MessageDto> handleNoPermission(NoPermissionException exception) {
         log.error(exception.getMessage(), exception);
         return new ResponseEntity<>(new MessageDto(exception.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<MessageDto> handleResourceNotFoundException(ResourceNotFoundException exception) {
+        log.error(exception.getMessage(), exception);
+        return new ResponseEntity<>(new MessageDto(exception.getMessage()), HttpStatus.NOT_FOUND);
     }
 }

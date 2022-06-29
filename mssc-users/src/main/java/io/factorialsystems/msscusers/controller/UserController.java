@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/user")
 public class UserController {
-
     private final UserService userService;
+
     private static final String ADMIN_ROLE = "ROLE_Onecard_Admin";
 
     @GetMapping

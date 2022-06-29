@@ -5,6 +5,7 @@ import io.factorialsystems.msscusers.config.JMSConfig;
 import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.domain.UserWallet;
+import io.factorialsystems.msscusers.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -17,7 +18,7 @@ import java.io.IOException;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RegisterUserListener {
+public class UserListener {
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
 
@@ -56,6 +57,17 @@ public class RegisterUserListener {
                                 .build()
                 );
             }
+        }
+    }
+
+    @JmsListener(destination = JMSConfig.LOGIN_QUEUE)
+    public void listenForUserLogin(String jsonData) throws IOException {
+
+        if (jsonData != null) {
+           String id = objectMapper.readValue(jsonData, String.class);
+
+            UserService userService = applicationContext.getBean(UserService.class);
+            userService.sendLoginMessage(id);
         }
     }
 }
