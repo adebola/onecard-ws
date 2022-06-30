@@ -91,6 +91,7 @@ public class UserService {
     }
 
     public void updateUser(String id, KeycloakUserDto dto) {
+        boolean changed = false;
 
         UserResource user = usersResource.get(id);
         User u = keycloakUserMapper.userDtoToUser(dto);
@@ -99,23 +100,36 @@ public class UserService {
             UserRepresentation representation = new UserRepresentation();
 
             if (dto.getFirstName() != null) {
+                changed = true;
                 representation.setFirstName(dto.getFirstName());
                 u.setFirstName(dto.getFirstName());
             }
 
             if (dto.getLastName() != null) {
+                changed = true;
                 representation.setLastName(dto.getLastName());
                 u.setLastName(dto.getLastName());
             }
 
-            u.setId(id);
-            user.update(representation);
-            userMapper.update(u);
+            if (changed) {
+                u.setId(id);
+                user.update(representation);
+                userMapper.update(u);
+
+                final String userString = u.getUsername().equals(K.getUserName()) ? "You" : "Onecard";
+
+                MailMessageDto mailMessageDto = MailMessageDto.builder()
+                        .subject("User Profile Changed")
+                        .to(u.getEmail())
+                        .body(String.format("Your Profile has successfully been changed by %s", userString))
+                        .build();
+
+                mailService.sendMailWithOutAttachment(mailMessageDto);
+            }
         }
     }
 
     public void changePassword(String id, String newPassword) {
-
         UserResource user = usersResource.get(id);
 
         if (user != null) {
@@ -125,6 +139,14 @@ public class UserService {
             credential.setTemporary(false);
 
             user.resetPassword(credential);
+
+            MailMessageDto mailMessageDto = MailMessageDto.builder()
+                    .subject("User Password Changed")
+                    .to(user.toRepresentation().getEmail())
+                    .body("Your Password has been successfully changed")
+                    .build();
+
+            mailService.sendMailWithOutAttachment(mailMessageDto);
         }
     }
 
