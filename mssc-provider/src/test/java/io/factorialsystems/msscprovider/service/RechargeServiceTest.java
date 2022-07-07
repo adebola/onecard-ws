@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.service;
 
+import io.factorialsystems.msscprovider.dto.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
@@ -7,6 +8,11 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,6 +28,26 @@ class RechargeServiceTest {
     void findRequest() {
     }
 
+    @Test
+    void adminSearch() throws ParseException {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+        SearchSingleRechargeDto dto = new SearchSingleRechargeDto();
+        dto.setUserId(id);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss", Locale.ENGLISH);
+        final String dateString = "26-04-2022 10:15:55 AM";
+        dto.setPageNumber(1);
+        dto.setPageSize(40);
+
+        Date d = formatter.parse(dateString);
+        dto.setSearchDate(d);
+
+//        dto.setSearchProduct("GLO");
+//        dto.setSearchRecipient("080");
+        var x = rechargeService.adminSearch(dto);
+        log.info(x);
+        log.info(x.getTotalSize());
+    }
     @Test
     void search() {
         var x = rechargeService.search("0803", 1, 20);
@@ -87,7 +113,7 @@ class RechargeServiceTest {
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
 
-            var y = rechargeService.getUserRecharges(1, 20);
+            var y = rechargeService.getUserRecharges(K.getUserId(), 1, 20);
             log.info(y);
         }
     }

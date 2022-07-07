@@ -7,6 +7,6 @@ public abstract class AbstractFactory {
     public abstract DataEnquiry getPlans(String action);
     public abstract ExtraDataEnquiry getExtraPlans(String action);
     public abstract ParameterCheck getCheck(String action);
-
     public abstract Balance getBalance();
+    public abstract ReQuery getReQuery();
 }

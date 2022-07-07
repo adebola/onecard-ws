@@ -291,9 +291,9 @@ public class NewBulkRechargeService {
         return createDto(requests);
     }
 
-    public PagedDto<NewBulkRechargeRequestDto> getUserRecharges(Integer pageNumber, Integer pageSize) {
+    public PagedDto<NewBulkRechargeRequestDto> getUserRecharges(String userId, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
-        Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findBulkRequestByUserId(K.getUserId());
+        Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findBulkRequestByUserId(userId);
 
         return createDto(requests);
     }

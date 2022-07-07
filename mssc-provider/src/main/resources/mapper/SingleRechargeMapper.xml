@@ -66,14 +66,6 @@
         and r.service_id = p.id
     </select>
 
-    <select id="search" parameterType="java.lang.String" resultMap="rechargeResultMap">
-        select
-        <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where r.recipient like CONCAT(#{search}, '%')
-        and r.service_id = p.id
-    </select>
-
     <select id="factory" parameterType="java.lang.Integer" resultMap="factoryResultMap">
         {call sp_factory(#{id, jdbcType = INTEGER, mode = IN})}
     </select>
@@ -111,4 +103,32 @@
     <update id="setEmailId" parameterType="java.util.Map">
         update providerdb.recharge_requests set email_id = #{emailId} where id = #{id}
     </update>
+
+    <select id="search" parameterType="java.lang.String" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.recipient like CONCAT(#{search}, '%')
+        and r.service_id = p.id
+    </select>
+
+    <select id="adminSearch" parameterType="io.factorialsystems.msscprovider.dto.SearchSingleRechargeDto" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where user_id = #{userId}
+        and r.service_id = p.id
+
+        <if test="searchRecipient != null">
+            and r.recipient like CONCAT(#{searchRecipient}, '%')
+        </if>
+
+        <if test="searchProduct != null">
+            and p.service_code like CONCAT(#{searchProduct}, '%')
+        </if>
+
+        <if test="searchDate != null">
+            and date(r.createdAt) = date(#{searchDate})
+        </if>
+    </select>
 </mapper>

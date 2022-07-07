@@ -46,4 +46,9 @@ public class EKEDPRechargeFactory extends AbstractFactory {
     public Balance getBalance() {
         return null;
     }
+
+    @Override
+    public ReQuery getReQuery() {
+        return null;
+    }
 }

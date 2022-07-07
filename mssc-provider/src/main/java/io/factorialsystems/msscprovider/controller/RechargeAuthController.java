@@ -1,9 +1,6 @@
 package io.factorialsystems.msscprovider.controller;
 
-import io.factorialsystems.msscprovider.dto.AsyncRechargeDto;
-import io.factorialsystems.msscprovider.dto.MessageDto;
-import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.SingleRechargeResponseDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.service.SingleRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
@@ -11,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -54,7 +52,23 @@ public class RechargeAuthController {
         if (pageSize == null || pageSize < 1) {
             pageSize = K.DEFAULT_PAGE_SIZE;
         }
-        return new ResponseEntity<>(rechargeService.getUserRecharges(pageNumber, pageSize), HttpStatus.OK);
+        return new ResponseEntity<>(rechargeService.getUserRecharges(K.getUserId(), pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/singlelist/{id}")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> getUserSingleRecharges(@PathVariable("id") String id,
+                                                    @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+        return new ResponseEntity<>(rechargeService.getUserRecharges(id, pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/single/{id}")
@@ -76,5 +90,12 @@ public class RechargeAuthController {
         }
 
         return new ResponseEntity<>(rechargeService.search(searchString, pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @PostMapping("/single/adminsearch")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> adminSearch(@Valid @RequestBody SearchSingleRechargeDto dto) {
+
+        return new ResponseEntity<>(rechargeService.adminSearch(dto), HttpStatus.OK);
     }
 }

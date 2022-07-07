@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,7 +53,23 @@ public class BulkRechargeAuthController {
             pageSize = K.DEFAULT_PAGE_SIZE;
         }
 
-        return new ResponseEntity<>(newBulkRechargeService.getUserRecharges(pageNumber, pageSize), HttpStatus.OK);
+        return new ResponseEntity<>(newBulkRechargeService.getUserRecharges(K.getUserId(), pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/list/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> getAdminUserBulkRecharges(@PathVariable("id") String id,
+                                                       @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                       @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newBulkRechargeService.getUserRecharges(id, pageNumber, pageSize), HttpStatus.OK);
     }
 
     @PostMapping("/searchdate")
@@ -86,7 +103,7 @@ public class BulkRechargeAuthController {
         return new ResponseEntity<>(newBulkRechargeService.getBulkIndividualRequests(id, pageNumber, pageSize), HttpStatus.OK);
     }
 
-    @GetMapping("/individual/search")
+    @PostMapping("/individual/search")
     public ResponseEntity<?> searchIndividualByStatus(@Valid @RequestBody SearchIndividualDto dto,
                                                       @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                       @RequestParam(value = "pageSize", required = false) Integer pageSize) {

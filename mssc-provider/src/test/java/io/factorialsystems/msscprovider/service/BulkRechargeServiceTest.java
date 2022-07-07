@@ -129,7 +129,7 @@ class BulkRechargeServiceTest {
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
 
-            var y = service.getUserRecharges(1, 20);
+            var y = service.getUserRecharges(K.getUserId(), 1, 20);
             log.info(y);
         }
     }

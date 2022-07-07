@@ -60,4 +60,9 @@ public class JedRechargeFactory extends AbstractFactory {
     public Balance getBalance() {
         return null;
     }
+
+    @Override
+    public ReQuery getReQuery() {
+        return null;
+    }
 }

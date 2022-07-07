@@ -3,14 +3,13 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.recharge.Balance;
-import io.factorialsystems.msscprovider.recharge.ParameterCheck;
-import io.factorialsystems.msscprovider.recharge.Recharge;
-import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.factory.RingoRechargeFactory;
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoAirtimeRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoInfoRequest;
+import io.factorialsystems.msscprovider.recharge.ringo.request.RingoReQueryRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoAirtimeResponse;
+import io.factorialsystems.msscprovider.recharge.ringo.response.RingoReQueryResponse;
 import io.factorialsystems.msscprovider.recharge.ringo.response.info.RingoInfoResponse;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,7 @@ import java.math.BigDecimal;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance {
+public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, ReQuery {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final RingoProperties ringoProperties;
@@ -125,5 +124,23 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance {
         headers.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
 
         return headers;
+    }
+
+    @Override
+    public String reQueryRequest(RingoReQueryRequest request) {
+
+        HttpHeaders headers = getHeader();
+
+        try {
+            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+
+            RingoReQueryResponse response =
+                    restTemplate.postForObject("https://www.api.ringo.ng/api/b2brequery", entity, RingoReQueryResponse.class);
+
+            return response.getMessage();
+        } catch (JsonProcessingException e) {
+            log.error("Ringo ReQuery Exception {}", e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
     }
 }

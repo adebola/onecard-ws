@@ -275,9 +275,9 @@ public class SingleRechargeService {
         return null;
     }
 
-    public PagedDto<SingleRechargeRequestDto> getUserRecharges(Integer pageNumber, Integer pageSize) {
+    public PagedDto<SingleRechargeRequestDto> getUserRecharges(String userId, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
-        Page<SingleRechargeRequest> requests = singleRechargeMapper.findRequestsByUserId(K.getUserId());
+        Page<SingleRechargeRequest> requests = singleRechargeMapper.findRequestsByUserId(userId);
 
         return createDto(requests);
     }
@@ -285,6 +285,14 @@ public class SingleRechargeService {
     public PagedDto<SingleRechargeRequestDto> search(String search, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<SingleRechargeRequest> requests = singleRechargeMapper.search(search);
+
+        return createDto(requests);
+    }
+
+    public PagedDto<SingleRechargeRequestDto> adminSearch(SearchSingleRechargeDto dto) {
+        PageHelper.startPage(dto.getPageNumber(), dto.getPageSize());
+        Page<SingleRechargeRequest> requests = singleRechargeMapper.adminSearch(dto);
+
 
         return createDto(requests);
     }

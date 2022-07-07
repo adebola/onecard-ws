@@ -116,6 +116,11 @@ public class RingoRechargeFactory extends AbstractFactory {
         return ApplicationContextProvider.getBean(RingoAirtimeRecharge.class);
     }
 
+    @Override
+    public ReQuery getReQuery() {
+        return ApplicationContextProvider.getBean(RingoAirtimeRecharge.class);
+    }
+
     private Recharge getClass(String action) {
         Recharge recharge = null;
 
