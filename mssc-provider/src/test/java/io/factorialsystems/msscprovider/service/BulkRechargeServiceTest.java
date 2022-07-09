@@ -1,10 +1,7 @@
 package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
-import io.factorialsystems.msscprovider.dto.AsyncRechargeDto;
-import io.factorialsystems.msscprovider.dto.IndividualRequestDto;
-import io.factorialsystems.msscprovider.dto.NewBulkRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.SearchIndividualDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
@@ -116,6 +113,28 @@ class BulkRechargeServiceTest {
             log.info(x);
             log.info(x.getTotalSize());
         }
+    }
+
+    @Test
+    void search() throws ParseException {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+
+        SearchBulkRechargeDto dto = new SearchBulkRechargeDto();
+        dto.setUserId(id);
+        dto.setPageNumber(1);
+        dto.setPageSize(20);
+        //dto.setSearchId("15");
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss", Locale.ENGLISH);
+        final String dateString = "15-06-2022 10:15:55 AM";
+        Date d = formatter.parse(dateString);
+        dto.setSearchDate(d);
+
+
+
+        var x = service.search(dto);
+        log.info(x);
+        log.info(x.getTotalSize());
     }
 
     @Test

@@ -174,4 +174,19 @@
             and p.service_code like CONCAT(#{product}, '%')
         </if>
     </select>
+
+    <select id="search" parameterType="io.factorialsystems.msscprovider.dto.SearchBulkRechargeDto" resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_column_list"/>
+        from new_bulk_recharge_requests
+        where user_id = #{userId}
+
+        <if test="searchDate != null">
+            and date(createdAt) = date(#{searchDate})
+        </if>
+
+        <if test="searchId != null">
+            and id like CONCAT(#{searchId}, '%')
+        </if>
+    </select>
 </mapper>

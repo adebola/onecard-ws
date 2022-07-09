@@ -87,6 +87,12 @@ public class BulkRechargeAuthController {
         return new ResponseEntity<>(newBulkRechargeService.searchByDate(dto.getScheduledDate(), pageNumber, pageSize), HttpStatus.OK);
     }
 
+    @PostMapping("/adminsearch")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> adminSearch(@Valid @RequestBody SearchBulkRechargeDto dto) {
+        return new ResponseEntity<>(newBulkRechargeService.search(dto), HttpStatus.OK);
+    }
+
     @GetMapping("/individual/{id}")
     public ResponseEntity<?> getBulkIndividualRequest(@PathVariable("id") String id,
                                                       @RequestParam(value = "pageNumber", required = false) Integer pageNumber,

@@ -312,6 +312,13 @@ public class NewBulkRechargeService {
         return createIndividualDto(requests);
     }
 
+    public PagedDto<NewBulkRechargeRequestDto> search(SearchBulkRechargeDto dto) {
+        PageHelper.startPage(dto.getPageNumber(), dto.getPageSize());
+        Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.search(dto);
+
+        return createDto(requests);
+    }
+
     public PagedDto<NewBulkRechargeRequestDto> searchByDate(Date date, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.searchByDate(new SearchByDate(date));

@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @CommonsLog
 class RechargeServiceTest {
-
     @Autowired
     private SingleRechargeService rechargeService;
 

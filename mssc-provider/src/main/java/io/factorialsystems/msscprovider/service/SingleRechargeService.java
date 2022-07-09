@@ -293,7 +293,6 @@ public class SingleRechargeService {
         PageHelper.startPage(dto.getPageNumber(), dto.getPageSize());
         Page<SingleRechargeRequest> requests = singleRechargeMapper.adminSearch(dto);
 
-
         return createDto(requests);
     }
 

@@ -6,6 +6,7 @@ import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
+import io.factorialsystems.msscprovider.dto.SearchBulkRechargeDto;
 import io.factorialsystems.msscprovider.dto.SearchIndividualDto;
 import io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification;
 import org.apache.ibatis.annotations.Mapper;
@@ -27,6 +28,7 @@ public interface NewBulkRechargeMapper {
     void failIndividualRequest(IndividualRequestFailureNotification n);
     Page<NewBulkRechargeRequest> findBulkRequestByUserId(String id);
     Page<NewBulkRechargeRequest> searchByDate(SearchByDate searchByDate);
+    Page<NewBulkRechargeRequest> search(SearchBulkRechargeDto dto);
     Page<IndividualRequest> findPagedBulkIndividualRequests(String id);
     Page<NewBulkRechargeRequest> findBulkRequestByAutoId(Map<String, String> parameters);
     IndividualRequest findIndividualRequestById(IndividualRequestQuery query);
