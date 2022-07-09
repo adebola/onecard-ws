@@ -47,8 +47,20 @@ public class AccountService {
     private static final String ACCOUNT_CREATED = "Account Created";
     private static final String ACCOUNT_WALLET_SELF_FUNDED = "Wallet Self-Funded";
     public static final String  ACCOUNT_WALLET_ADMIN_FUNDED = "Wallet Funded By Admin";
+    public static final String ACCOUNT_WALLET_USER_FUNDED = "Wallet Funded By Another User";
+    public static final String ACCOUNT_WALLET_USER_DEBITED = "Wallet Debited by Another User";
     private static final String ACCOUNT_BALANCE_FUNDED = "Account Balance Funded";
     private static final String ACCOUNT_BALANCE_UPDATED = "Account Balance Updated";
+
+    public static final int WALLET_SELF_FUNDED = 1;
+    public static final int WALLET_ONECARD_FUNDED = 2;
+    public static final int WALLET_USER_FUNDED = 3;
+    public static final int WALLET_USER_DEBITED = 4;
+
+    public static final String WALLET_SELF_FUNDED_STRING = "Self Funded";
+    public static final String WALLET_ONECARD_FUNDED_STRING = "Onecard Funded";
+    public static final String WALLET_USER_FUNDED_STRING = "User Funded";
+    public static final String WALLET_USER_DEBIT_STRING = "User DebitXXXXXX";
 
     @Value("${api.host.baseurl}")
     private String baseLocalUrl;
@@ -111,6 +123,7 @@ public class AccountService {
         FundWalletRequest request = fundWalletMapstructMapper.dtoToWalletRequest(dto);
         request.setId(id);
         request.setUserId(userId);
+        request.setFundType(WALLET_SELF_FUNDED);
 
         log.info(String.format("Initializing Wallet Funding id %s, for User %s, amount %.2f", id, userId, request.getAmount()));
 
@@ -203,7 +216,77 @@ public class AccountService {
     }
 
     @Transactional
-    public void updateAccountBalance(String id, BalanceDto dto) {
+    public WalletResponseDto transferFunds(TransferFundsDto dto) {
+        Account toAccount = Optional.ofNullable(accountMapper.findAccountById(dto.getRecipient()))
+                .orElseThrow(() -> new ResourceNotFoundException("To Account", "id", dto.getRecipient()));
+
+        Account fromAccount = Optional.ofNullable(accountMapper.findAccountByUserId(K.getUserId()))
+                .orElseThrow(() -> new ResourceNotFoundException("From Account", "id", dto.getRecipient()));
+
+        if (fromAccount.getBalance().compareTo(dto.getAmount()) > 0) {
+            // Load Accounts from User Module
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+
+            SimpleUserDto toSimpleDto =
+                    Optional.ofNullable(restTemplate.getForObject(baseLocalUrl + "/api/v1/user/simple/" + toAccount.getUserId(), SimpleUserDto.class))
+                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", toAccount.getUserId()));
+
+            SimpleUserDto fromSimpleDto =
+                    Optional.ofNullable(restTemplate.getForObject(baseLocalUrl + "/api/v1/user/simple/" + fromAccount.getUserId(), SimpleUserDto.class))
+                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", fromAccount.getUserId()));
+
+            BigDecimal newFromBalance = fromAccount.getBalance().subtract(dto.getAmount());
+            BigDecimal newToBalance = toAccount.getBalance().add(dto.getAmount());
+
+            fromAccount.setBalance(newFromBalance);
+            toAccount.setBalance(newToBalance);
+
+            accountMapper.changeBalance(fromAccount);
+            accountMapper.changeBalance(toAccount);
+
+            final String message = String.format("Funds Transfer from %s to %s in the sum of %.2f", fromSimpleDto.getUserName(), toSimpleDto.getUserName(), dto.getAmount());
+            log.info(message);
+            auditService.auditEvent(message, ACCOUNT_WALLET_USER_FUNDED);
+
+            saveTransaction(dto.getAmount(), fromAccount.getId(), ACCOUNT_WALLET_USER_DEBITED);
+            saveTransaction(dto.getAmount(), toAccount.getId(), ACCOUNT_WALLET_USER_FUNDED);
+
+            saveFundWalletRequest(dto.getAmount(), WALLET_USER_FUNDED, toAccount.getUserId(), String.format("Onecard User %s Funded Wallet", fromSimpleDto.getUserName()));
+            saveFundWalletRequest(dto.getAmount(), WALLET_USER_DEBITED, fromAccount.getUserId(), String.format("Funded Onecard User %s", toSimpleDto.getUserName()));
+
+            MailMessageDto toDto = MailMessageDto.builder()
+                    .subject("Wallet Funding")
+                    .body(String.format("Your account has been funded By %s in the sum of %.2f, your new balance is %.2f", fromSimpleDto.getUserName(),dto.getAmount(), newToBalance))
+                    .to(toSimpleDto.getEmail())
+                    .build();
+
+            MailMessageDto fromDto = MailMessageDto.builder()
+                    .subject("Wallet Funding")
+                    .to(fromSimpleDto.getEmail())
+                    .body(String.format("You have successfully funded %s by %.2f, your new Balance is %.2f", toSimpleDto.getUserName(), dto.getAmount(), newFromBalance))
+                    .build();
+
+            pushMailMessage(toDto);
+            pushMailMessage(fromDto);
+
+            return WalletResponseDto.builder()
+                    .status(200)
+                    .message(message)
+                    .build();
+        } else {
+            final String errorMessage = String.format("Insufficient Funds to transfer %.2f current balance %.2f", dto.getAmount(), fromAccount.getBalance());
+            log.error(errorMessage);
+
+            return WalletResponseDto.builder()
+                    .status(400)
+                    .message(errorMessage)
+                    .build();
+        }
+    }
+
+    @Transactional
+    public void fundWallet(String id, BalanceDto dto) {
         Account account = Optional.ofNullable(accountMapper.findAccountById(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
 
@@ -227,6 +310,22 @@ public class AccountService {
             log.error(String.format("Unable to retrieve User For Account %s", account.getId()));
             return;
         }
+
+        final String requestId = UUID.randomUUID().toString();
+
+        FundWalletRequest request = FundWalletRequest.builder()
+                .id(requestId)
+                .amount(dto.getBalance())
+                .fundType(WALLET_ONECARD_FUNDED)
+                .paymentVerified(true)
+                .closed(true)
+                .status(200)
+                .userId(simpleUserDto.getId())
+                .paymentId(requestId)
+                .message("Onecard Admin Wallet Funding")
+                .build();
+
+        fundWalletMapper.saveClosedAndVerified(request);
 
         log.info(String.format("Sending Notification of Admin Wallet Update to %s", simpleUserDto.getEmail()));
 
@@ -285,11 +384,15 @@ public class AccountService {
         }
     }
 
-    public PagedDto<FundWalletRequestDto> findWalletFunding(Integer pageNumber, Integer pageSize) {
+    public PagedDto<FundWalletRequestDto> findWalletFundings(String userId, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber,pageSize);
-        Page<FundWalletRequest> requests = fundWalletMapper.findByUserId(K.getUserId());
+        Page<FundWalletRequest> requests = fundWalletMapper.findByUserId(userId);
 
         return createFundDto(requests);
+    }
+
+    public void sendMailMessage(MailMessageDto dto) {
+        mailService.sendMailWithOutAttachment(dto);
     }
 
     private Boolean checkPayment(String id) {
@@ -300,8 +403,22 @@ public class AccountService {
         return dto != null ? dto.getVerified() : false;
     }
 
-    public void sendMailMessage(MailMessageDto dto) {
-        mailService.sendMailWithOutAttachment(dto);
+    private void saveFundWalletRequest(BigDecimal amount, Integer fundType, String userId, String narrative) {
+        final String id = UUID.randomUUID().toString();
+
+        FundWalletRequest request = FundWalletRequest.builder()
+                .id(id)
+                .amount(amount)
+                .fundType(fundType)
+                .paymentVerified(true)
+                .closed(true)
+                .status(200)
+                .userId(userId)
+                .paymentId(id)
+                .message(narrative)
+                .build();
+
+        fundWalletMapper.saveClosedAndVerified(request);
     }
 
     private void pushMailMessage(MailMessageDto dto) {
@@ -333,8 +450,6 @@ public class AccountService {
     }
 
     private void saveTransaction(BigDecimal amount, String accountId, String narrative) {
-        log.info(String.format("Wallet Transaction Narrative: %s", narrative));
-
         Transaction transaction = Transaction.builder()
                 .accountId(accountId)
                 .recipient(accountId)

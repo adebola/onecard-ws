@@ -85,6 +85,10 @@ public class UserService {
         return keycloakUserMapper.userToSimpleDto(user);
     }
 
+    public SimpleUserDto verifyUser(String id) {
+        return findSimpleUserById(id);
+    }
+
     public PagedDto<KeycloakUserDto> searchUser(Integer pageNumber, Integer pageSize, String searchString) {
         PageHelper.startPage(pageNumber, pageSize);
         return createDto(userMapper.search(searchString));

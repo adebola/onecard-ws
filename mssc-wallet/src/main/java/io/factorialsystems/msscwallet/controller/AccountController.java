@@ -43,9 +43,9 @@ public class AccountController {
 
     @PutMapping("/balance/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('Onecard_Admin')")
+    @PreAuthorize("hasRole('Onecard_Admin')")
     public void updateAccountBalance(@PathVariable("id") String id, @Valid @RequestBody BalanceDto balanceDto) {
-        accountService.updateAccountBalance(id, balanceDto);
+        accountService.fundWallet(id, balanceDto);
     }
 
     @GetMapping("/{id}")
@@ -89,7 +89,29 @@ public class AccountController {
             pageSize = K.DEFAULT_PAGE_SIZE;
         }
 
-        return new ResponseEntity<>(accountService.findWalletFunding(pageNumber, pageSize), HttpStatus.OK);
+        return new ResponseEntity<>(accountService.findWalletFundings(K.getUserId(), pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/wallet/{id}")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> getAdminWalletFunding(@PathVariable("id") String id,
+                                                   @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                   @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(accountService.findWalletFundings(id, pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<?> transferFunds(@Valid @RequestBody TransferFundsDto dto) {
+        return new ResponseEntity<>(accountService.transferFunds(dto), HttpStatus.OK);
     }
 
 //

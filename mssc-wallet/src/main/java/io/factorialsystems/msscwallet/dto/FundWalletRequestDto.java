@@ -31,5 +31,9 @@ public class FundWalletRequestDto {
     @Null(message = "Closed cannot be specified")
     private Boolean closed;
 
+    @Null(message = "Fund Type cannot be specified")
+    private String type;
+
     private String redirectUrl;
+
 }

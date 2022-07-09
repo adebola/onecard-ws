@@ -63,6 +63,11 @@ public class UserController {
         return new ResponseEntity<>(userService.findSimpleUserById(id), HttpStatus.OK);
     }
 
+    @GetMapping("/verify/{id}")
+    public ResponseEntity<?> verifyUser(@PathVariable("id") String id) {
+        return new ResponseEntity<>(userService.verifyUser(id), HttpStatus.OK);
+    }
+
     @GetMapping("/roles/{id}")
     ResponseEntity<?> getUserRoles(@PathVariable("id") String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

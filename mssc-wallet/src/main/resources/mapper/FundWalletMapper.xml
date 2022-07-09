@@ -9,6 +9,7 @@
         <result column="redirect_url" property="redirectUrl" jdbcType="VARCHAR"/>
         <result column="amount" property="amount" jdbcType="DECIMAL"/>
         <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="fund_type" property="fundType" jdbcType="INTEGER"/>
         <result column="message" property="message" jdbcType="VARCHAR"/>
         <result column="payment_id" property="paymentId" jdbcType="VARCHAR"/>
         <result column="created_on" property="createdOn" jdbcType="TIMESTAMP"/>
@@ -17,8 +18,9 @@
     </resultMap>
 
     <sql id="column_list">
-        id, user_id, authorization_url, redirect_url, amount, status, message, payment_id, payment_verified, created_on, closed
+        id, user_id, authorization_url, redirect_url, amount, status, fund_type, message, payment_id, payment_verified, created_on, closed
     </sql>
+
 
     <select id="findById" parameterType="java.lang.String" resultMap="fundWalletResultMap">
         select
@@ -32,11 +34,17 @@
         <include refid="column_list"/>
         from fund_wallet_request
         where user_id = #{id}
+        and payment_verified = true
     </select>
 
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.FundWalletRequest">
-        insert into fund_wallet_request(id, user_id, authorization_url, redirect_url, amount, status, message, payment_id) values
-            (#{id},  #{userId}, #{authorizationUrl}, #{redirectUrl}, #{amount}, #{status},#{message},#{paymentId})
+        insert into fund_wallet_request(id, user_id, authorization_url, redirect_url, amount, status, message, payment_id, fund_type) values
+            (#{id},  #{userId}, #{authorizationUrl}, #{redirectUrl}, #{amount}, #{status},#{message},#{paymentId}, #{fundType})
+    </insert>
+
+    <insert id="saveClosedAndVerified" parameterType="io.factorialsystems.msscwallet.domain.FundWalletRequest">
+        insert into fund_wallet_request(id, user_id, authorization_url, redirect_url, amount, status, message, payment_id, fund_type, closed, payment_verified) values
+            (#{id},  #{userId}, #{authorizationUrl}, #{redirectUrl}, #{amount}, #{status},#{message},#{paymentId}, #{fundType}, #{closed}, #{paymentVerified})
     </insert>
 
     <update id="update" parameterType="io.factorialsystems.msscwallet.domain.FundWalletRequest">

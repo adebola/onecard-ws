@@ -3,6 +3,7 @@ package io.factorialsystems.msscwallet.mapper;
 import io.factorialsystems.msscwallet.domain.FundWalletRequest;
 import io.factorialsystems.msscwallet.dto.FundWalletRequestDto;
 import io.factorialsystems.msscwallet.dto.FundWalletResponseDto;
+import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -10,6 +11,7 @@ import org.mapstruct.Mappings;
 import java.util.List;
 
 @Mapper
+@DecoratedWith(FundWalletMapstructMapperDecorator.class)
 public interface FundWalletMapstructMapper {
 
     @Mappings({
