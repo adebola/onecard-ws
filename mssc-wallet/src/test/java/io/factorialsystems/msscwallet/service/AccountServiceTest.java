@@ -173,6 +173,36 @@ class AccountServiceTest {
     }
 
     @Test
+    void refundWallet() {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+        final String accessToken = getUserToken(id);
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assert Objects.equals(K.getUserId(), id);
+            log.info(K.getUserId());
+
+            k.when(K::getAccessToken).thenReturn(accessToken);
+            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+            log.info(K.getAccessToken());
+
+            k.when(K::getEmail).thenReturn("admin@factorialsystems.io");
+            k.when(K::getUserName).thenReturn("admin");
+
+            BigDecimal addBalance = new BigDecimal(1000);
+
+            BalanceDto currentDto = accountService.findAccountBalance();
+            log.info(String.format("Current Balance %.2f", currentDto.getBalance()));
+
+            BalanceDto dto = new BalanceDto(addBalance);
+            accountService.refundWallet(id, dto);
+
+            BalanceDto newDto = accountService.findAccountBalance();
+            assertEquals(currentDto.getBalance().add(addBalance), newDto.getBalance());
+        }
+    }
+
+    @Test
     void chargeAccount() {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final int amount = 200;

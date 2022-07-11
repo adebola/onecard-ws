@@ -35,8 +35,6 @@ public class FundWalletMapstructMapperDecorator implements FundWalletMapstructMa
 
         FundWalletRequestDto dto = mapstructMapper.requestToRequestDto(request);
 
-        log.info(String.format("FundWalletRequestType %d", request.getFundType()));
-
         switch (request.getFundType()) {
             case AccountService.WALLET_SELF_FUNDED:
                 dto.setType(AccountService.WALLET_SELF_FUNDED_STRING);
@@ -52,6 +50,10 @@ public class FundWalletMapstructMapperDecorator implements FundWalletMapstructMa
 
             case AccountService.WALLET_USER_DEBITED:
                 dto.setType(AccountService.WALLET_USER_DEBIT_STRING);
+                break;
+
+            case AccountService.WALLET_ONECARD_REFUNDED:
+                dto.setType(AccountService.WALLET_ONECARD_REFUNDED_STRING);
                 break;
 
             default:
