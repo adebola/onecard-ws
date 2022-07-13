@@ -58,7 +58,7 @@ public class UserController {
     }
 
     @GetMapping("/simple/{id}")
-    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+//    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public ResponseEntity<?> getSimpleUserById(@PathVariable("id") String id) {
         return new ResponseEntity<>(userService.findSimpleUserById(id), HttpStatus.OK);
     }
