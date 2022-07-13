@@ -9,8 +9,8 @@ import java.util.Map;
 
 @Slf4j
 public class K {
-    private static final String SYSTEM_NAME = "anonymous";
-    private static final String SYSTEM_EMAIL = "anonymous@factorialsystems.io";
+    private static final String SYSTEM_NAME = "system";
+    private static final String SYSTEM_EMAIL = "system@onecardnigeria.com";
 
     public static final Integer DEFAULT_PAGE_NUMBER = 1;
     public static final Integer DEFAULT_PAGE_SIZE = 20;
@@ -23,6 +23,11 @@ public class K {
     public static String getUserId() {
         Map<String, Object> claims = K.getClaims();
         return claims != null ? (String) claims.get("sub") : null;
+    }
+
+    public static String getEmail() {
+        Map<String, Object> claims = K.getClaims();
+        return claims != null ? (String) claims.get("email") : SYSTEM_EMAIL;
     }
 
 }

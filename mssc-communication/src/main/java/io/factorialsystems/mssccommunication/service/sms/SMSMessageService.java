@@ -80,6 +80,7 @@ public class SMSMessageService {
 
         message.setUserId(K.getUserId());
         message.setCreatedDate(new Date());
+        message.setSentBy(K.getEmail());
 
         try {
             String response = restTemplate.postForObject(smsUrl, param, String.class);

@@ -7,15 +7,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.Date;
 
 @Data
-@Document("sms")
-public class SMSMessage {
+@Document("mail")
+public class MailMessage {
     @Id
     private String id;
     private String to;
-    private String message;
-    private String userId;
+    private String from;
+    private String subject;
+    private String body;
+    private String fileName;
     private Date createdDate;
-    private String response;
-    private boolean status;
     private String sentBy;
 }
