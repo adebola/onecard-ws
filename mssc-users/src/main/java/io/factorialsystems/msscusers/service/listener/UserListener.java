@@ -5,8 +5,11 @@ import io.factorialsystems.msscusers.config.JMSConfig;
 import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.domain.UserWallet;
+import io.factorialsystems.msscusers.dto.AsyncRefundResponseDto;
+import io.factorialsystems.msscusers.remote.RemoteMail;
 import io.factorialsystems.msscusers.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jms.annotation.JmsListener;
@@ -21,6 +24,16 @@ import java.io.IOException;
 public class UserListener {
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
+
+    @SneakyThrows
+    @JmsListener(destination = JMSConfig.WALLET_REFUND_RESPONSE_QUEUE_USER)
+    public void listenForRefundWallet(String jsonData) {
+        if (jsonData != null) {
+            AsyncRefundResponseDto responseDto = objectMapper.readValue(jsonData, AsyncRefundResponseDto.class);
+            RemoteMail remoteMail = applicationContext.getBean(RemoteMail.class);
+            remoteMail.sendRefundMail(responseDto);
+        }
+    }
 
     @JmsListener(destination = JMSConfig.NEW_USER_QUEUE)
     public void listenForNewUser(String jsonData) throws IOException {

@@ -8,5 +8,6 @@ public class JMSConfig {
     public static final String ADD_ORGANIZATION_ACCOUNT_QUEUE = "add-organization";
     public static final String REMOVE_ORGANIZATION_ACCOUNT_QUEUE = "remove-organization";
     public static final String LOGIN_QUEUE = "LoginQueue";
+    public static final String WALLET_REFUND_RESPONSE_QUEUE_USER = "wallet-refund-response-queue-user";
 
 }
