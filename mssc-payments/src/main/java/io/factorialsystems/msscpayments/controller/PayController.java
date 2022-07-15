@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -32,15 +33,8 @@ public class PayController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PaymentRequestDto> checkPayment(@PathVariable("id") String id) {
-
-       PaymentRequestDto dto = paymentService.checkPaymentValidity(id);
-
-       if (dto == null)
-       {
-           final String message = String.format("Payment not consumated, pending id (%s)", id);
-           log.error(message);
-           throw new RuntimeException(message);
-       }
+       PaymentRequestDto dto = Optional.ofNullable(paymentService.checkPaymentValidity(id))
+               .orElseThrow(() -> new RuntimeException(String.format("Payment not consummated, pending id (%s)", id)));
 
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }

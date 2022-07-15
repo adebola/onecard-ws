@@ -1,12 +1,14 @@
 package io.factorialsystems.msscpayments.controller;
 
 import io.factorialsystems.msscpayments.domain.PaymentRequest;
+import io.factorialsystems.msscpayments.dto.BalanceDto;
 import io.factorialsystems.msscpayments.dto.PaymentRequestDto;
 import io.factorialsystems.msscpayments.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -21,6 +23,12 @@ public class PaymentController {
     @GetMapping("/{id}")
     public ResponseEntity<PaymentRequest> getPayment(@PathVariable("id") String id) {
         return new ResponseEntity<>(paymentService.findById(id), HttpStatus.OK);
+    }
+
+    @PutMapping("/refund/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> refundPayment(@PathVariable("id") String id, @Valid @RequestBody BalanceDto balanceDto) {
+        return  new ResponseEntity<>(paymentService.refundPayment(id, balanceDto), HttpStatus.OK);
     }
 
     @PostMapping

@@ -17,8 +17,37 @@
         <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
     </resultMap>
 
+    <resultMap id="refundResultMap" type="io.factorialsystems.msscpayments.domain.RefundRequest">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="payment_id" property="paymentId" jdbcType="VARCHAR"/>
+        <result column="amount" property="amount" jdbcType="DECIMAL"/>
+        <result column="refunded_on" property="refundedOn" jdbcType="TIMESTAMP" />
+        <result column="refunded_by" property="refundedBy" jdbcType="VARCHAR"/>
+        <result column="fund_wallet_request_id" property="fundRequestId" jdbcType="VARCHAR"/>
+    </resultMap>
+
     <sql id="Column_List">
-        id, amount, authorization_url, redirect_url, access_code, reference, verified, status, message, payment_created, payment_verified, payment_mode
+        id,
+        amount,
+        authorization_url,
+        redirect_url,
+        access_code,
+        reference,
+        verified,
+        status,
+        message,
+        payment_created,
+        payment_verified,
+        payment_mode
+    </sql>
+
+    <sql id="refund_column_list">
+        id,
+        payment_id,
+        amount,
+        refunded_on,
+        refunded_by,
+        fund_wallet_request_id
     </sql>
 
     <select id="findAll" resultMap="paymentResultMap">
@@ -27,11 +56,21 @@
         from payment
     </select>
 
-    <select id="search" parameterType="java.lang.String" resultMap="paymentResultMap">
+    <select id="findRefundByPaymentId" resultMap="refundResultMap">
         select
-        <include refid="Column_List"/>
-        from cluster where name like CONCAT(#{search}, '%')
+        <include refid="refund_column_list"/>
+        from refund where payment_id = #{id}
     </select>
+
+    <select id="findRefundTotalByPaymentId" resultType="double">
+        select sum(amount) from refund where payment_id = #{id}
+    </select>
+
+<!--    <select id="search" parameterType="java.lang.String" resultMap="paymentResultMap">-->
+<!--        select-->
+<!--        <include refid="Column_List"/>-->
+<!--        from cluster where name like CONCAT(#{search}, '%')-->
+<!--    </select>-->
 
     <select id="findById" parameterType="java.lang.String" resultMap="paymentResultMap">
         select
@@ -43,6 +82,11 @@
     <insert id="save" parameterType="io.factorialsystems.msscpayments.domain.PaymentRequest">
         insert into payment(id, amount, authorization_url, redirect_url, status, message, access_code, reference, payment_mode)
         values(#{id}, #{amount}, #{authorizationUrl}, #{redirectUrl}, #{status}, #{message}, #{accessCode}, #{reference}, #{paymentMode})
+    </insert>
+
+    <insert id="saveRefundRequest" parameterType="io.factorialsystems.msscpayments.domain.RefundRequest">
+        insert into refund(id, payment_id, amount, refunded_by, fund_wallet_request_id)
+        value (#{id}, #{paymentId}, #{amount}, #{refundedBy}, #{fundRequestId})
     </insert>
 
     <update id="verifyByReference" parameterType="java.lang.String">

@@ -25,4 +25,5 @@ public class PaymentRequest {
     private Boolean verified;
     private Timestamp paymentCreated;
     private Timestamp paymentVerified;
+    private Boolean reversed;
 }

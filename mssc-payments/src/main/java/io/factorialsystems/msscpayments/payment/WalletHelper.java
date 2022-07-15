@@ -20,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.sql.Timestamp;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -61,13 +62,8 @@ public class WalletHelper implements Payment {
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getInterceptors().add(new RestTemplateInterceptor());
             InitializeWalletTransactionResponse response =
-                    restTemplate.postForObject(baseUrl + "/api/v1/account", request, InitializeWalletTransactionResponse.class);
-
-            if (response == null) {
-                final String message = String.format("RuntimeException charging Wallet Payment ID %s", id);
-                log.error(message);
-                throw new RuntimeException(message);
-            }
+                    Optional.ofNullable(restTemplate.postForObject(baseUrl + "/api/v1/account", request, InitializeWalletTransactionResponse.class))
+                            .orElseThrow(() -> new RuntimeException(String.format("RuntimeException charging Wallet Payment ID %s", id)));
 
             Integer status = response.getStatus();
 
