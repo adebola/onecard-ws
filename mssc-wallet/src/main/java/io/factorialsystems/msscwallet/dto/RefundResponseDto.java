@@ -5,10 +5,10 @@ import lombok.Data;
 
 @Data
 @Builder
-public class RefundTransactionResponseDto {
+public class RefundResponseDto {
     private String id;
+    private String rechargeId;
     private Integer status;
-    private String transactionId;
     private String  paymentId;
     private String message;
 }

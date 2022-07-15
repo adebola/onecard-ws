@@ -2,7 +2,6 @@ package io.factorialsystems.msscwallet.controller;
 
 import io.factorialsystems.msscwallet.dto.DateRangeDto;
 import io.factorialsystems.msscwallet.dto.MessageDto;
-import io.factorialsystems.msscwallet.dto.RefundTransactionDto;
 import io.factorialsystems.msscwallet.service.TransactionService;
 import io.factorialsystems.msscwallet.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -95,11 +94,5 @@ public class TransactionController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(file);
-    }
-
-    @PostMapping
-    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
-    public ResponseEntity<?> refundTransaction(@Valid @RequestBody RefundTransactionDto dto) {
-        return new ResponseEntity<>(transactionService.refundTransaction(dto), HttpStatus.OK);
     }
 }

@@ -18,6 +18,7 @@ import io.factorialsystems.msscwallet.mapper.FundWalletMapstructMapper;
 import io.factorialsystems.msscwallet.security.RestTemplateInterceptor;
 import io.factorialsystems.msscwallet.utils.K;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
@@ -221,11 +222,11 @@ public class AccountService {
 
     @Transactional
     public WalletResponseDto transferFunds(TransferFundsDto dto) {
-        Account toAccount = Optional.ofNullable(accountMapper.findAccountById(dto.getRecipient()))
+        Account toAccount = Optional.ofNullable(accountMapper.findAccountByUserId(dto.getRecipient()))
                 .orElseThrow(() -> new ResourceNotFoundException("To Account", "id", dto.getRecipient()));
 
         Account fromAccount = Optional.ofNullable(accountMapper.findAccountByUserId(K.getUserId()))
-                .orElseThrow(() -> new ResourceNotFoundException("From Account", "id", dto.getRecipient()));
+                .orElseThrow(() -> new ResourceNotFoundException("From Account", "id", K.getUserId()));
 
         if (fromAccount.getBalance().compareTo(dto.getAmount()) > 0) {
             // Load Accounts from User Module
@@ -289,8 +290,46 @@ public class AccountService {
         }
     }
 
+
+    @SneakyThrows
     @Transactional
-    public WalletResponseDto refundWallet(String id, BalanceDto dto) {
+    public void refundWallet(AsyncRefundRequest request) {
+        Account account = Optional.ofNullable(accountMapper.findAccountByUserId(request.getUserId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", request.getUserId()));
+
+        BigDecimal newBalance = account.getBalance().add(request.getAmount());
+
+        account.setBalance(newBalance);
+        accountMapper.changeBalance(account);
+
+        String auditMessage =
+                String.format("Account (%s / %s) Refunded by %.2f to %.2f by (%s)", account.getId(), account.getName(), request.getAmount(), account.getBalance(), K.getUserName());
+        log.info(auditMessage);
+        auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_REFUNDED);
+
+        saveTransaction(request.getAmount(), account.getId(), ACCOUNT_WALLET_ADMIN_REFUNDED);
+        final String refundWalletId = saveFundWalletRequest(request.getAmount(), WALLET_ONECARD_REFUNDED, request.getUserId(), String.format("Wallet Refunded By %s", request.getUserId()));
+
+
+        AsyncRefundResponseDto dto = AsyncRefundResponseDto.builder()
+                .status(200)
+                .amount(request.getAmount())
+                .message("success")
+                .id(refundWalletId)
+                .paymentId(request.getPaymentId())
+                .userId(request.getUserId())
+                .rechargeId(request.getSingleRechargeId())
+                .build();
+
+        final String buffer = objectMapper.writeValueAsString(dto);
+
+        jmsTemplate.convertAndSend(JMSConfig.WALLET_REFUND_RESPONSE_QUEUE_USER, buffer);
+        jmsTemplate.convertAndSend(JMSConfig.WALLET_REFUND_RESPONSE_QUEUE_PAYMENT, buffer);
+        jmsTemplate.convertAndSend(JMSConfig.WALLET_REFUND_RESPONSE_QUEUE_PROVIDER, buffer);
+    }
+
+    @Transactional
+    public RefundResponseDto refundWallet(String id, BalanceDto dto) {
         Account account = Optional.ofNullable(accountMapper.findAccountByUserId(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
 
@@ -305,7 +344,7 @@ public class AccountService {
         auditService.auditEvent(auditMessage, ACCOUNT_BALANCE_REFUNDED);
 
         saveTransaction(dto.getBalance(), account.getId(), ACCOUNT_WALLET_ADMIN_REFUNDED);
-        saveFundWalletRequest(dto.getBalance(), WALLET_ONECARD_REFUNDED, id, String.format("Wallet Refunded By %s", K.getUserName()));
+        final String refundWalletId = saveFundWalletRequest(dto.getBalance(), WALLET_ONECARD_REFUNDED, id, String.format("Wallet Refunded By %s", K.getUserName()));
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getInterceptors().add(new RestTemplateInterceptor());
@@ -322,9 +361,10 @@ public class AccountService {
 
         pushMailMessage(mailMessageDto);
 
-        return WalletResponseDto.builder()
+        return RefundResponseDto.builder()
                 .status(200)
                 .message("Success")
+                .id(refundWalletId)
                 .build();
     }
 
@@ -446,7 +486,7 @@ public class AccountService {
         return dto != null ? dto.getVerified() : false;
     }
 
-    private void saveFundWalletRequest(BigDecimal amount, Integer fundType, String userId, String narrative) {
+    private String saveFundWalletRequest(BigDecimal amount, Integer fundType, String userId, String narrative) {
         final String id = UUID.randomUUID().toString();
 
         FundWalletRequest request = FundWalletRequest.builder()
@@ -462,6 +502,8 @@ public class AccountService {
                 .build();
 
         fundWalletMapper.saveClosedAndVerified(request);
+
+        return id;
     }
 
     private void pushMailMessage(MailMessageDto dto) {

@@ -12,8 +12,10 @@ import io.factorialsystems.msscwallet.domain.UserWallet;
 import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.service.AccountService;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ import java.util.UUID;
 public class WalletServiceJMSListener {
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
+    private final ApplicationContext applicationContext;
     private final RestTemplate restTemplate;
     private final AccountMapper accountMapper;
     private final AccountService accountService;
@@ -36,6 +39,17 @@ public class WalletServiceJMSListener {
 
     @Value("${api.host.baseurl}")
     private String baseUrl;
+
+
+    public static final String WALLET_REFUND_QUEUE = "wallet-refund-queue";
+
+    @SneakyThrows
+    @JmsListener(destination = JMSConfig.WALLET_REFUND_QUEUE)
+    public void listenForRefund(String jsonData)  {
+        AsyncRefundRequest request = objectMapper.readValue(jsonData, AsyncRefundRequest.class);
+        AccountService accountService = applicationContext.getBean(AccountService.class);
+        accountService.refundWallet(request);
+    }
 
     @JmsListener(destination = JMSConfig.NEW_USER_WALLET_QUEUE)
     public void listenForNewUser(String jsonData)  {

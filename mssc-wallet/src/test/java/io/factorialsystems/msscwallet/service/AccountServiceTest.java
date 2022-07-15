@@ -273,7 +273,7 @@ class AccountServiceTest {
 
 
             TransferFundsDto dto = new TransferFundsDto();
-            dto.setRecipient("275745a4-8fb9-46f6-ac80-ff245bc62fcb");
+            dto.setRecipient("28e05596-9ad0-4187-ac11-fd93fb7701af");
             dto.setAmount(new BigDecimal(15));
 
             accountService.transferFunds(dto);

@@ -79,8 +79,4 @@ public class TransactionService {
         pagedDto.setList(transactionMapstructMapper.listTransactionToTransactionDto(transactions.getResult()));
         return pagedDto;
     }
-
-    public RefundTransactionResponseDto refundTransaction(RefundTransactionDto dto) {
-        return null;
-    }
 }
