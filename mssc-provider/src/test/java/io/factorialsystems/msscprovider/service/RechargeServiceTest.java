@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.service;
 
+import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.dto.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.apachecommons.CommonsLog;
@@ -23,8 +24,26 @@ class RechargeServiceTest {
     @Autowired
     private SingleRechargeService rechargeService;
 
+    @Autowired
+    private SingleRechargeMapper singleRechargeMapper;
+
     @Test
     void findRequest() {
+    }
+
+    @Test
+    void refundRechargeRequest() {
+//        final String rechargeId = "10867903-ebe3-438e-8ef5-c4f148ee1465";
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//
+//        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+//            k.when(K::getUserId).thenReturn(id);
+//            assertThat(K.getUserId()).isEqualTo(id);
+//            log.info(K.getUserId());
+//
+//            SingleRechargeRequest request = singleRechargeMapper.findById(rechargeId);
+//            rechargeService.refundRechargeRequest(request);
+//        }
     }
 
     @Test

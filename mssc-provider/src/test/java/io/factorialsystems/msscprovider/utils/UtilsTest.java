@@ -32,4 +32,26 @@ public class UtilsTest {
         log.info(String.format("Week of Year %d", weekOfYear));
         log.info(String.format("Month of Year %d", monthOfYear));
     }
+
+//    @Test
+//    public void mapTest() {
+//        Student student = new Student();
+//
+//        var y = student.getAccount();
+//        var z = y.get().getLoan();
+//
+//        var x = Optional.of(student)
+//                .flatMap(Student::getAccount)
+//                .flatMap(Account::getLoan)
+//                .map(Loan::getAmount)
+//                .orElse(0d);
+//
+//        List<Student> students = Arrays.asList(new Student(), new Student());
+//
+//        var a = students.stream()
+//                .map(Student::getAccount)
+//                .map(account -> account.get().getLoan())
+//                .map(account -> account.flatMap(Account::getLoan))
+//
+//    }
 }

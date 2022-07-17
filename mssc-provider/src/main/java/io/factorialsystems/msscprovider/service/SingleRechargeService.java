@@ -12,6 +12,7 @@ import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequestRetry;
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
@@ -22,6 +23,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.response.ProductItem;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -31,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Slf4j
@@ -161,7 +164,13 @@ public class SingleRechargeService {
         RechargeStatus status = null;
 
         if (request.getPaymentId() != null && !checkPayment(request.getPaymentId())) {
-            throw new RuntimeException("Payment has not been made or notification delayed, please try again");
+            final String errorMessage = String.format("Error Fulfilling Single Recharge Request %s, Payment has not been made", request.getId());
+            log.error(errorMessage);
+
+            return RechargeStatus.builder()
+                    .message(errorMessage)
+                    .status(HttpStatus.BAD_REQUEST)
+                    .build();
         }
 
         List<RechargeFactoryParameters> parameters = parameterCache.getFactoryParameter(request.getServiceId());
@@ -173,19 +182,207 @@ public class SingleRechargeService {
             Recharge recharge = factory.getRecharge(parameter.getServiceAction());
             status = recharge.recharge(request);
 
-            if (status.getStatus() == HttpStatus.OK) {
-                singleRechargeMapper.closeRequest(request.getId());
+            singleRechargeMapper.closeRequest(request.getId());
 
-                // If it is a scheduled Recharge, it will have been paid for and transaction logged at the time it was Scheduled
-                if (request.getScheduledRequestId() == null) {
-                    saveTransaction(request);
-                }
+            // If it is a scheduled Recharge, it will have been paid for and transaction logged at the time it was Scheduled
+            if (request.getScheduledRequestId() == null) {
+                saveTransaction(request);
             }
 
-            sendMail(request, dto, status);
+            if (status.getStatus() == HttpStatus.OK) {
+                sendMail(request, dto, status);
+            } else {
+                refundRechargeRequest(request);
+            }
         }
 
         return status;
+    }
+
+    @SneakyThrows
+    public void refundRechargeRequest(SingleRechargeRequest request) {
+
+        // You can only Refund if the User is not anonymous, otherwise we don't know who to refund to
+        if (request.getUserId() != null) {
+            AsyncRefundRequestDto refundRequest = AsyncRefundRequestDto.builder()
+                    .singleRechargeId(request.getId())
+                    .amount(request.getServiceCost())
+                    .paymentId(request.getPaymentId())
+                    .userId(request.getUserId())
+                    .build();
+
+            log.info(String.format("MQ Request sent for Refund on Single Recharge for User %s, Amount %.2f", request.getUserId(), request.getServiceCost()));
+            jmsTemplate.convertAndSend(JMSConfig.PAYMENT_REFUND_QUEUE, objectMapper.writeValueAsString(refundRequest));
+        }
+    }
+
+    public void refundRechargeResponse(AsyncRefundResponseDto dto) {
+
+        log.info(String.format("Received Recharge Refund Response for %s, Status %d", dto.getRechargeId(), dto.getStatus()));
+
+        if (dto.getStatus() == 200) {
+            Map<String, String> refundMap = new HashMap<>();
+            refundMap.put("id", dto.getRechargeId());
+            refundMap.put("refundId", dto.getId());
+            singleRechargeMapper.saveRefund(refundMap);
+        }
+    }
+
+    public MessageDto refundRecharge(String id) {
+        SingleRechargeRequest request = Optional.ofNullable(singleRechargeMapper.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("SingleRechargeRequest", "id", id));
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+
+        RefundResponseDto dto =
+                Optional.ofNullable(restTemplate.getForObject(BASE_LOCAL_STATIC + "/api/v1/payment/refund/" + id, RefundResponseDto.class))
+                .orElseThrow(() -> new RuntimeException(String.format("Error in RefundPayment %s", id)));
+
+        if (dto.getStatus() == 200) {
+
+            Map<String, String> refundMap = new HashMap<>();
+            refundMap.put("id", request.getId());
+            refundMap.put("refundId", dto.getId());
+            singleRechargeMapper.saveRefund(refundMap);
+
+            final String mailMessage = String.format("You have been refunded %.2f by Onecard", request.getServiceCost());
+
+            SimpleUserDto simpleDto =
+                    Optional.ofNullable(restTemplate.getForObject( BASE_LOCAL_STATIC + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
+                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
+
+            MailMessageDto mailMessageDto = MailMessageDto.builder()
+                    .body(mailMessage)
+                    .subject("Wallet Refund")
+                    .to(simpleDto.getEmail())
+                    .build();
+
+            mailService.pushMailWithOutAttachment(mailMessageDto);
+
+            return new MessageDto(String.format("Single Recharge Refunded Successfully for %s", id));
+        }
+
+        return new MessageDto(String.format("Single Refund Failure for %s", id));
+    }
+
+    public MessageDto resolveRecharge(String id, ResolveRechargeDto dto) {
+        return null;
+    }
+
+    public RechargeStatus retryRecharge(String id, String recipient) {
+        String email = null;
+
+        SingleRechargeRequest request = Optional.ofNullable(singleRechargeMapper.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("SingleRechargeRequest", "id", id));
+
+        if (recipient == null) recipient = request.getRecipient();
+
+        if (request.getRetryId() != null) {
+            SingleRechargeRequestRetry rechargeRequestRetry = Optional.ofNullable(singleRechargeMapper.findRequestRetryById(request.getRetryId()))
+                    .orElseThrow(() -> new ResourceNotFoundException("SingleRechargeRequestRetry", id, request.getRetryId()));
+
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+            String dateString = simpleDateFormat.format(rechargeRequestRetry.getRetriedOn());
+
+            final String message =
+                    String.format("The Recharge Request was retried on %s by %s and the message is %s", dateString, rechargeRequestRetry.getRetriedBy(), rechargeRequestRetry.getStatusMessage());
+            log.info(message);
+
+            return RechargeStatus.builder()
+                    .message(message)
+                    .status(HttpStatus.OK)
+                    .build();
+        }
+
+        List<RechargeFactoryParameters> parameters = parameterCache.getFactoryParameter(request.getServiceId());
+
+        if (parameters != null && !parameters.isEmpty()) {
+
+            if (request.getUserId() != null) {
+                RestTemplate restTemplate = new RestTemplate();
+                restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+
+                SimpleUserDto simpleDto =
+                        Optional.ofNullable(restTemplate.getForObject(BASE_LOCAL_STATIC + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
+                                .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
+                email = simpleDto.getEmail();;
+            }
+
+            RechargeFactoryParameters parameter = parameters.get(0);
+            String rechargeProviderCode = parameter.getRechargeProviderCode();
+            AbstractFactory factory = producer.getFactory(rechargeProviderCode);
+            Recharge recharge = factory.getRecharge(parameter.getServiceAction());
+            ReQuery reQuery = factory.getReQuery();
+
+            ReQueryRequest reQueryRequest = new ReQueryRequest();
+            reQueryRequest.setId(request.getId());
+            String result = reQuery.reQueryRequest(reQueryRequest);
+
+            if (result.equalsIgnoreCase("failed")) {
+                final String retryId = UUID.randomUUID().toString();
+
+                // temporarily reset the id for the request, it will be used as unique identifier in the recharge
+                // if we leave the current id, it will error with  duplicate id error
+                request.setId(retryId);
+
+                // Also set recipient
+                request.setRecipient(recipient);
+                RechargeStatus retryStatus = recharge.recharge(request);
+
+                if (retryStatus.getStatus() == HttpStatus.OK) {
+                    singleRechargeMapper.saveRetryRequest (
+                            SingleRechargeRequestRetry.builder()
+                            .retriedBy(K.getUserName())
+                            .id(retryId)
+                            .requestId(id)
+                            .successful(true)
+                            .statusMessage("Success")
+                            .recipient(recipient)
+                            .build()
+                    );
+
+                    Map<String, String> param = new HashMap<>();
+                    param.put("id", id);
+                    param.put("retryId", retryId);
+
+                    singleRechargeMapper.saveSuccessfulRetry(param);
+                } else {
+                    singleRechargeMapper.saveRetryRequest (
+                            SingleRechargeRequestRetry.builder()
+                                    .retriedBy(K.getUserName())
+                                    .id(retryId)
+                                    .requestId(id)
+                                    .successful(false)
+                                    .statusMessage(retryStatus.getMessage())
+                                    .recipient(recipient)
+                                    .build()
+                    );
+                }
+
+                if (email != null) {
+                    AsyncRechargeDto dto = AsyncRechargeDto.builder()
+                            .id(id)
+                            .email(email)
+                            .build();
+
+                    sendMail(request, dto, retryStatus);
+                }
+            } else {
+                final String message = String.format("Cannot Retry Recharge status is %s", result);
+                log.info(message);
+
+                return RechargeStatus.builder()
+                        .message(message)
+                        .status(HttpStatus.BAD_REQUEST)
+                        .build();
+            }
+        }
+
+        return RechargeStatus.builder()
+                .message("Recharge Retry Failure Please contact Onecard Support")
+                .status(HttpStatus.BAD_REQUEST)
+                .build();
     }
 
     private void sendMail(SingleRechargeRequest request, AsyncRechargeDto dto, RechargeStatus status) {

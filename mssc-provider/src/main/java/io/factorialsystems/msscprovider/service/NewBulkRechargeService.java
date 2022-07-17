@@ -17,9 +17,7 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeReq
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.NewBulkRechargeMapstructMapper;
-import io.factorialsystems.msscprovider.recharge.ParameterCheck;
-import io.factorialsystems.msscprovider.recharge.Recharge;
-import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.service.file.BulkRequestExcelWriter;
@@ -212,13 +210,15 @@ public class NewBulkRechargeService {
                         RechargeStatus rechargeStatus = recharge.recharge(singleRechargeRequest);
 
                         if (rechargeStatus.getStatus() != HttpStatus.OK) {
-                            IndividualRequestFailureNotification notification = IndividualRequestFailureNotification
-                                    .builder()
-                                    .errorMsg(rechargeStatus.getMessage().length() > 255 ? rechargeStatus.getMessage().substring(0, 255) : rechargeStatus.getMessage())
-                                    .id(individualRequest.getId())
-                                    .build();
+//                            if (!retryFailedRecharge(singleRechargeRequest, recharge)) {
+                                IndividualRequestFailureNotification notification = IndividualRequestFailureNotification
+                                        .builder()
+                                        .errorMsg(rechargeStatus.getMessage().length() > 255 ? rechargeStatus.getMessage().substring(0, 255) : rechargeStatus.getMessage())
+                                        .id(individualRequest.getId())
+                                        .build();
 
-                            newBulkRechargeMapper.failIndividualRequest(notification);
+                                newBulkRechargeMapper.failIndividualRequest(notification);
+//                            }
                         }
                     } else {
                         final String errorMessage =
@@ -324,6 +324,28 @@ public class NewBulkRechargeService {
         Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.searchByDate(new SearchByDate(date));
 
         return createDto(requests);
+    }
+
+    private Boolean retryFailedRecharge(SingleRechargeRequest request, Recharge recharge) {
+
+        List<RechargeFactoryParameters> parameters = parameterCache.getFactoryParameter(request.getServiceId());
+
+        if (parameters != null && !parameters.isEmpty()) {
+            RechargeFactoryParameters parameter = parameters.get(0);
+            AbstractFactory factory = producer.getFactory(parameter.getRechargeProviderCode());
+            ReQuery reQuery = factory.getReQuery();
+
+            ReQueryRequest reQueryRequest = new ReQueryRequest();
+            reQueryRequest.setId(reQueryRequest.getId());
+            String result = reQuery.reQueryRequest(reQueryRequest);
+
+            if (result.equalsIgnoreCase("failure")) {
+                RechargeStatus rechargeStatus = recharge.recharge(request);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public StatusMessageDto retryFailedRecharge(Integer id) {

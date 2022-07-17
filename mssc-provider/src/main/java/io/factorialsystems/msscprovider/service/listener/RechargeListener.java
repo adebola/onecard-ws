@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.service.listener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.JMSConfig;
 import io.factorialsystems.msscprovider.dto.AsyncRechargeDto;
+import io.factorialsystems.msscprovider.dto.AsyncRefundResponseDto;
 import io.factorialsystems.msscprovider.service.NewBulkRechargeService;
 import io.factorialsystems.msscprovider.service.SingleRechargeService;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +54,17 @@ public class RechargeListener {
             } catch (InterruptedException ie) {
                 ie.printStackTrace();
             }
+        }
+    }
+
+    @JmsListener(destination = JMSConfig.WALLET_REFUND_RESPONSE_QUEUE_PROVIDER)
+    public void listenForWalletResponse(String jsonData) throws IOException {
+
+        if (jsonData != null) {
+            AsyncRefundResponseDto dto = objectMapper.readValue(jsonData, AsyncRefundResponseDto.class);
+            SingleRechargeService rechargeService = applicationContext.getBean(SingleRechargeService.class);
+
+            rechargeService.refundRechargeResponse(dto);
         }
     }
 }

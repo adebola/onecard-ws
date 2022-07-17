@@ -41,6 +41,25 @@ public class RechargeAuthController {
         return new ResponseEntity<>(new MessageDto(status.getMessage()), status.getStatus());
     }
 
+    @PutMapping("/retry/{id}")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> retryRecharge(@PathVariable("id") String id,
+                                           @RequestParam(value = "recipient", required = false) String recipient) {
+        return new ResponseEntity<>(rechargeService.retryRecharge(id, recipient), HttpStatus.OK);
+    }
+
+    @PutMapping("/refund/{id}")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> refundRecharge(@PathVariable("id") String id) {
+        return new ResponseEntity<>(rechargeService.refundRecharge(id), HttpStatus.OK);
+    }
+
+    @PutMapping("/resolve/{id}")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> refundRecharge(@PathVariable("id") String id, @Valid @RequestBody ResolveRechargeDto dto) {
+        return new ResponseEntity<>(rechargeService.resolveRecharge(id, dto), HttpStatus.OK);
+    }
+
     @GetMapping("/singlelist")
     public ResponseEntity<?> getUserSingleRecharges(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize) {

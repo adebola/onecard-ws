@@ -127,12 +127,14 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, 
     }
 
     @Override
-    public String reQueryRequest(RingoReQueryRequest request) {
-
+    public String reQueryRequest(ReQueryRequest request) {
         HttpHeaders headers = getHeader();
 
+        RingoReQueryRequest ringoReQueryRequest = new RingoReQueryRequest();
+        ringoReQueryRequest.setRequest_id(request.getId());
+
         try {
-            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), headers);
+            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(ringoReQueryRequest), headers);
 
             RingoReQueryResponse response =
                     restTemplate.postForObject("https://www.api.ringo.ng/api/b2brequery", entity, RingoReQueryResponse.class);

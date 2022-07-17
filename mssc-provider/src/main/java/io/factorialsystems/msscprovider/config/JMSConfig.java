@@ -14,6 +14,9 @@ public class JMSConfig {
     public static final String BULK_RECHARGE_QUEUE = "bulk-recharge-queue";
     public static final String SINGLE_RECHARGE_QUEUE = "single-recharge-queue";
     public static final String NEW_BULK_RECHARGE_QUEUE = "new-bulk-recharge-queue";
+    public static final String SEND_PROVIDER_MAIL_QUEUE = "communication-mail-without-attachment-queue";
+    public static final String PAYMENT_REFUND_QUEUE = "payment-refund-queue";
+    public static final String WALLET_REFUND_RESPONSE_QUEUE_PROVIDER = "wallet-refund-response-queue-provider";
 
     @Bean
     public RestTemplate restTemplate() {

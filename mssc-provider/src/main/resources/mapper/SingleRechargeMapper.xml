@@ -24,6 +24,8 @@
         <result column="bulk_request_id" property="bulkRequestId" jdbcType="VARCHAR"/>
         <result column="async_request" property="asyncRequest" jdbcType="BOOLEAN"/>
         <result column="email_id" property="emailId" jdbcType="VARCHAR"/>
+        <result column="successful_retry_id" property="retryId" jdbcType="VARCHAR"/>
+        <result column="refund_id" property="refundId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <resultMap id="factoryResultMap" type="io.factorialsystems.msscprovider.domain.RechargeFactoryParameters">
@@ -31,6 +33,14 @@
         <result column="recharge_provider_code" property="rechargeProviderCode" jdbcType="VARCHAR"/>
         <result column="service_action" property="serviceAction" jdbcType="VARCHAR"/>
         <result column="async" property="async" jdbcType="BOOLEAN"/>
+    </resultMap>
+
+    <resultMap id="requestRetryMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequestRetry">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="recharge_request_id" property="requestId" jdbcType="VARCHAR"/>
+        <result column="retried_on" property="retriedOn" jdbcType="TIMESTAMP"/>
+        <result column="successful" property="successful" jdbcType="BOOLEAN"/>
+        <result column="status_message" property="statusMessage" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Column_List">
@@ -55,8 +65,27 @@
         r.bulk_request_id,
         r.account_type,
         r.async_request,
-        r.createdAt
+        r.createdAt,
+        r.successful_retry_id,
+        r.refund_id
     </sql>
+
+    <sql id="retry_column_list">id, recharge_request_id, retried_on, retried_by, recipient, successful, status_message</sql>
+
+    <select id="findRequestRetryById" parameterType="java.lang.String" resultMap="requestRetryMap">
+        select
+        <include refid="retry_column_list"/>
+        from single_recharge_request_retries where id = #{id}
+    </select>
+
+    <insert id="saveRetryRequest" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequestRetry">
+        insert into single_recharge_request_retries(id, recharge_request_id, successful, status_message, retried_by, recipient)
+        values(#{id}, #{requestId}, #{successful}, #{statusMessage}, #{retriedBy}, #{recipient})
+    </insert>
+
+    <update id="saveSuccessfulRetry" parameterType="java.util.Map">
+        update providerdb.recharge_requests set successful_retry_id = #{retryId} where id = #{id}
+    </update>
 
     <select id="findById" parameterType="java.lang.String" resultMap="rechargeResultMap">
         select
@@ -102,6 +131,10 @@
 
     <update id="setEmailId" parameterType="java.util.Map">
         update providerdb.recharge_requests set email_id = #{emailId} where id = #{id}
+    </update>
+
+    <update id="saveRefund" parameterType="java.util.Map">
+        update providerdb.recharge_requests set refund_id = #{refundId} where id = #{id}
     </update>
 
     <select id="search" parameterType="java.lang.String" resultMap="rechargeResultMap">

@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.dao;
 import com.github.pagehelper.Page;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequestRetry;
 import io.factorialsystems.msscprovider.dto.SearchSingleRechargeDto;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -20,4 +21,8 @@ public interface SingleRechargeMapper {
     Page<SingleRechargeRequest> search(String search);
     Page<SingleRechargeRequest> adminSearch(SearchSingleRechargeDto dto);
     Boolean setEmailId(Map<String, String> parameters);
+    SingleRechargeRequestRetry findRequestRetryById(String id);
+    void saveRetryRequest(SingleRechargeRequestRetry requestRetry);
+    Boolean saveSuccessfulRetry(Map<String, String> parameters);
+    Boolean saveRefund(Map<String, String> refundMap);
 }
