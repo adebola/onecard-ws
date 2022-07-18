@@ -11,6 +11,7 @@ public interface UserMapper {
     Page<User> findAll();
     Page<User> search(String searchString);
     User findUserById(String id);
+    User findUserByIdOrNameOrEmail(String id);
     User findByName(String name);
     void save(User user);
     void update(User user);

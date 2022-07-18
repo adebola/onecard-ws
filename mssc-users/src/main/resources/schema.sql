@@ -22,6 +22,7 @@ create table users (
     profile_picture varchar(1024),
     FOREIGN KEY (organization_id) REFERENCES organizations (id),
     UNIQUE idx_user_name(user_name),
+    UNIQUE idx_email(email),
     PRIMARY KEY (id)
 );
 

@@ -49,6 +49,15 @@
         from users where id = #{id}
     </select>
 
+    <select id="findUserByIdOrNameOrEmail" parameterType="java.lang.String" resultMap="userResultMap">
+        select
+        <include refid="Column_List_Long"/>
+        from users
+        where id = #{id}
+        or user_name = #{id}
+        or email = #{id}
+    </select>
+
     <select id="findUserByOrganizationId" parameterType="java.lang.String" resultMap="userResultMap">
         select
         <include refid="Column_List_Long"/>

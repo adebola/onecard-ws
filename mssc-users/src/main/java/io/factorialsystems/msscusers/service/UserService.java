@@ -85,6 +85,11 @@ public class UserService {
         return keycloakUserMapper.userToSimpleDto(user);
     }
 
+    public SimpleUserDto findSimpleUserByIdOrNameOrEmail(String string) {
+        User user = userMapper.findUserByIdOrNameOrEmail(string);
+        return keycloakUserMapper.userToSimpleDto(user);
+    }
+
     public SimpleUserDto verifyUser(String id) {
         return findSimpleUserById(id);
     }

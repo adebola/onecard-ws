@@ -3,12 +3,13 @@ package io.factorialsystems.msscusers.service;
 import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.dto.KeycloakUserDto;
 import io.factorialsystems.msscusers.dto.PagedDto;
+import io.factorialsystems.msscusers.dto.SimpleUserDto;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @CommonsLog
 @SpringBootTest
@@ -26,6 +27,21 @@ class UserServiceTest {
 //        User user = userMapper.findUserById("28e05596-9ad0-4187-ac11-fd93fb7701af");
 //        user.setSecret(encoder.encode("password"));
 //        userMapper.update(user);
+    }
+
+    @Test
+    void findUserByIdOrNameOrEmail() {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+        final String email = "aomoboya@icloud.com";
+
+        SimpleUserDto s1 = userService.findSimpleUserByIdOrNameOrEmail(id);
+        SimpleUserDto s2 = userService.findSimpleUserByIdOrNameOrEmail(email);
+        assertNotNull(s1);
+        assertNotNull(s2);
+
+        assertEquals(s1.getId(), s2.getId());
+        log.info(s1);
+        log.info(s2);
     }
 
     @Test
