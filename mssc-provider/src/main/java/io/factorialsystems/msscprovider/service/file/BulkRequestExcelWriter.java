@@ -1,7 +1,6 @@
 package io.factorialsystems.msscprovider.service.file;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
-import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -15,9 +14,8 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class BulkRequestExcelWriter {
-    private static final String[] HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "status", "reason" };
+    private static final String[] HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "status", "reason", "retry" };
     private static final String SHEET = "onecard";
 
     public ByteArrayInputStream bulkRequestToExcel(List<IndividualRequest> individualRequests, String title) {
@@ -52,6 +50,12 @@ public class BulkRequestExcelWriter {
                 } else if (individualRequest.getFailed()) {
                     row.createCell(4).setCellValue("Failed");
                     row.createCell(5).setCellValue(individualRequest.getFailedMessage());
+
+                    if (individualRequest.getRetryId() == null) {
+                        row.createCell(6).setCellValue("Retry Failed");
+                    } else  {
+                        row.createCell(6).setCellValue("Retry Succeeded");
+                    }
                 } else {
                     row.createCell(4).setCellValue("Success");
                 }

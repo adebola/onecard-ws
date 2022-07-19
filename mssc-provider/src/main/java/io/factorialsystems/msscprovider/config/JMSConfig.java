@@ -6,12 +6,8 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class JMSConfig {
-    public static final String NEW_USER_QUEUE = "UserQueue";
-    public static final String UPDATE_USER_WALLET_QUEUE = "update-user-wallet";
-    public static final String NEW_USER_WALLET_QUEUE = "new-user-wallet";
     public static final String AUDIT_MESSAGE_QUEUE = "audit-message-queue";
     public static final String NEW_TRANSACTION_QUEUE = "new-transaction-queue";
-    public static final String BULK_RECHARGE_QUEUE = "bulk-recharge-queue";
     public static final String SINGLE_RECHARGE_QUEUE = "single-recharge-queue";
     public static final String NEW_BULK_RECHARGE_QUEUE = "new-bulk-recharge-queue";
     public static final String SEND_PROVIDER_MAIL_QUEUE = "communication-mail-without-attachment-queue";

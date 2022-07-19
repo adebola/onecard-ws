@@ -110,6 +110,7 @@ create table recharge_requests (
     failed boolean default FALSE NOT NULL,
     failed_message varchar(256),
     successful_retry_id int,
+    refund_id varchar(64),
     FOREIGN KEY (successful_retry_id) REFERENCES  single_recharge_request_retries (id),
     FOREIGN KEY (scheduled_request_id) REFERENCES scheduled_recharge(id),
     FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
@@ -260,6 +261,8 @@ create table bulk_individual_requests (
     recipient varchar(64) NOT NULL,
     failed BOOLEAN default false,
     failed_message varchar(256),
+    refund_id varchar(64),
+    successful_retry_id varchar(64),
     FOREIGN KEY (scheduled_request_id) REFERENCES new_scheduled_recharge_requests(id),
     FOREIGN KEY (bulk_request_id) REFERENCES new_bulk_recharge_requests(id),
     FOREIGN KEY (auto_request_id) REFERENCES new_auto_recharge_requests(id),
@@ -267,9 +270,11 @@ create table bulk_individual_requests (
 );
 
 create table bulk_individual_request_retries(
-    id int AUTO_INCREMENT,
+    id varchar(64),
     bulk_individual_request_id int,
     retried_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    retried_by VARCHAR(64) NOT NULL,
+    recipient VARCHAR(64) NOT NULL,
     successful boolean default FALSE NOT NULL,
     status_message varchar(256),
     FOREIGN KEY (bulk_individual_request_id) REFERENCES bulk_individual_requests(id),

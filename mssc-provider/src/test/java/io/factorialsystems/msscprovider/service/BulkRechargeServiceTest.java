@@ -1,9 +1,11 @@
 package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
+import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification;
@@ -27,12 +29,10 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -51,6 +51,44 @@ class BulkRechargeServiceTest {
     final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
 
 
+    @Test
+    void retryFailedRecharges() {
+        String id = "158f4d0b-19be-4d8d-8c83-398383890188";
+        service.retryFailedRecharges(id);
+    }
+    @Test
+    void findRequestRetryById() {
+        final String id = "6f6e1014-457c-4670-b738-d673f2bdc871";
+
+        IndividualRequestRetry requestRetry = newBulkRechargeMapper.findRequestRetryById(id);
+        assertNotNull(requestRetry);
+        log.info(requestRetry);
+    }
+    @Test
+    void saveRetryRequest() {
+        IndividualRequestRetry requestRetry = IndividualRequestRetry.builder()
+                .recipient("08055572307")
+                .requestId(1)
+                .retriedBy("adebola")
+                .id(UUID.randomUUID().toString())
+                .statusMessage("status")
+                .successful(true)
+                .build();
+
+        newBulkRechargeMapper.saveRetryRequest(requestRetry);
+    }
+
+    @Test
+    void saveSuccessfulRetry() {
+        final String id = "6f6e1014-457c-4670-b738-d673f2bdc871";
+        Map<String, String> map = new HashMap<>();
+
+        map.put("id", String.valueOf(1));
+        map.put("retryId", id);
+
+        Boolean b = newBulkRechargeMapper.saveSuccessfulRetry(map);
+        assertEquals (b, true);
+    }
     @Test
     void saveService() {
 

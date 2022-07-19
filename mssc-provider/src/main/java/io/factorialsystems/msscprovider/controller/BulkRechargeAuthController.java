@@ -2,7 +2,7 @@ package io.factorialsystems.msscprovider.controller;
 
 
 import io.factorialsystems.msscprovider.dto.*;
-import io.factorialsystems.msscprovider.service.NewBulkRechargeService;
+import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -135,8 +135,16 @@ public class BulkRechargeAuthController {
                 .body(file);
     }
 
-    @GetMapping("/retry/{id}")
+    @GetMapping("/individualretry/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public ResponseEntity<?> retryFailedRequest(@PathVariable("id") Integer id) {
         return new ResponseEntity<>(newBulkRechargeService.retryFailedRecharge(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/bulkretry/{id}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public void retryFailedRequests(@PathVariable("id") String id) {
+        newBulkRechargeService.retryFailedRecharges(id);
     }
 }

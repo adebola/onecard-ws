@@ -24,4 +24,6 @@ public class IndividualRequest {
     private String recipient;
     private Boolean failed;
     private String failedMessage;
+    private String refundId;
+    private String retryId;
 }

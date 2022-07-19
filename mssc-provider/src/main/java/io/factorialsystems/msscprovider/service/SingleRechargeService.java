@@ -190,7 +190,7 @@ public class SingleRechargeService {
             }
 
             if (status.getStatus() == HttpStatus.OK) {
-                sendMail(request, dto, status);
+                if (request.getUserId() != null) sendMail(request, dto, status);
             } else {
                 refundRechargeRequest(request);
             }
@@ -368,6 +368,11 @@ public class SingleRechargeService {
 
                     sendMail(request, dto, retryStatus);
                 }
+
+                return RechargeStatus.builder()
+                        .message("Recharge Retry Success")
+                        .status(HttpStatus.OK)
+                        .build();
             } else {
                 final String message = String.format("Cannot Retry Recharge status is %s", result);
                 log.info(message);
@@ -423,11 +428,8 @@ public class SingleRechargeService {
             throw new RuntimeException(String.format("Unknown Extra Data plan (%s)", dto.getServiceCode()));
         }
 
-        AbstractFactory factory = getFactory(action.getId());
-
-        if (factory == null) {
-            throw new RuntimeException(String.format("Factory not found for Product with code (%s)", dto.getServiceCode()));
-        }
+        AbstractFactory factory = Optional.ofNullable(getFactory(action.getId()))
+                .orElseThrow(() -> new RuntimeException(String.format("Factory not found for Product with code (%s)", dto.getServiceCode())));
 
         ExtraDataEnquiry enquiry = factory.getExtraPlans(dto.getServiceCode());
         return enquiry.getExtraPlans(dto);
@@ -443,11 +445,8 @@ public class SingleRechargeService {
             throw new RuntimeException(String.format("Unknown data plan (%s) Or Data Plan is not for DATA", code));
         }
 
-        AbstractFactory factory = getFactory(action.getId());
-
-        if (factory == null) {
-            throw new RuntimeException(String.format("Factory not found for Product with code (%s)", code));
-        }
+        AbstractFactory factory = Optional.ofNullable(getFactory(action.getId()))
+                .orElseThrow(() -> new RuntimeException(String.format("Factory not found for Product with code (%s)", code)));
 
         DataEnquiry enquiry = factory.getPlans(code);
         return enquiry.getDataPlans(code);
@@ -498,7 +497,8 @@ public class SingleRechargeService {
         return rechargeMapstructMapper.rechargeToRechargeDto(request);
     }
 
-    public void saveTransaction(SingleRechargeRequest request) {
+    @SneakyThrows
+    public static void saveTransaction(SingleRechargeRequest request) {
 
         log.info("Saving Transaction for User : {}", request.getUserId());
 
@@ -510,12 +510,11 @@ public class SingleRechargeService {
                 .userId(request.getUserId())
                 .recipient(request.getRecipient())
                 .build();
-        try {
-            jmsTemplate.convertAndSend(JMSConfig.NEW_TRANSACTION_QUEUE, objectMapper.writeValueAsString(requestTransactionDto));
-        } catch (JsonProcessingException e) {
-            log.error("Error sending JMS Transaction Message to Wallet service {}", e.getMessage());
-            throw new RuntimeException(e.getMessage());
-        }
+
+        JmsTemplate template = ApplicationContextProvider.getBean(JmsTemplate.class);
+        ObjectMapper mapper = ApplicationContextProvider.getBean(ObjectMapper.class);
+
+        template.convertAndSend(JMSConfig.NEW_TRANSACTION_QUEUE, mapper.writeValueAsString(requestTransactionDto));
     }
 
     public static PaymentRequestDto initializePayment(SingleRechargeRequest request) {

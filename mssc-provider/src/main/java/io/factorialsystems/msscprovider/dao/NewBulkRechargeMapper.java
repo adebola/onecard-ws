@@ -30,9 +30,13 @@ public interface NewBulkRechargeMapper {
     Page<NewBulkRechargeRequest> searchByDate(SearchByDate searchByDate);
     Page<NewBulkRechargeRequest> search(SearchBulkRechargeDto dto);
     Page<IndividualRequest> findPagedBulkIndividualRequests(String id);
+    List<IndividualRequest> findBulkIndividualFailedRequests(String id);
     Page<NewBulkRechargeRequest> findBulkRequestByAutoId(Map<String, String> parameters);
     IndividualRequest findIndividualRequestById(IndividualRequestQuery query);
     void saveRequestRetry(IndividualRequestRetry requestRetry);
     Boolean setIndividualRequestSuccess(Integer id);
     Page<IndividualRequest> searchIndividual(SearchIndividualDto dto);
+    void saveRetryRequest(IndividualRequestRetry retry);
+    Boolean saveSuccessfulRetry(Map<String, String> map);
+    IndividualRequestRetry findRequestRetryById(String id);
 }

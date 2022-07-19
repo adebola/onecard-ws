@@ -70,7 +70,15 @@
         r.refund_id
     </sql>
 
-    <sql id="retry_column_list">id, recharge_request_id, retried_on, retried_by, recipient, successful, status_message</sql>
+    <sql id="retry_column_list">
+        id,
+        recharge_request_id,
+        retried_on,
+        retried_by,
+        recipient,
+        successful,
+        status_message
+    </sql>
 
     <select id="findRequestRetryById" parameterType="java.lang.String" resultMap="requestRetryMap">
         select

@@ -30,15 +30,75 @@
         <result column="telephone" property="telephone" jdbcType="VARCHAR"/>
         <result column="failed" property="failed" jdbcType="BOOLEAN"/>
         <result column="failed_message" property="failedMessage" jdbcType="VARCHAR"/>
+        <result column="refund_id" property="refundId" jdbcType="VARCHAR"/>
+        <result column="successful_retry_id" property="retryId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="requestRetryMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="bulk_individual_request_id" property="requestId" jdbcType="VARCHAR"/>
+        <result column="retried_on" property="retriedOn" jdbcType="TIMESTAMP"/>
+        <result column="retried_by" property="retriedBy" jdbcType="VARCHAR"/>
+        <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
+        <result column="successful" property="successful" jdbcType="BOOLEAN"/>
+        <result column="status_message" property="statusMessage" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="bulk_column_list">
-        id, user_id, total_service_cost, payment_id, closed, authorization_url, redirect_url, payment_mode, auto_request_id, scheduled_request_id, createdAt
+        id,
+        user_id,
+        total_service_cost,
+        payment_id,
+        closed,
+        authorization_url,
+        redirect_url,
+        payment_mode,
+        auto_request_id,
+        scheduled_request_id,
+        createdAt
     </sql>
 
     <sql id="individual_column_list">
-        b.id, b.bulk_request_id, b.auto_request_id, b.external_request_id, b.recipient, b.service_id, p.service_code, b.service_cost, b.product_id, b.telephone, b.failed, b.failed_message
+        b.id,
+        b.bulk_request_id,
+        b.auto_request_id,
+        b.external_request_id,
+        b.recipient,
+        b.service_id,
+        p.service_code,
+        b.service_cost,
+        b.product_id,
+        b.telephone,
+        b.failed,
+        b.failed_message,
+        b.refund_id,
+        b.successful_retry_id
     </sql>
+
+    <sql id="retry_column_list">
+        id,
+        bulk_individual_request_id,
+        retried_on,
+        retried_by,
+        recipient,
+        successful,
+        status_message
+    </sql>
+
+    <insert id="saveRetryRequest" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry">
+        insert into bulk_individual_request_retries(id, bulk_individual_request_id, successful, status_message, retried_by, recipient)
+        values(#{id}, #{requestId}, #{successful}, #{statusMessage}, #{retriedBy}, #{recipient})
+    </insert>
+
+    <update id="saveSuccessfulRetry" parameterType="java.util.Map">
+        update providerdb.bulk_individual_requests set successful_retry_id = #{retryId} where id = #{id}
+    </update>
+
+    <select id="findRequestRetryById" parameterType="java.lang.String" resultMap="requestRetryMap">
+        select
+        <include refid="retry_column_list"/>
+        from bulk_individual_request_retries where id = #{id}
+    </select>
 
     <select id="findIndividualRequestById" parameterType="io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery" resultMap="individualRequestResultMap">
         select
@@ -49,6 +109,7 @@
         and b.service_id = p.id
         and b.id = #{id}
     </select>
+
 
     <select id="findBulkRechargeById" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">
         select
@@ -70,6 +131,15 @@
         <include refid="individual_column_list"/>
         from bulk_individual_requests b, provider_services p
         where b.bulk_request_id = #{id}
+        and   b.service_id = p.id
+    </select>
+
+    <select id="findBulkIndividualFailedRequests"  parameterType="java.lang.String" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, provider_services p
+        where b.bulk_request_id = #{id}
+        and b.failed = true
         and   b.service_id = p.id
     </select>
 
