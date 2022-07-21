@@ -1,21 +1,12 @@
 package io.factorialsystems.msscprovider.service.bulkrecharge.helper;
 
-import io.factorialsystems.msscprovider.cache.ParameterCache;
 import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
-import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
-import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.StatusMessageDto;
-import io.factorialsystems.msscprovider.recharge.ReQuery;
-import io.factorialsystems.msscprovider.recharge.ReQueryRequest;
-import io.factorialsystems.msscprovider.recharge.Recharge;
-import io.factorialsystems.msscprovider.recharge.RechargeStatus;
-import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
-import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
-import io.factorialsystems.msscprovider.service.model.ServiceHelper;
+import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,22 +18,21 @@ import java.util.*;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RetryRecharge {
-    private final ServiceHelper helper;
-    private final FactoryProducer producer;
-    private final ParameterCache parameterCache;
-    private final SingleRechargeMapper singleRechargeMapper;
+public class BulkRetryRecharge {
+    private final RechargeInterfaceRequester requester;
     private final NewBulkRechargeMapper newBulkRechargeMapper;
 
+    // Retry List of Recharges
     public void retryRequestsWithoutPayment(List<IndividualRequest> requests) {
         requests.forEach(this::retryIndividualRequestWithoutPayment);
     }
 
+    // Retry One Recharge from a list of Failed Bulk Recharges - Overloaded
     public StatusMessageDto retryIndividualRequestWithoutPayment(IndividualRequest individualRequest) {
         int status = 300;
         String statusMessage = "Recharge Retry Failed";
 
-        Optional<ReQuery> reQuery = getRequery(individualRequest.getServiceId());
+        Optional<ReQuery> reQuery = requester.getReQuery(individualRequest.getServiceId());
 
         if (reQuery.isEmpty()) {
             final String message = String.format("ReQuery Interface Not Found for %d", individualRequest.getServiceId());
@@ -54,9 +44,9 @@ public class RetryRecharge {
                     .build();
         }
 
-        Optional <Recharge> recharge = getRecharge(individualRequest.getServiceId());
+        Optional<RechargeParameters> optionalParameters = requester.getRecharge(individualRequest.getServiceId());
 
-        if (recharge.isEmpty()) {
+        if (optionalParameters.isEmpty()) {
             final String message = String.format("Invalid Service Id %d in Individual Request %d", individualRequest.getServiceId(), individualRequest.getId());
             log.error(message);
 
@@ -66,9 +56,13 @@ public class RetryRecharge {
                     .build();
         }
 
+        Recharge recharge = optionalParameters.get().getRecharge();
+
         ReQueryRequest reQueryRequest = new ReQueryRequest();
         reQueryRequest.setId(individualRequest.getExternalRequestId());
         String result = reQuery.get().reQueryRequest(reQueryRequest);
+
+        log.info(String.format("Query Bulk Individual Recharge %d for Query result %s", individualRequest.getId(), result));
 
         if (result.equalsIgnoreCase("failure")) {
             SingleRechargeRequest singleRechargeRequest = SingleRechargeRequest.builder()
@@ -82,14 +76,16 @@ public class RetryRecharge {
                     .paymentMode(K.WALLET_PAY_MODE)
                     .build();
 
-            RechargeStatus rechargeStatus = recharge.get().recharge(singleRechargeRequest);
+            RechargeStatus rechargeStatus = recharge.recharge(singleRechargeRequest);
 
             if (rechargeStatus.getStatus() == HttpStatus.OK) {
                 status = 200;
                 statusMessage = "Recharge Retry Success";
 
+                log.info(String.format("Successful Retry Recharge %s/%s", individualRequest.getServiceCode(), individualRequest.getRecipient()));
                 saveSuccessfulIndividualRetry(individualRequest);
             } else {
+                log.error(String.format("Failed Retry Recharge %s/%s Reason %s", individualRequest.getServiceCode(), individualRequest.getRecipient(), rechargeStatus.getMessage()));
                 statusMessage = statusMessage + " Reason: " + rechargeStatus.getMessage();
             }
         } else {
@@ -102,6 +98,7 @@ public class RetryRecharge {
                 .build();
     }
 
+    // Retry One Recharge from a list of Failed Bulk Recharges - Overloaded
     public StatusMessageDto retryIndividualRequestWithoutPayment(Integer id) {
         Optional<IndividualRequest> request = getIndividualRequest(id);
 
@@ -118,22 +115,8 @@ public class RetryRecharge {
         return retryIndividualRequestWithoutPayment(request.get());
     }
 
-    public StatusMessageDto retrySingleRechargeWithoutPayment(String id) {
-        SingleRechargeRequest request = singleRechargeMapper.findById(id);
 
-        if (request != null) return retrySingleRechargeWithoutPayment(request);
-
-        final String message = String.format("Retry Failed for Single Recharge %s, it s not existent", id);
-        return StatusMessageDto.builder()
-                .message(message)
-                .status(300)
-                .build();
-    }
-
-    public StatusMessageDto retrySingleRechargeWithoutPayment(SingleRechargeRequest request) {
-        return null;
-    }
-
+    // Once a Retry Recharge Succeeds Update the Database accordingly
     private void saveSuccessfulIndividualRetry(IndividualRequest request) {
         final String id = UUID.randomUUID().toString();
 
@@ -157,6 +140,8 @@ public class RetryRecharge {
 
         Boolean b = newBulkRechargeMapper.saveSuccessfulRetry(map);
     }
+
+    // Common Code - Load Individual Request from Database
     private Optional<IndividualRequest> getIndividualRequest(Integer id) {
 
         IndividualRequestQuery query = IndividualRequestQuery.builder()
@@ -171,35 +156,5 @@ public class RetryRecharge {
         }
 
         return Optional.of(individualRequest);
-    }
-
-
-    private Optional<Recharge> getRecharge(Integer serviceId) {
-        List<RechargeFactoryParameters> parameters = parameterCache.getFactoryParameter(serviceId);
-
-        if (parameters != null && !parameters.isEmpty()) {
-            RechargeFactoryParameters parameter = parameters.get(0);
-            String rechargeProviderCode = parameter.getRechargeProviderCode();
-            AbstractFactory factory = producer.getFactory(rechargeProviderCode);
-
-            return Optional.ofNullable(factory.getRecharge(parameter.getServiceAction()));
-        }
-
-        return Optional.empty();
-    }
-
-    private Optional<ReQuery> getRequery(Integer serviceId) {
-
-        List<RechargeFactoryParameters> parameters = parameterCache.getFactoryParameter(serviceId);
-
-        if (parameters != null && !parameters.isEmpty()) {
-            RechargeFactoryParameters parameter = parameters.get(0);
-            String rechargeProviderCode = parameter.getRechargeProviderCode();
-            AbstractFactory factory = producer.getFactory(rechargeProviderCode);
-
-            return Optional.ofNullable(factory.getReQuery());
-        }
-
-        return Optional.empty();
     }
 }

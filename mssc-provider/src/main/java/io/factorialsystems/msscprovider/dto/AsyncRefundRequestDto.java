@@ -12,4 +12,6 @@ public class AsyncRefundRequestDto {
     private BigDecimal amount;
     private String paymentId;
     private String singleRechargeId;
+    private String bulkRechargeId;
+    private Integer individualRechargeId;
 }

@@ -1,0 +1,109 @@
+package io.factorialsystems.msscprovider.service.singlerecharge.helper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.factorialsystems.msscprovider.config.JMSConfig;
+import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
+import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
+import io.factorialsystems.msscprovider.service.MailService;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class SingleRefundRecharge {
+    private final ObjectMapper objectMapper;
+    private final JmsTemplate jmsTemplate;
+    private final MailService mailService;
+    private final SingleRechargeMapper singleRechargeMapper;
+
+    @Value("${api.local.host.baseurl}")
+    private String baseUrl;
+
+    public void refundRechargeResponse(AsyncRefundResponseDto dto) {
+
+        log.info(String.format("Received Recharge Refund Response for %s, Status %d", dto.getRechargeId(), dto.getStatus()));
+
+        if (dto.getStatus() == 200) {
+            Map<String, String> refundMap = new HashMap<>();
+            refundMap.put("id", dto.getRechargeId());
+            refundMap.put("refundId", dto.getId());
+            Boolean result = singleRechargeMapper.saveRefund(refundMap);
+
+            if (result) {
+                log.info("Recharge {} Update Successfully with RefundId {}", dto.getRechargeId(), dto.getId());
+            } else {
+                log.error("Recharge {} Update Failure with RefundId {}", dto.getRechargeId(), dto.getId());
+            }
+        }
+    }
+
+    public MessageDto refundRecharge(String id) {
+        SingleRechargeRequest request = Optional.ofNullable(singleRechargeMapper.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("SingleRechargeRequest", "id", id));
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+
+        RefundResponseDto dto =
+                Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/payment/refund/" + id, RefundResponseDto.class))
+                        .orElseThrow(() -> new RuntimeException(String.format("Error in RefundPayment %s", id)));
+
+        if (dto.getStatus() == 200) {
+
+            Map<String, String> refundMap = new HashMap<>();
+            refundMap.put("id", request.getId());
+            refundMap.put("refundId", dto.getId());
+            singleRechargeMapper.saveRefund(refundMap);
+
+            final String mailMessage = String.format("You have been refunded %.2f by Onecard", request.getServiceCost());
+
+            SimpleUserDto simpleDto =
+                    Optional.ofNullable(restTemplate.getForObject( baseUrl + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
+                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
+
+            MailMessageDto mailMessageDto = MailMessageDto.builder()
+                    .body(mailMessage)
+                    .subject("Wallet Refund")
+                    .to(simpleDto.getEmail())
+                    .build();
+
+            mailService.pushMailWithOutAttachment(mailMessageDto);
+
+            return new MessageDto(String.format("Single Recharge Refunded Successfully for %s", id));
+        }
+
+        return new MessageDto(String.format("Single Refund Failure for %s", id));
+    }
+
+    @SneakyThrows
+    public void refundRechargeRequest(SingleRechargeRequest request) {
+
+        // You can only Refund if the User is not anonymous, otherwise we don't know who to refund to
+        if (request.getUserId() != null) {
+            AsyncRefundRequestDto refundRequest = AsyncRefundRequestDto.builder()
+                    .singleRechargeId(request.getId())
+                    .amount(request.getServiceCost())
+                    .paymentId(request.getPaymentId())
+                    .userId(request.getUserId())
+                    .build();
+
+            log.info(String.format("MQ Request sent for Refund on Single Recharge for User %s, Amount %.2f", request.getUserId(), request.getServiceCost()));
+            jmsTemplate.convertAndSend(JMSConfig.PAYMENT_REFUND_QUEUE, objectMapper.writeValueAsString(refundRequest));
+        } else {
+            log.error(String.format("Asynchronous Single Recharge Refund Failed for %s, User Not Present", request.getId()));
+        }
+    }
+}

@@ -50,6 +50,20 @@ class BulkRechargeServiceTest {
     final String realmUser = "realm-admin";
     final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
 
+    @Test
+    void refundRechargeRequest() {
+        //final String rechargeId = "04c462eb-720c-4c0b-b908-bdbefaf63ec8"; // NULL User
+        final String rechargeId = "158f4d0b-19be-4d8d-8c83-398383890188";
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            service.refundFailedRecharges(rechargeId);
+        }
+    }
 
     @Test
     void retryFailedRecharges() {

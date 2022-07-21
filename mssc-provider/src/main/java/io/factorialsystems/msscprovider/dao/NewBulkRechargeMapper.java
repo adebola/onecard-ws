@@ -39,4 +39,7 @@ public interface NewBulkRechargeMapper {
     void saveRetryRequest(IndividualRequestRetry retry);
     Boolean saveSuccessfulRetry(Map<String, String> map);
     IndividualRequestRetry findRequestRetryById(String id);
+    Double findRefundTotalByRequestId(String id);
+    Boolean saveBulkRefund(Map<String, String> map);
+    Boolean saveIndividualRefund(Map<String, String> map);
 }

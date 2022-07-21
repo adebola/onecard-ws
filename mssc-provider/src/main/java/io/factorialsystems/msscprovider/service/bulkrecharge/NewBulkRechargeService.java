@@ -18,7 +18,8 @@ import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.service.MailService;
-import io.factorialsystems.msscprovider.service.bulkrecharge.helper.RetryRecharge;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRefundRecharge;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRetryRecharge;
 import io.factorialsystems.msscprovider.service.file.BulkRequestExcelWriter;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
@@ -54,7 +55,8 @@ public class NewBulkRechargeService {
     private final FactoryProducer producer;
     private final ObjectMapper objectMapper;
     private final FileUploader fileUploader;
-    private final RetryRecharge retryRecharge;
+    private final BulkRetryRecharge bulkRetryRecharge;
+    private final BulkRefundRecharge bulkRefundRecharge;
     private final ParameterCache parameterCache;
     private final BulkRequestExcelWriter excelWriter;
     private final NewBulkRechargeMapstructMapper mapper;
@@ -244,8 +246,8 @@ public class NewBulkRechargeService {
             }
 
             retryFailedRecharges(id);
-
             sendReport(dto);
+            refundFailedRecharges(id);
         } catch (Exception ex) {
             log.error(String.format("Unknown Error Running Bulk Recharge %s Reason %s", id, ex.getMessage()));
         } finally {
@@ -259,8 +261,16 @@ public class NewBulkRechargeService {
         if (requests != null && !requests.isEmpty()) {
             final String message = String.format("Processing Failed Recharges for %s, size %d", id, requests.size());
             log.info(message);
-            retryRecharge.retryRequestsWithoutPayment(requests);
+            bulkRetryRecharge.retryRequestsWithoutPayment(requests);
         }
+    }
+
+    public void refundFailedRecharges(String id) {
+        bulkRefundRecharge.refundRecharges(id);
+    }
+
+    public void refundFailedRecharge(Integer id, String bulkRequestId) {
+        bulkRefundRecharge.refundRecharge(id, bulkRequestId);
     }
 
     @SneakyThrows
@@ -330,7 +340,7 @@ public class NewBulkRechargeService {
     }
 
     public StatusMessageDto retryFailedRecharge(Integer id) {
-        return retryRecharge.retryIndividualRequestWithoutPayment(id);
+        return bulkRetryRecharge.retryIndividualRequestWithoutPayment(id);
     }
 
     public ByteArrayInputStream generateExcelFile(String id) {

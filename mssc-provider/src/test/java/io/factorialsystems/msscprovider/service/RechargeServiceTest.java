@@ -1,7 +1,10 @@
 package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
+import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.SearchSingleRechargeDto;
+import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
+import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
@@ -27,23 +30,28 @@ class RechargeServiceTest {
     @Autowired
     private SingleRechargeMapper singleRechargeMapper;
 
+    @Autowired
+    private SingleRefundRecharge singleRefundRecharge;
+
     @Test
     void findRequest() {
     }
 
     @Test
     void refundRechargeRequest() {
-//        final String rechargeId = "10867903-ebe3-438e-8ef5-c4f148ee1465";
-//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-//
-//        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-//            k.when(K::getUserId).thenReturn(id);
-//            assertThat(K.getUserId()).isEqualTo(id);
-//            log.info(K.getUserId());
-//
-//            SingleRechargeRequest request = singleRechargeMapper.findById(rechargeId);
-//            rechargeService.refundRechargeRequest(request);
-//        }
+        final String rechargeId = "04c462eb-720c-4c0b-b908-bdbefaf63ec8"; // NULL User
+        // final String rechargeId = "1b2f9ef5-b9e5-4b34-8e8e-90acd8004617";
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            SingleRechargeRequest request = singleRechargeMapper.findById(rechargeId);
+
+            singleRefundRecharge.refundRechargeRequest(request);
+        }
     }
 
     @Test

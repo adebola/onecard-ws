@@ -110,6 +110,14 @@
         and b.id = #{id}
     </select>
 
+    <select id="findRefundTotalByRequestId" parameterType="java.lang.String" resultType="double">
+        select sum(service_cost) from providerdb.bulk_individual_requests
+        where bulk_request_id = #{id}
+        and failed = true
+        and refund_id is NULL
+        and successful_retry_id is NULL
+    </select>
+
 
     <select id="findBulkRechargeById" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">
         select
@@ -259,4 +267,12 @@
             and id like CONCAT(#{searchId}, '%')
         </if>
     </select>
+
+    <update id="saveBulkRefund" parameterType="java.util.Map">
+        update providerdb.bulk_individual_requests set refund_id = #{refundId} where bulk_request_id = #{id}
+    </update>
+
+    <update id="saveIndividualRefund" parameterType="java.util.Map">
+       update providerdb.bulk_individual_requests set refund_id = #{refundId} where id = #{id}
+    </update>
 </mapper>

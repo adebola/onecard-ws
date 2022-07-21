@@ -5,7 +5,9 @@ import io.factorialsystems.msscprovider.config.JMSConfig;
 import io.factorialsystems.msscprovider.dto.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.AsyncRefundResponseDto;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
-import io.factorialsystems.msscprovider.service.SingleRechargeService;
+import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRefundRecharge;
+import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +21,6 @@ import java.io.IOException;
 @Service
 @RequiredArgsConstructor
 public class RechargeListener {
-
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
 
@@ -62,9 +63,26 @@ public class RechargeListener {
 
         if (jsonData != null) {
             AsyncRefundResponseDto dto = objectMapper.readValue(jsonData, AsyncRefundResponseDto.class);
-            SingleRechargeService rechargeService = applicationContext.getBean(SingleRechargeService.class);
 
-            rechargeService.refundRechargeResponse(dto);
+            final String singleRechargeId = dto.getRechargeId();
+            final String bulkRechargeId = dto.getBulkRechargeId();
+
+            if (singleRechargeId != null && bulkRechargeId != null) {
+                final String errorMessage =
+                        String.format("Wallet Refund Response has Single recharge Id %s and Bulk Recharge Id %s, only 1 can be set", singleRechargeId, bulkRechargeId);
+                log.error(errorMessage);
+                return;
+            }
+
+            if (dto.getBulkRechargeId() != null) {
+                BulkRefundRecharge bulkRefundRecharge = applicationContext.getBean(BulkRefundRecharge.class);
+                bulkRefundRecharge.refundRechargeResponse(dto);
+            } else if (dto.getRechargeId() != null) {
+                SingleRefundRecharge singleRefundRecharge = applicationContext.getBean(SingleRefundRecharge.class);
+                singleRefundRecharge.refundRechargeResponse(dto);
+            } else {
+                log.error ("Wallet Refund Response Recharge Ids not set");
+            }
         }
     }
 }

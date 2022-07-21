@@ -1,4 +1,4 @@
-package io.factorialsystems.msscprovider.service;
+package io.factorialsystems.msscprovider.service.singlerecharge;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +12,6 @@ import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequestRetry;
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
@@ -21,6 +20,9 @@ import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.recharge.ringo.response.ProductItem;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
+import io.factorialsystems.msscprovider.service.MailService;
+import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
+import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRetryRecharge;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -33,21 +35,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SingleRechargeService {
-    private final MailService mailService;
     private final JmsTemplate jmsTemplate;
     private final FactoryProducer producer;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final ParameterCache parameterCache;
     private final ServiceActionMapper serviceActionMapper;
+    private final SingleRetryRecharge singleRetryRecharge;
     private final SingleRechargeMapper singleRechargeMapper;
+    private final SingleRefundRecharge singleRefundRecharge;
     private final RechargeMapstructMapper rechargeMapstructMapper;
 
     private static String BASE_LOCAL_STATIC;
@@ -192,78 +194,15 @@ public class SingleRechargeService {
             if (status.getStatus() == HttpStatus.OK) {
                 if (request.getUserId() != null) sendMail(request, dto, status);
             } else {
-                refundRechargeRequest(request);
+                singleRefundRecharge.refundRechargeRequest(request);
             }
         }
 
         return status;
     }
 
-    @SneakyThrows
-    public void refundRechargeRequest(SingleRechargeRequest request) {
-
-        // You can only Refund if the User is not anonymous, otherwise we don't know who to refund to
-        if (request.getUserId() != null) {
-            AsyncRefundRequestDto refundRequest = AsyncRefundRequestDto.builder()
-                    .singleRechargeId(request.getId())
-                    .amount(request.getServiceCost())
-                    .paymentId(request.getPaymentId())
-                    .userId(request.getUserId())
-                    .build();
-
-            log.info(String.format("MQ Request sent for Refund on Single Recharge for User %s, Amount %.2f", request.getUserId(), request.getServiceCost()));
-            jmsTemplate.convertAndSend(JMSConfig.PAYMENT_REFUND_QUEUE, objectMapper.writeValueAsString(refundRequest));
-        }
-    }
-
-    public void refundRechargeResponse(AsyncRefundResponseDto dto) {
-
-        log.info(String.format("Received Recharge Refund Response for %s, Status %d", dto.getRechargeId(), dto.getStatus()));
-
-        if (dto.getStatus() == 200) {
-            Map<String, String> refundMap = new HashMap<>();
-            refundMap.put("id", dto.getRechargeId());
-            refundMap.put("refundId", dto.getId());
-            singleRechargeMapper.saveRefund(refundMap);
-        }
-    }
-
     public MessageDto refundRecharge(String id) {
-        SingleRechargeRequest request = Optional.ofNullable(singleRechargeMapper.findById(id))
-                .orElseThrow(() -> new ResourceNotFoundException("SingleRechargeRequest", "id", id));
-
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-        RefundResponseDto dto =
-                Optional.ofNullable(restTemplate.getForObject(BASE_LOCAL_STATIC + "/api/v1/payment/refund/" + id, RefundResponseDto.class))
-                .orElseThrow(() -> new RuntimeException(String.format("Error in RefundPayment %s", id)));
-
-        if (dto.getStatus() == 200) {
-
-            Map<String, String> refundMap = new HashMap<>();
-            refundMap.put("id", request.getId());
-            refundMap.put("refundId", dto.getId());
-            singleRechargeMapper.saveRefund(refundMap);
-
-            final String mailMessage = String.format("You have been refunded %.2f by Onecard", request.getServiceCost());
-
-            SimpleUserDto simpleDto =
-                    Optional.ofNullable(restTemplate.getForObject( BASE_LOCAL_STATIC + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
-                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
-
-            MailMessageDto mailMessageDto = MailMessageDto.builder()
-                    .body(mailMessage)
-                    .subject("Wallet Refund")
-                    .to(simpleDto.getEmail())
-                    .build();
-
-            mailService.pushMailWithOutAttachment(mailMessageDto);
-
-            return new MessageDto(String.format("Single Recharge Refunded Successfully for %s", id));
-        }
-
-        return new MessageDto(String.format("Single Refund Failure for %s", id));
+        return singleRefundRecharge.refundRecharge(id);
     }
 
     public MessageDto resolveRecharge(String id, ResolveRechargeDto dto) {
@@ -271,126 +210,10 @@ public class SingleRechargeService {
     }
 
     public RechargeStatus retryRecharge(String id, String recipient) {
-        String email = null;
-
-        SingleRechargeRequest request = Optional.ofNullable(singleRechargeMapper.findById(id))
-                .orElseThrow(() -> new ResourceNotFoundException("SingleRechargeRequest", "id", id));
-
-        if (recipient == null) recipient = request.getRecipient();
-
-        if (request.getRetryId() != null) {
-            SingleRechargeRequestRetry rechargeRequestRetry = Optional.ofNullable(singleRechargeMapper.findRequestRetryById(request.getRetryId()))
-                    .orElseThrow(() -> new ResourceNotFoundException("SingleRechargeRequestRetry", id, request.getRetryId()));
-
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
-            String dateString = simpleDateFormat.format(rechargeRequestRetry.getRetriedOn());
-
-            final String message =
-                    String.format("The Recharge Request was retried on %s by %s and the message is %s", dateString, rechargeRequestRetry.getRetriedBy(), rechargeRequestRetry.getStatusMessage());
-            log.info(message);
-
-            return RechargeStatus.builder()
-                    .message(message)
-                    .status(HttpStatus.OK)
-                    .build();
-        }
-
-        List<RechargeFactoryParameters> parameters = parameterCache.getFactoryParameter(request.getServiceId());
-
-        if (parameters != null && !parameters.isEmpty()) {
-
-            if (request.getUserId() != null) {
-                RestTemplate restTemplate = new RestTemplate();
-                restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-                SimpleUserDto simpleDto =
-                        Optional.ofNullable(restTemplate.getForObject(BASE_LOCAL_STATIC + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
-                                .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
-                email = simpleDto.getEmail();;
-            }
-
-            RechargeFactoryParameters parameter = parameters.get(0);
-            String rechargeProviderCode = parameter.getRechargeProviderCode();
-            AbstractFactory factory = producer.getFactory(rechargeProviderCode);
-            Recharge recharge = factory.getRecharge(parameter.getServiceAction());
-            ReQuery reQuery = factory.getReQuery();
-
-            ReQueryRequest reQueryRequest = new ReQueryRequest();
-            reQueryRequest.setId(request.getId());
-            String result = reQuery.reQueryRequest(reQueryRequest);
-
-            if (result.equalsIgnoreCase("failed")) {
-                final String retryId = UUID.randomUUID().toString();
-
-                // temporarily reset the id for the request, it will be used as unique identifier in the recharge
-                // if we leave the current id, it will error with  duplicate id error
-                request.setId(retryId);
-
-                // Also set recipient
-                request.setRecipient(recipient);
-                RechargeStatus retryStatus = recharge.recharge(request);
-
-                if (retryStatus.getStatus() == HttpStatus.OK) {
-                    singleRechargeMapper.saveRetryRequest (
-                            SingleRechargeRequestRetry.builder()
-                            .retriedBy(K.getUserName())
-                            .id(retryId)
-                            .requestId(id)
-                            .successful(true)
-                            .statusMessage("Success")
-                            .recipient(recipient)
-                            .build()
-                    );
-
-                    Map<String, String> param = new HashMap<>();
-                    param.put("id", id);
-                    param.put("retryId", retryId);
-
-                    singleRechargeMapper.saveSuccessfulRetry(param);
-                } else {
-                    singleRechargeMapper.saveRetryRequest (
-                            SingleRechargeRequestRetry.builder()
-                                    .retriedBy(K.getUserName())
-                                    .id(retryId)
-                                    .requestId(id)
-                                    .successful(false)
-                                    .statusMessage(retryStatus.getMessage())
-                                    .recipient(recipient)
-                                    .build()
-                    );
-                }
-
-                if (email != null) {
-                    AsyncRechargeDto dto = AsyncRechargeDto.builder()
-                            .id(id)
-                            .email(email)
-                            .build();
-
-                    sendMail(request, dto, retryStatus);
-                }
-
-                return RechargeStatus.builder()
-                        .message("Recharge Retry Success")
-                        .status(HttpStatus.OK)
-                        .build();
-            } else {
-                final String message = String.format("Cannot Retry Recharge status is %s", result);
-                log.info(message);
-
-                return RechargeStatus.builder()
-                        .message(message)
-                        .status(HttpStatus.BAD_REQUEST)
-                        .build();
-            }
-        }
-
-        return RechargeStatus.builder()
-                .message("Recharge Retry Failure Please contact Onecard Support")
-                .status(HttpStatus.BAD_REQUEST)
-                .build();
+        return singleRetryRecharge.retryRecharge(id, recipient);
     }
 
-    private void sendMail(SingleRechargeRequest request, AsyncRechargeDto dto, RechargeStatus status) {
+    public static void sendMail(SingleRechargeRequest request, AsyncRechargeDto dto, RechargeStatus status) {
 
         if (dto.getEmail() == null) {
             log.info("Unable to Send E-mail for Transaction, No E-mail Address found");
@@ -413,12 +236,15 @@ public class SingleRechargeService {
                 .subject("Recharge Report")
                 .build();
 
-        final String emailId = mailService.sendMailWithOutAttachment(mailMessageDto);
+        MailService mail = ApplicationContextProvider.getBean(MailService.class);
+        SingleRechargeMapper mapper = ApplicationContextProvider.getBean(SingleRechargeMapper.class);
+
+        final String emailId = mail.sendMailWithOutAttachment(mailMessageDto);
 
         Map<String, String> emailMap = new HashMap<>();
         emailMap.put("id", dto.getId());
         emailMap.put("emailId", emailId);
-        singleRechargeMapper.setEmailId(emailMap);
+        mapper.setEmailId(emailMap);
     }
 
     public ExtraDataPlanDto getExtraDataPlans(ExtraPlanRequestDto dto) {

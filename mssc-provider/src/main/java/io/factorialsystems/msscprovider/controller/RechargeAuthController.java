@@ -2,7 +2,7 @@ package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
-import io.factorialsystems.msscprovider.service.SingleRechargeService;
+import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
