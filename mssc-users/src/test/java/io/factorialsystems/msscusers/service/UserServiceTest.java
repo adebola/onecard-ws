@@ -22,6 +22,14 @@ class UserServiceTest {
     UserMapper userMapper;
 
     @Test
+    void search() {
+        String search = "fol";
+        var x = userMapper.search(search);
+        log.info(x);
+        log.info(x.size());
+    }
+
+    @Test
     void setPassword() {
 //        PasswordEncoder encoder = new BCryptPasswordEncoder();
 //        User user = userMapper.findUserById("28e05596-9ad0-4187-ac11-fd93fb7701af");

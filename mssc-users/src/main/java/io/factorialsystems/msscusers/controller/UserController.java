@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 public class UserController {
     private final UserService userService;
 
-    private static final String ADMIN_ROLE = "ROLE_Onecard_Admin";
-
     @GetMapping
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
      public ResponseEntity<?> getUsers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,

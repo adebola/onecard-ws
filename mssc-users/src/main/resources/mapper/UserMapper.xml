@@ -41,6 +41,12 @@
         <include refid="Column_List_Short"/>
         from users
         where user_name like CONCAT(#{search}, '%')
+        or
+        email like CONCAT(#{search}, '%')
+        or
+        first_name like CONCAT(#{search}, '%')
+        or
+        last_name like CONCAT(#{search}, '%')
     </select>
 
     <select id="findUserById" parameterType="java.lang.String" resultMap="userResultMap">
