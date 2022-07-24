@@ -76,14 +76,16 @@ public class PaymentService {
         PaymentRequest paymentRequest = Optional.ofNullable(paymentMapper.findById(request.getPaymentId()))
                 .orElseThrow(() -> new ResourceNotFoundException("payment", "id", request.getPaymentId()));
 
+        log.info(String.format("Refunding %.2f", request.getAmount()));
+
         if (paymentRequest.getVerified() && paymentRequest.getStatus() == 200) {
-
             Double aDouble = paymentMapper.findRefundTotalByPaymentId(request.getPaymentId());
-
             BigDecimal totalRefunded = BigDecimal.valueOf(aDouble == null ? 0 : aDouble);
 
             if (totalRefunded.add(request.getAmount()).compareTo(request.getAmount()) > 0) {
-                final String message = String.format("Error Unable to perform refund, cumulative refunds on payment %s is %.2f cannot accomodate %.2f", request.getPaymentId(), totalRefunded, request.getAmount());
+                final String message =
+                        String.format("Error Unable to perform refund, cumulative refunds on payment %s is %.2f cannot accommodate extra %.2f",
+                                request.getPaymentId(), totalRefunded, request.getAmount());
                 log.error(message);
 
                 return;
@@ -109,7 +111,7 @@ public class PaymentService {
     }
 
     @SneakyThrows
-    public RefundResponseDto refundPayment(String id, BalanceDto balanceDto) {
+    public RefundResponseDto refundPayment(String id, RefundRequestDto refundRequestDto) {
         PaymentRequest request = Optional.ofNullable(paymentMapper.findById(id))
                 .orElseThrow(() -> new ResourceNotFoundException("payment", "id", id));
 
@@ -117,8 +119,10 @@ public class PaymentService {
             Double aDouble = paymentMapper.findRefundTotalByPaymentId(id);
             BigDecimal totalRefunded = BigDecimal.valueOf(aDouble == null ? 0 : aDouble);
 
-            if (totalRefunded.add(balanceDto.getBalance()).compareTo(request.getAmount()) > 0) {
-                final String message = String.format("Error Unable to perform refund, cumulative refunds on payment %s is %.2f cannot accommodate an extra %.2f", id, totalRefunded, balanceDto.getBalance());
+            if (totalRefunded.add(refundRequestDto.getAmount()).compareTo(request.getAmount()) > 0) {
+                final String message =
+                        String.format("Error Unable to perform refund, cumulative refunds on payment %s is %.2f cannot accommodate an extra %.2f",
+                                id, totalRefunded, refundRequestDto.getAmount());
                 log.error(message);
 
                 return RefundResponseDto.builder()
@@ -138,19 +142,20 @@ public class PaymentService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(accessToken);
 
-            HttpEntity<String> httpRequest = new HttpEntity<>(objectMapper.writeValueAsString(balanceDto), headers);
+            HttpEntity<String> httpRequest = new HttpEntity<>(objectMapper.writeValueAsString(refundRequestDto), headers);
 
             ResponseEntity<RefundResponseDto> response
-                    = restTemplate.exchange (baseUrl + "/api/v1/account/refund/" + id, HttpMethod.PUT, httpRequest, RefundResponseDto.class);
-
+                    = restTemplate.exchange (baseUrl + "/api/v1/account/refund/" + refundRequestDto.getUserId(),
+                                                HttpMethod.PUT, httpRequest, RefundResponseDto.class);
 
             RefundResponseDto dto = Optional.ofNullable(response.getBody())
-                    .orElseThrow(() -> new RuntimeException(String.format("Error Refund Wallet for Payment %s, Amount %.2f", id, balanceDto.getBalance())));
+                    .orElseThrow(() -> new RuntimeException(String.format("Error Refund Wallet for Payment %s, Amount %.2f", id, refundRequestDto.getAmount())));
 
             RefundRequest refundRequest = RefundRequest.builder()
+                    .id(UUID.randomUUID().toString())
                     .paymentId(request.getId())
                     .refundedBy(K.getUserName())
-                    .amount(balanceDto.getBalance())
+                    .amount(refundRequestDto.getAmount())
                     .fundRequestId(dto.getId())
                     .build();
 
