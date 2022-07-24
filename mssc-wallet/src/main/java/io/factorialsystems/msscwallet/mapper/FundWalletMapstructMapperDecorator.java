@@ -3,7 +3,7 @@ package io.factorialsystems.msscwallet.mapper;
 import io.factorialsystems.msscwallet.domain.FundWalletRequest;
 import io.factorialsystems.msscwallet.dto.FundWalletRequestDto;
 import io.factorialsystems.msscwallet.dto.FundWalletResponseDto;
-import io.factorialsystems.msscwallet.service.AccountService;
+import io.factorialsystems.msscwallet.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -12,7 +12,6 @@ import java.util.List;
 
 @Slf4j
 public class FundWalletMapstructMapperDecorator implements FundWalletMapstructMapper {
-
     private FundWalletMapstructMapper mapstructMapper;
 
     @Autowired
@@ -36,24 +35,24 @@ public class FundWalletMapstructMapperDecorator implements FundWalletMapstructMa
         FundWalletRequestDto dto = mapstructMapper.requestToRequestDto(request);
 
         switch (request.getFundType()) {
-            case AccountService.WALLET_SELF_FUNDED:
-                dto.setType(AccountService.WALLET_SELF_FUNDED_STRING);
+            case Constants.WALLET_SELF_FUNDED:
+                dto.setType(Constants.WALLET_SELF_FUNDED_STRING);
                 break;
 
-            case AccountService.WALLET_ONECARD_FUNDED:
-                dto.setType(AccountService.WALLET_ONECARD_FUNDED_STRING);
+            case Constants.WALLET_ONECARD_FUNDED:
+                dto.setType(Constants.WALLET_ONECARD_FUNDED_STRING);
                 break;
 
-            case AccountService.WALLET_USER_FUNDED:
-                dto.setType(AccountService.WALLET_USER_FUNDED_STRING);
+            case Constants.WALLET_USER_FUNDED:
+                dto.setType(Constants.WALLET_USER_FUNDED_STRING);
                 break;
 
-            case AccountService.WALLET_USER_DEBITED:
-                dto.setType(AccountService.WALLET_USER_DEBIT_STRING);
+            case Constants.WALLET_USER_DEBITED:
+                dto.setType(Constants.WALLET_USER_DEBIT_STRING);
                 break;
 
-            case AccountService.WALLET_ONECARD_REFUNDED:
-                dto.setType(AccountService.WALLET_ONECARD_REFUNDED_STRING);
+            case Constants.WALLET_ONECARD_REFUNDED:
+                dto.setType(Constants.WALLET_ONECARD_REFUNDED_STRING);
                 break;
 
             default:

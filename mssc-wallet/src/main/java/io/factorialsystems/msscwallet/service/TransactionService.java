@@ -5,10 +5,12 @@ import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscwallet.dao.TransactionMapper;
 import io.factorialsystems.msscwallet.domain.Transaction;
 import io.factorialsystems.msscwallet.domain.query.SearchByDateRange;
-import io.factorialsystems.msscwallet.dto.*;
+import io.factorialsystems.msscwallet.dto.DateRangeDto;
+import io.factorialsystems.msscwallet.dto.PagedDto;
+import io.factorialsystems.msscwallet.dto.TransactionDto;
 import io.factorialsystems.msscwallet.mapper.TransactionMapstructMapper;
 import io.factorialsystems.msscwallet.service.file.ExcelWriter;
-import io.factorialsystems.msscwallet.utils.K;
+import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -56,7 +58,7 @@ public class TransactionService {
             SearchByDateRange dateRange = new SearchByDateRange();
             dateRange.setFromTs(from);
             dateRange.setToTs(to);
-            dateRange.setUserId(K.getUserId());
+            dateRange.setUserId(Security.getUserId());
 
             List<Transaction> transactions = transactionMapper.findUserTransactionByDateRange(dateRange);
 

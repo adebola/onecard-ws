@@ -3,7 +3,7 @@ package io.factorialsystems.msscwallet.service;
 import io.factorialsystems.msscwallet.dao.FundWalletMapper;
 import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.exception.ResourceNotFoundException;
-import io.factorialsystems.msscwallet.utils.K;
+import io.factorialsystems.msscwallet.utils.Security;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -73,13 +73,12 @@ class AccountServiceTest {
 
     @Test
     void findAccountByUserId() {
-
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assert Objects.equals(K.getUserId(), id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> security  = Mockito.mockStatic(Security.class)) {
+            security.when(Security::getUserId).thenReturn(id);
+            assert Objects.equals(Security.getUserId(), id);
+            log.info(Security.getUserId());
 
             String userId = "31c2a399-8a45-4cd0-b6da-40c2f295d9d7";
             AccountDto dto = accountService.findAccountByUserId(userId);
@@ -94,17 +93,17 @@ class AccountServiceTest {
         final String accessToken = getUserToken(id);
         final String adminEmail = "admin@gmail.com";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
+            k.when(Security::getUserId).thenReturn(id);
+            assertThat(Security.getUserId()).isEqualTo(id);
+            log.info(Security.getUserId());
 
-            k.when(K::getAccessToken).thenReturn(accessToken);
-            assertThat(K.getAccessToken()).isEqualTo(accessToken);
-            log.info(K.getAccessToken());
+            k.when(Security::getAccessToken).thenReturn(accessToken);
+            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
+            log.info(Security.getAccessToken());
 
-            k.when(K::getEmail).thenReturn(adminEmail);
-            assertThat(K.getEmail()).isEqualTo(adminEmail);
+            k.when(Security::getEmail).thenReturn(adminEmail);
+            assertThat(Security.getEmail()).isEqualTo(adminEmail);
             log.info(adminEmail);
 
             final String accountId = "275745a4-8fb9-46f6-ac80-ff245bc62fcb";
@@ -127,10 +126,10 @@ class AccountServiceTest {
     void findAccountBalance() {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assert Objects.equals(K.getUserId(), id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> security  = Mockito.mockStatic(Security.class)) {
+            security.when(Security::getUserId).thenReturn(id);
+            assert Objects.equals(Security.getUserId(), id);
+            log.info(Security.getUserId());
 
             var balance = accountService.findAccountBalance();
             assertNotNull (balance);
@@ -142,10 +141,10 @@ class AccountServiceTest {
     void initializeFundWallet() {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assert Objects.equals(K.getUserId(), id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> security  = Mockito.mockStatic(Security.class)) {
+            security.when(Security::getUserId).thenReturn(id);
+            assert Objects.equals(Security.getUserId(), id);
+            log.info(Security.getUserId());
 
             FundWalletRequestDto request = new FundWalletRequestDto();
             request.setAmount(new BigDecimal(1500));
@@ -161,10 +160,10 @@ class AccountServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final String transactionId = "897dc52c-79ef-4bd6-b5d0-57367ba0c4b0";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assert Objects.equals(K.getUserId(), id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
+            k.when(Security::getUserId).thenReturn(id);
+            assert Objects.equals(Security.getUserId(), id);
+            log.info(Security.getUserId());
 
             var response = accountService.fundWallet(transactionId);
             assertNotNull (response);
@@ -177,24 +176,28 @@ class AccountServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final String accessToken = getUserToken(id);
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assert Objects.equals(K.getUserId(), id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
+            k.when(Security::getUserId).thenReturn(id);
+            assert Objects.equals(Security.getUserId(), id);
+            log.info(Security.getUserId());
 
-            k.when(K::getAccessToken).thenReturn(accessToken);
-            assertThat(K.getAccessToken()).isEqualTo(accessToken);
-            log.info(K.getAccessToken());
+            k.when(Security::getAccessToken).thenReturn(accessToken);
+            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
+            log.info(Security.getAccessToken());
 
-            k.when(K::getEmail).thenReturn("admin@factorialsystems.io");
-            k.when(K::getUserName).thenReturn("admin");
+            k.when(Security::getEmail).thenReturn("admin@factorialsystems.io");
+            k.when(Security::getUserName).thenReturn("admin");
 
             BigDecimal addBalance = new BigDecimal(1000);
 
             BalanceDto currentDto = accountService.findAccountBalance();
             log.info(String.format("Current Balance %.2f", currentDto.getBalance()));
 
-            BalanceDto dto = new BalanceDto(addBalance);
+            RefundRequestDto dto = RefundRequestDto.builder()
+                    .userId(id)
+                    .amount(addBalance)
+                    .build();
+
             accountService.refundWallet(id, dto);
 
             BalanceDto newDto = accountService.findAccountBalance();
@@ -207,10 +210,10 @@ class AccountServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final int amount = 200;
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assert Objects.equals(K.getUserId(), id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
+            k.when(Security::getUserId).thenReturn(id);
+            assert Objects.equals(Security.getUserId(), id);
+            log.info(Security.getUserId());
 
             var balance = accountService.findAccountBalance();
             assertNotNull (balance);
@@ -231,12 +234,12 @@ class AccountServiceTest {
     void findWalletFundings() {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assert Objects.equals(K.getUserId(), id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
+            k.when(Security::getUserId).thenReturn(id);
+            assert Objects.equals(Security.getUserId(), id);
+            log.info(Security.getUserId());
 
-           var y = accountService.findWalletFundings(K.getUserId(), 1, 20);
+           var y = accountService.findWalletFundings(Security.getUserId(), 1, 20);
            assertNotNull(y);
            assert(y.getTotalSize() > 0);
            log.info("Size of Array : " + y.getTotalSize());
@@ -258,17 +261,17 @@ class AccountServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final String accessToken = getUserToken(id);
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assert Objects.equals(K.getUserId(), id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
+            k.when(Security::getUserId).thenReturn(id);
+            assert Objects.equals(Security.getUserId(), id);
+            log.info(Security.getUserId());
 
-            k.when(K::getAccessToken).thenReturn(accessToken);
-            assertThat(K.getAccessToken()).isEqualTo(accessToken);
-            log.info(K.getAccessToken());
+            k.when(Security::getAccessToken).thenReturn(accessToken);
+            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
+            log.info(Security.getAccessToken());
 
-//            k.when(K::getEmail).thenReturn(adminEmail);
-//            assertThat(K.getEmail()).isEqualTo(adminEmail);
+//            k.when(Constants::getEmail).thenReturn(adminEmail);
+//            assertThat(Constants.getEmail()).isEqualTo(adminEmail);
 //            log.info(adminEmail);
 
 

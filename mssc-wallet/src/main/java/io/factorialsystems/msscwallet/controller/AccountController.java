@@ -2,7 +2,8 @@ package io.factorialsystems.msscwallet.controller;
 
 import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.service.AccountService;
-import io.factorialsystems.msscwallet.utils.K;
+import io.factorialsystems.msscwallet.utils.Constants;
+import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,11 +26,11 @@ public class AccountController {
                                           @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(accountService.findAccounts(pageNumber, pageSize), HttpStatus.OK);
@@ -50,8 +51,8 @@ public class AccountController {
 
     @PutMapping("/refund/{id}")
     @PreAuthorize("hasRole('Onecard_Admin')")
-    public ResponseEntity<RefundResponseDto> refundWallet(@PathVariable("id") String id, @Valid @RequestBody BalanceDto balanceDto) {
-        return new ResponseEntity<>(accountService.refundWallet(id, balanceDto), HttpStatus.OK);
+    public ResponseEntity<RefundResponseDto> refundWallet(@PathVariable("id") String id, @Valid @RequestBody RefundRequestDto refundRequestDto) {
+        return new ResponseEntity<>(accountService.refundWallet(id, refundRequestDto), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -88,14 +89,14 @@ public class AccountController {
     public ResponseEntity<?> getWalletFunding(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                               @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
-        return new ResponseEntity<>(accountService.findWalletFundings(K.getUserId(), pageNumber, pageSize), HttpStatus.OK);
+        return new ResponseEntity<>(accountService.findWalletFundings(Security.getUserId(), pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/wallet/{id}")
@@ -105,11 +106,11 @@ public class AccountController {
                                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(accountService.findWalletFundings(id, pageNumber, pageSize), HttpStatus.OK);

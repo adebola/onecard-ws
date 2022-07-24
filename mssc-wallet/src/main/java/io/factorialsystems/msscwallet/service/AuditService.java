@@ -3,8 +3,8 @@ package io.factorialsystems.msscwallet.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscwallet.config.JMSConfig;
-import io.factorialsystems.msscwallet.utils.K;
 import io.factorialsystems.msscwallet.dto.AuditMessageDto;
+import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +32,7 @@ public class AuditService {
                 .serviceAction(action)
                 .serviceName(serviceName)
                 .description(message)
-                .userName(K.getUserName())
+                .userName(Security.getUserName())
                 .build();
 
         try {

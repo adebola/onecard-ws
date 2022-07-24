@@ -1,7 +1,7 @@
 package io.factorialsystems.msscwallet.service;
 
 import io.factorialsystems.msscwallet.dto.DateRangeDto;
-import io.factorialsystems.msscwallet.utils.K;
+import io.factorialsystems.msscwallet.utils.Security;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -15,7 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @CommonsLog
 @SpringBootTest
@@ -44,10 +44,10 @@ class TransactionServiceTest {
 
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<Security> security = Mockito.mockStatic(Security.class)) {
+            security.when(Security::getUserId).thenReturn(id);
+            assertThat(Security.getUserId()).isEqualTo(id);
+            log.info(Security.getUserId());
 
             DateRangeDto dto = new DateRangeDto();
             InputStreamResource resource = new InputStreamResource(transactionService.generateExcelTransactionFile(dto));

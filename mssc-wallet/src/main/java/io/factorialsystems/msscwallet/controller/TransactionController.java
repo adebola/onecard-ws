@@ -3,7 +3,8 @@ package io.factorialsystems.msscwallet.controller;
 import io.factorialsystems.msscwallet.dto.DateRangeDto;
 import io.factorialsystems.msscwallet.dto.MessageDto;
 import io.factorialsystems.msscwallet.service.TransactionService;
-import io.factorialsystems.msscwallet.utils.K;
+import io.factorialsystems.msscwallet.utils.Constants;
+import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
@@ -32,11 +33,11 @@ public class TransactionController {
                                                  @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(transactionService.findUserTransactions(id, pageNumber, pageSize), HttpStatus.OK);
@@ -53,11 +54,11 @@ public class TransactionController {
                                                          @RequestParam(value = "pageSize", required = false) Integer pageSize ) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(transactionService.findOrganizationTransactionsByAccountId(id, pageNumber, pageSize), HttpStatus.OK);
@@ -66,15 +67,15 @@ public class TransactionController {
     @GetMapping
     public ResponseEntity<?> getMyTransactions( @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                 @RequestParam(value = "pageSize", required = false) Integer pageSize) {
-        String id = K.getUserId();
+        String id = Security.getUserId();
 
         if (id != null) {
             if (pageNumber == null || pageNumber < 0) {
-                pageNumber = K.DEFAULT_PAGE_NUMBER;
+                pageNumber = Constants.DEFAULT_PAGE_NUMBER;
             }
 
             if (pageSize == null || pageSize < 1) {
-                pageSize = K.DEFAULT_PAGE_SIZE;
+                pageSize = Constants.DEFAULT_PAGE_SIZE;
             }
 
             return new ResponseEntity<>(transactionService.findUserTransactions(id, pageNumber, pageSize), HttpStatus.OK);
