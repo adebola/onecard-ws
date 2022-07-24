@@ -31,4 +31,10 @@ public class IndividualRequestDto {
 
     @Null(message = "Failure message cannot be set")
     private String failedMessage;
+
+    @Null(message = "RefundId cannot be set")
+    private String refundId;
+
+    @Null(message = "Successful Retry Id cannot be set")
+    private String retryId;
 }

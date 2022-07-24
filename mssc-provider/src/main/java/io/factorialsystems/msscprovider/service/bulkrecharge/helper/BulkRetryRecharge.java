@@ -62,14 +62,16 @@ public class BulkRetryRecharge {
         reQueryRequest.setId(individualRequest.getExternalRequestId());
         String result = reQuery.get().reQueryRequest(reQueryRequest);
 
-        log.info(String.format("Query Bulk Individual Recharge %d for Query result %s", individualRequest.getId(), result));
+        log.info(String.format("Query Bulk Individual Recharge %d result %s", individualRequest.getId(), result));
 
-        if (result.equalsIgnoreCase("failure")) {
+        if (result.equalsIgnoreCase("failed")) {
+            final String requestRetryId = UUID.randomUUID().toString();
+
             SingleRechargeRequest singleRechargeRequest = SingleRechargeRequest.builder()
                     .serviceId(individualRequest.getServiceId())
                     .serviceCode(individualRequest.getServiceCode())
                     .serviceCost(individualRequest.getServiceCost())
-                    .id(individualRequest.getExternalRequestId())
+                    .id(requestRetryId)
                     .recipient(individualRequest.getRecipient())
                     .productId(individualRequest.getProductId())
                     .bulkRequestId(individualRequest.getBulkRequestId())
@@ -83,10 +85,11 @@ public class BulkRetryRecharge {
                 statusMessage = "Recharge Retry Success";
 
                 log.info(String.format("Successful Retry Recharge %s/%s", individualRequest.getServiceCode(), individualRequest.getRecipient()));
-                saveSuccessfulIndividualRetry(individualRequest);
+                saveSuccessfulIndividualRetry(individualRequest, requestRetryId);
             } else {
                 log.error(String.format("Failed Retry Recharge %s/%s Reason %s", individualRequest.getServiceCode(), individualRequest.getRecipient(), rechargeStatus.getMessage()));
                 statusMessage = statusMessage + " Reason: " + rechargeStatus.getMessage();
+                saveUnsuccessfulIndividualRetry(individualRequest, requestRetryId);
             }
         } else {
             statusMessage = statusMessage + "Reason: " + result;
@@ -115,10 +118,24 @@ public class BulkRetryRecharge {
         return retryIndividualRequestWithoutPayment(request.get());
     }
 
+    private void saveUnsuccessfulIndividualRetry(IndividualRequest request, String id) {
+        String tokenUser = K.getUserId();
+
+        IndividualRequestRetry requestRetry = IndividualRequestRetry.builder()
+                .recipient(request.getRecipient())
+                .requestId(request.getId())
+                .retriedBy(tokenUser != null ? tokenUser : "auto")
+                .id(id)
+                .statusMessage("Retry Failed")
+                .successful(false)
+                .build();
+
+        newBulkRechargeMapper.saveRetryRequest(requestRetry);
+    }
+
 
     // Once a Retry Recharge Succeeds Update the Database accordingly
-    private void saveSuccessfulIndividualRetry(IndividualRequest request) {
-        final String id = UUID.randomUUID().toString();
+    private void saveSuccessfulIndividualRetry(IndividualRequest request, String id) {
 
         String tokenUser = K.getUserId();
 

@@ -8,16 +8,19 @@ import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.service.MailService;
+import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -50,19 +53,34 @@ public class SingleRefundRecharge {
         }
     }
 
+    @SneakyThrows
     public MessageDto refundRecharge(String id) {
         SingleRechargeRequest request = Optional.ofNullable(singleRechargeMapper.findById(id))
                 .orElseThrow(() -> new ResourceNotFoundException("SingleRechargeRequest", "id", id));
 
+        if (request.getUserId() == null) {
+            throw new RuntimeException("Unable to Refund No User Present");
+        }
+
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
 
-        RefundResponseDto dto =
-                Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/payment/refund/" + id, RefundResponseDto.class))
-                        .orElseThrow(() -> new RuntimeException(String.format("Error in RefundPayment %s", id)));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(Objects.requireNonNull(K.getAccessToken()));
 
-        if (dto.getStatus() == 200) {
+        RefundRequestDto refundRequestDto = RefundRequestDto.builder()
+                .userId(request.getUserId())
+                .amount(request.getServiceCost())
+                .build();
 
+        HttpEntity<String> httpRequest = new HttpEntity<>(objectMapper.writeValueAsString(refundRequestDto), headers);
+
+        ResponseEntity<RefundResponseDto> response
+                = restTemplate.exchange (baseUrl + "/api/v1/payment/refund/" + request.getPaymentId(), HttpMethod.PUT, httpRequest, RefundResponseDto.class);
+
+        RefundResponseDto dto = response.getBody();
+
+        if (dto != null && dto.getStatus() == 200) {
             Map<String, String> refundMap = new HashMap<>();
             refundMap.put("id", request.getId());
             refundMap.put("refundId", dto.getId());
@@ -70,9 +88,12 @@ public class SingleRefundRecharge {
 
             final String mailMessage = String.format("You have been refunded %.2f by Onecard", request.getServiceCost());
 
+            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+
             SimpleUserDto simpleDto =
                     Optional.ofNullable(restTemplate.getForObject( baseUrl + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
                             .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
+
 
             MailMessageDto mailMessageDto = MailMessageDto.builder()
                     .body(mailMessage)

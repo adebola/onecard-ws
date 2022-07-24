@@ -269,7 +269,11 @@
     </select>
 
     <update id="saveBulkRefund" parameterType="java.util.Map">
-        update providerdb.bulk_individual_requests set refund_id = #{refundId} where bulk_request_id = #{id}
+        update providerdb.bulk_individual_requests set refund_id = #{refundId}
+        where bulk_request_id = #{id}
+        and failed = true
+        and refund_id is NULL
+        and successful_retry_id is NULL
     </update>
 
     <update id="saveIndividualRefund" parameterType="java.util.Map">

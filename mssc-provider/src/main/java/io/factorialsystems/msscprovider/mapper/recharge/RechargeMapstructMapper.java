@@ -25,6 +25,10 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "productId", target = "productId"),
             @Mapping(source = "paymentMode", target = "paymentMode"),
             @Mapping(source = "name", target = "name"),
+            @Mapping(source = "refundId", target = "refundId"),
+            @Mapping(source = "retryId", target = "retryId"),
+            @Mapping(source = "resolveId", target = "resolveId"),
+            @Mapping(source = "failed", target = "failed")
     })
     SingleRechargeRequestDto rechargeToRechargeDto(SingleRechargeRequest request);
     List<SingleRechargeRequestDto> listRechargeToRechargeDto(List<SingleRechargeRequest> requests);

@@ -131,6 +131,16 @@ create table single_recharge_request_retries (
     PRIMARY KEY (id)
 );
 
+create table single_recharge_request_resolve (
+    id varchar(64) NOT NULL,
+    recharge_request_id varchar(64) NOT NULL,
+    resolved_by varchar(64) NOT NULL,
+    resolved_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    resolution_message varchar(256) NOT NULL,
+    FOREIGN KEY (recharge_request_id) REFERENCES recharge_requests(id),
+    PRIMARY KEY (id)
+);
+
 create table ringo_data_plans (
     product_id varchar(16) NOT NULL,
     network varchar(32) NOT NULL,
@@ -218,7 +228,6 @@ create table auto_events_ran(
     PRIMARY KEY (id)
 );
 
-
 create table new_bulk_recharge_requests (
     id varchar(64),
     user_id varchar(64),
@@ -277,6 +286,16 @@ create table bulk_individual_request_retries(
     recipient VARCHAR(64) NOT NULL,
     successful boolean default FALSE NOT NULL,
     status_message varchar(256),
+    FOREIGN KEY (bulk_individual_request_id) REFERENCES bulk_individual_requests(id),
+    PRIMARY KEY (id)
+);
+
+create table bulk_individual_resolve_request(
+    id varchar(64),
+    bulk_individual_request_id int,
+    resolved_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    resolved_by VARCHAR(64) NOT NULL,
+    resolution_message varchar(256),
     FOREIGN KEY (bulk_individual_request_id) REFERENCES bulk_individual_requests(id),
     PRIMARY KEY (id)
 );

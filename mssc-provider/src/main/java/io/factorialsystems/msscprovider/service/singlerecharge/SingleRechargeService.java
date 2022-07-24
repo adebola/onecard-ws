@@ -22,6 +22,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.response.ProductItem;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.service.MailService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
+import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleResolveRecharge;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRetryRecharge;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,7 @@ public class SingleRechargeService {
     private final SingleRetryRecharge singleRetryRecharge;
     private final SingleRechargeMapper singleRechargeMapper;
     private final SingleRefundRecharge singleRefundRecharge;
+    private final SingleResolveRecharge singleResolveRecharge;
     private final RechargeMapstructMapper rechargeMapstructMapper;
 
     private static String BASE_LOCAL_STATIC;
@@ -205,8 +207,12 @@ public class SingleRechargeService {
         return singleRefundRecharge.refundRecharge(id);
     }
 
-    public MessageDto resolveRecharge(String id, ResolveRechargeDto dto) {
-        return null;
+    public ResolveRechargeDto resolveRecharge(String id, ResolveRechargeDto dto) {
+        dto.setRechargeId(id);
+        dto.setResolvedBy(K.getUserName());
+
+        return singleResolveRecharge.resolve(dto)
+                .orElseThrow(() -> new RuntimeException(String.format("Error Resolving Recharge %s", id)));
     }
 
     public RechargeStatus retryRecharge(String id, String recipient) {

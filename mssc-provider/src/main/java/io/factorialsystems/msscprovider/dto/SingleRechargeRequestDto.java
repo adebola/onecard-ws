@@ -37,4 +37,16 @@ public class SingleRechargeRequestDto {
 
     @Null(message = "Created Date cannot be set")
     private Date createdAt;
+
+    @Null(message = "Failed cannot be set")
+    private Boolean failed;
+
+    @Null(message = "RefundId cannot be set")
+    private String refundId;
+
+    @Null(message = "RetryId cannot be set")
+    private String retryId;
+
+    @Null(message = "resolveId cannot be set")
+    private String resolveId;
 }

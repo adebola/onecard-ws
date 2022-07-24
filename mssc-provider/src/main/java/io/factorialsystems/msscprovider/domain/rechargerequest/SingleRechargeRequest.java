@@ -38,6 +38,8 @@ public class SingleRechargeRequest {
     private String name;
     private String emailId;
     private Timestamp createdAt;
+    private Boolean failed;
     private String retryId;
     private String refundId;
+    private String resolveId;
 }

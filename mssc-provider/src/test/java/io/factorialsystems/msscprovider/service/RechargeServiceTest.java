@@ -2,6 +2,7 @@ package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
@@ -34,7 +35,15 @@ class RechargeServiceTest {
     private SingleRefundRecharge singleRefundRecharge;
 
     @Test
-    void findRequest() {
+    void resolveRecharge() {
+        final String id = "04c462eb-720c-4c0b-b908-bdbefaf63ec8";
+
+        ResolveRechargeDto dto = new ResolveRechargeDto();
+        dto.setRechargeId(id);
+        dto.setResolvedBy("Adebola");
+        dto.setMessage("Resolved Message");
+
+        //rechargeService.resolveRecharge(id, dto);
     }
 
     @Test

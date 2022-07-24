@@ -41,14 +41,14 @@ public class RechargeAuthController {
         return new ResponseEntity<>(new MessageDto(status.getMessage()), status.getStatus());
     }
 
-    @PutMapping("/retry/{id}")
+    @GetMapping("/retry/{id}")
     @PreAuthorize("hasRole('Onecard_Admin')")
     public ResponseEntity<?> retryRecharge(@PathVariable("id") String id,
                                            @RequestParam(value = "recipient", required = false) String recipient) {
         return new ResponseEntity<>(rechargeService.retryRecharge(id, recipient), HttpStatus.OK);
     }
 
-    @PutMapping("/refund/{id}")
+    @GetMapping("/refund/{id}")
     @PreAuthorize("hasRole('Onecard_Admin')")
     public ResponseEntity<?> refundRecharge(@PathVariable("id") String id) {
         return new ResponseEntity<>(rechargeService.refundRecharge(id), HttpStatus.OK);

@@ -26,6 +26,8 @@
         <result column="email_id" property="emailId" jdbcType="VARCHAR"/>
         <result column="successful_retry_id" property="retryId" jdbcType="VARCHAR"/>
         <result column="refund_id" property="refundId" jdbcType="VARCHAR"/>
+        <result column="resolve_id" property="resolveId" jdbcType="VARCHAR"/>
+        <result column="failed" property="failed" jdbcType="BOOLEAN"/>
     </resultMap>
 
     <resultMap id="factoryResultMap" type="io.factorialsystems.msscprovider.domain.RechargeFactoryParameters">
@@ -60,6 +62,7 @@
         r.message,
         r.status,
         r.name,
+        r.failed,
         r.auto_request_id,
         r.scheduled_request_id,
         r.bulk_request_id,
@@ -67,7 +70,8 @@
         r.async_request,
         r.createdAt,
         r.successful_retry_id,
-        r.refund_id
+        r.refund_id,
+        r.resolve_id
     </sql>
 
     <sql id="retry_column_list">
@@ -128,6 +132,15 @@
              #{item.message, jdbcType=VARCHAR}, #{item.accountType, jdbcType=VARCHAR}, #{item.autoRequestId, jdbcType=VARCHAR}, #{item.scheduledRequestId, jdbcType=VARCHAR} )
         </foreach>
     </insert>
+
+    <insert id="saveResolution" parameterType="io.factorialsystems.msscprovider.domain.SingleResolve">
+        insert into single_recharge_request_resolve(id, recharge_request_id, resolved_by, resolution_message)
+        values (#{id}, #{rechargeId}, #{resolvedBy}, #{resolutionMessage})
+    </insert>
+
+    <update id="resolveRequest" parameterType="java.util.Map">
+        update providerdb.recharge_requests set resolve_id = #{resolveId} where id = #{id}
+    </update>
 
     <select id="findRequestsByUserId" parameterType="java.lang.String" resultMap="rechargeResultMap">
         select

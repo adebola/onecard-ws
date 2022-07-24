@@ -2,6 +2,7 @@ package io.factorialsystems.msscprovider.dao;
 
 import com.github.pagehelper.Page;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
+import io.factorialsystems.msscprovider.domain.SingleResolve;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequestRetry;
 import io.factorialsystems.msscprovider.dto.SearchSingleRechargeDto;
@@ -25,4 +26,6 @@ public interface SingleRechargeMapper {
     void saveRetryRequest(SingleRechargeRequestRetry requestRetry);
     Boolean saveSuccessfulRetry(Map<String, String> parameters);
     Boolean saveRefund(Map<String, String> refundMap);
+    void saveResolution(SingleResolve resolve);
+    Boolean resolveRequest(Map<String, String> rechargeMap);
 }
