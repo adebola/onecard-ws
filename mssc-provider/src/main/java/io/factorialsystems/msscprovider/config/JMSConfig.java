@@ -13,6 +13,7 @@ public class JMSConfig {
     public static final String SEND_PROVIDER_MAIL_QUEUE = "communication-mail-without-attachment-queue";
     public static final String PAYMENT_REFUND_QUEUE = "payment-refund-queue";
     public static final String WALLET_REFUND_RESPONSE_QUEUE_PROVIDER = "wallet-refund-response-queue-provider";
+    public static final String RETRY_RECHARGE_QUEUE = "retry-bulk-failed-recharges";
 
     @Bean
     public RestTemplate restTemplate() {

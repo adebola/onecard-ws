@@ -26,4 +26,5 @@ public class IndividualRequest {
     private String failedMessage;
     private String refundId;
     private String retryId;
+    private String resolveId;
 }

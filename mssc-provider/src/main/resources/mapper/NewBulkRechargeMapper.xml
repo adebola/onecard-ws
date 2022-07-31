@@ -32,6 +32,7 @@
         <result column="failed_message" property="failedMessage" jdbcType="VARCHAR"/>
         <result column="refund_id" property="refundId" jdbcType="VARCHAR"/>
         <result column="successful_retry_id" property="retryId" jdbcType="VARCHAR"/>
+        <result column="resolve_id" property="resolveId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <resultMap id="requestRetryMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry">
@@ -72,7 +73,8 @@
         b.failed,
         b.failed_message,
         b.refund_id,
-        b.successful_retry_id
+        b.successful_retry_id,
+        b.resolve_id
     </sql>
 
     <sql id="retry_column_list">
@@ -279,4 +281,63 @@
     <update id="saveIndividualRefund" parameterType="java.util.Map">
        update providerdb.bulk_individual_requests set refund_id = #{refundId} where id = #{id}
     </update>
+
+    <insert id="saveResolution" parameterType="io.factorialsystems.msscprovider.domain.SingleResolve">
+        insert into bulk_individual_resolve_request(id, bulk_request_id, resolved_by, resolution_message)
+        values (#{id}, #{rechargeId}, #{resolvedBy}, #{resolutionMessage})
+    </insert>
+
+    <update id="resolveBulkRequest" parameterType="java.util.Map">
+        update providerdb.bulk_individual_requests set resolve_id = #{resolveId} where bulk_request_id = #{id}
+    </update>
+
+    <update id="resolveIndividualRequest" parameterType="java.util.Map">
+        update providerdb.bulk_individual_requests set resolve_id = #{resolveId} where id = #{id}
+    </update>
+
+    <select id="findFailedUnResolvedRequests" resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_column_list"/>
+        from new_bulk_recharge_requests
+        where id  in (
+            select distinct bulk_request_id
+            from providerdb.bulk_individual_requests
+            where failed = true
+            and resolve_id is NULL
+            and refund_id is NULL
+            and successful_retry_id is NULL
+        )
+    </select>
+
+    <select id="findFailedRequests" resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_column_list"/>
+        from new_bulk_recharge_requests
+        where id  in (
+        select distinct bulk_request_id
+        from providerdb.bulk_individual_requests
+        where failed = true
+        )
+    </select>
+
+    <select id="findFailedIndividuals" parameterType="java.lang.String" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, provider_services p
+        where b.bulk_request_id = #{id}
+        and b.failed = true
+        and b.service_id = p.id
+    </select>
+
+    <select id="findFailedUnresolvedIndividuals" parameterType="java.lang.String" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, provider_services p
+        where b.bulk_request_id = #{id}
+        and b.failed = true
+        and b.successful_retry_id is NULL
+        and b.refund_id is NULL
+        AND B.resolve_id IS NULL
+        and b.service_id = p.id
+    </select>
 </mapper>

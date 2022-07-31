@@ -5,8 +5,8 @@ import io.factorialsystems.msscprovider.config.JMSConfig;
 import io.factorialsystems.msscprovider.dto.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.AsyncRefundResponseDto;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
-import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRefundRecharge;
+import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +26,17 @@ public class RechargeListener {
 
     @Value("${sleep.value}")
     private Integer sleepValue;
+
+    @JmsListener(destination = JMSConfig.RETRY_RECHARGE_QUEUE)
+    public void listenForRetryBulk(String jsonData) throws IOException{
+
+        if (jsonData != null) {
+            String id = objectMapper.readValue(jsonData, String.class);
+
+            NewBulkRechargeService rechargeService = applicationContext.getBean(NewBulkRechargeService.class);
+            rechargeService.retryFailedRecharges(id);
+        }
+    }
 
     @JmsListener(destination = JMSConfig.NEW_BULK_RECHARGE_QUEUE)
     public void listenForNewBulkRechargeRequest(String jsonData) throws IOException {

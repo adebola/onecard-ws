@@ -17,5 +17,7 @@ public class ResolveRechargeDto {
     private String message;
 
    @Null(message = "resolvedBy cannot be set")
-    private String resolvedBy;
+   private String resolvedBy;
+
+   private Integer individualId;
 }

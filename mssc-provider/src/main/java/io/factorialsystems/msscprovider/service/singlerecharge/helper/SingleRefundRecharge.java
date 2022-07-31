@@ -6,8 +6,6 @@ import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
-import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
-import io.factorialsystems.msscprovider.service.MailService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -29,12 +27,12 @@ import java.util.Optional;
 public class SingleRefundRecharge {
     private final ObjectMapper objectMapper;
     private final JmsTemplate jmsTemplate;
-    private final MailService mailService;
     private final SingleRechargeMapper singleRechargeMapper;
 
     @Value("${api.local.host.baseurl}")
     private String baseUrl;
 
+    // Asynchronous Response to Asynchronous Refund Request
     public void refundRechargeResponse(AsyncRefundResponseDto dto) {
 
         log.info(String.format("Received Recharge Refund Response for %s, Status %d", dto.getRechargeId(), dto.getStatus()));
@@ -53,6 +51,7 @@ public class SingleRefundRecharge {
         }
     }
 
+    // Refund Single Recharge Synchronously
     @SneakyThrows
     public MessageDto refundRecharge(String id) {
         SingleRechargeRequest request = Optional.ofNullable(singleRechargeMapper.findById(id))
@@ -86,31 +85,15 @@ public class SingleRefundRecharge {
             refundMap.put("refundId", dto.getId());
             singleRechargeMapper.saveRefund(refundMap);
 
-            final String mailMessage = String.format("You have been refunded %.2f by Onecard", request.getServiceCost());
-
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-            SimpleUserDto simpleDto =
-                    Optional.ofNullable(restTemplate.getForObject( baseUrl + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
-                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
-
-
-            MailMessageDto mailMessageDto = MailMessageDto.builder()
-                    .body(mailMessage)
-                    .subject("Wallet Refund")
-                    .to(simpleDto.getEmail())
-                    .build();
-
-            mailService.pushMailWithOutAttachment(mailMessageDto);
-
             return new MessageDto(String.format("Single Recharge Refunded Successfully for %s", id));
         }
 
         return new MessageDto(String.format("Single Refund Failure for %s", id));
     }
 
+    // Refund Single Recharge Asynchronously
     @SneakyThrows
-    public void refundRechargeRequest(SingleRechargeRequest request) {
+    public void asyncRefundRecharge(SingleRechargeRequest request) {
 
         // You can only Refund if the User is not anonymous, otherwise we don't know who to refund to
         if (request.getUserId() != null) {

@@ -28,4 +28,6 @@ public interface SingleRechargeMapper {
     Boolean saveRefund(Map<String, String> refundMap);
     void saveResolution(SingleResolve resolve);
     Boolean resolveRequest(Map<String, String> rechargeMap);
+    Page<SingleRechargeRequest> findFailedRequests();
+    Page<SingleRechargeRequest> findFailedUnResolvedRequests();
 }

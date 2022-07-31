@@ -185,4 +185,23 @@
             and date(r.createdAt) = date(#{searchDate})
         </if>
     </select>
+
+    <select id="findFailedUnResolvedRequests" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.service_id = p.id
+        and r.failed = true
+        and r.refund_id is NULL
+        and r.resolve_id is NULL
+        and r.successful_retry_id is NULL
+    </select>
+
+    <select id="findFailedRequests" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.service_id = p.id
+        and r.failed = true
+    </select>
 </mapper>

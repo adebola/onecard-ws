@@ -38,16 +38,20 @@ class RechargeServiceTest {
     void resolveRecharge() {
         final String id = "04c462eb-720c-4c0b-b908-bdbefaf63ec8";
 
-        ResolveRechargeDto dto = new ResolveRechargeDto();
-        dto.setRechargeId(id);
-        dto.setResolvedBy("Adebola");
-        dto.setMessage("Resolved Message");
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            ResolveRechargeDto dto = new ResolveRechargeDto();
+            dto.setRechargeId(id);
+            dto.setResolvedBy("Adebola");
+            dto.setMessage("Resolved Message");
 
-        //rechargeService.resolveRecharge(id, dto);
+            rechargeService.resolveRecharge(id, dto);
+        });
+
+        log.info(exception.getMessage());
     }
 
     @Test
-    void refundRechargeRequest() {
+    void asyncRefundRecharge() {
         final String rechargeId = "04c462eb-720c-4c0b-b908-bdbefaf63ec8"; // NULL User
         // final String rechargeId = "1b2f9ef5-b9e5-4b34-8e8e-90acd8004617";
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
@@ -59,7 +63,23 @@ class RechargeServiceTest {
 
             SingleRechargeRequest request = singleRechargeMapper.findById(rechargeId);
 
-            singleRefundRecharge.refundRechargeRequest(request);
+            singleRefundRecharge.asyncRefundRecharge(request);
+        }
+    }
+
+    @Test
+    void refundRecharge() {
+        final String rechargeId = "04c462eb-720c-4c0b-b908-bdbefaf63ec8"; // NULL User
+        // final String rechargeId = "1b2f9ef5-b9e5-4b34-8e8e-90acd8004617";
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+
+        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            SingleRechargeRequest request = singleRechargeMapper.findById(rechargeId);
+            singleRefundRecharge.refundRecharge(rechargeId);
         }
     }
 
@@ -114,11 +134,17 @@ class RechargeServiceTest {
     }
 
     @Test
-    void startRecharge() {
+    void getFailedTransactions() {
+        var x = rechargeService.getFailedTransactions(1, 20);
+        log.info(x);
+        log.info(x.getTotalSize());
     }
 
     @Test
-    void finishRecharge() {
+    void getFailedUnresolvedTransactions() {
+        var x = rechargeService.getFailedUnresolvedTransactions(1, 20);
+        log.info(x);
+        log.info(x.getTotalSize());
     }
 
     @Test

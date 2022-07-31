@@ -32,8 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
@@ -41,7 +40,6 @@ import static org.mockito.ArgumentMatchers.any;
 class BulkRechargeServiceTest {
     @Autowired
     private NewBulkRechargeService service;
-
     @Autowired
     NewBulkRechargeMapper newBulkRechargeMapper;
 
@@ -51,12 +49,75 @@ class BulkRechargeServiceTest {
     final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
 
     @Test
+    void findFailedRecharges() {
+        var x = service.getFailedRequests(1, 20);
+        log.info(x);
+        log.info(x.getTotalSize());
+    }
+
+    @Test
+    void findFailedUnresolvedRecharges() {
+        var x = service.getFailedUnresolvedRequests(1, 20);
+        log.info(x);
+        log.info(x.getTotalSize());
+    }
+    @Test
+    void resolveBulkRechargeFail() {
+        final String id = "04c462eb-720c-4c0b-b908-bdbefaf63ec8";
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            ResolveRechargeDto dto = new ResolveRechargeDto();
+            dto.setRechargeId(id);
+            dto.setResolvedBy("Adebola");
+            dto.setMessage("Resolved Message");
+
+
+            var x = service.resolveRecharges(id, dto);
+            log.info(x);
+        });
+
+        log.info(exception.getMessage());
+    }
+
+    @Test
+    void resolveBulkRecharges() {
+        final String id = "268c0450-172c-4cbd-aad5-9368ace533a6";
+
+        ResolveRechargeDto dto = new ResolveRechargeDto();
+        dto.setRechargeId(id);
+        dto.setResolvedBy("Adebola");
+        dto.setMessage("Resolved Message");
+
+
+        var x = service.resolveRecharges(id, dto);
+        log.info(x);
+    }
+
+    @Test
+    void resolveBulkRecharge() {
+        final int individualId = 42;
+        final String id = "3d3a01bf-b07c-4f03-bf58-6d55679fb174";
+
+        ResolveRechargeDto dto = new ResolveRechargeDto();
+
+        dto.setRechargeId(id);
+        dto.setResolvedBy("Adebola");
+        dto.setMessage("Resolved Message");
+        dto.setIndividualId(individualId);
+
+        var x = service.resolveRecharges(id, dto);
+        log.info(x);
+    }
+
+
+
+    @Test
     void refundRechargeRequest() {
         //final String rechargeId = "04c462eb-720c-4c0b-b908-bdbefaf63ec8"; // NULL User
         final String rechargeId = "158f4d0b-19be-4d8d-8c83-398383890188";
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
             k.when(K::getUserId).thenReturn(id);
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
@@ -70,6 +131,7 @@ class BulkRechargeServiceTest {
         String id = "158f4d0b-19be-4d8d-8c83-398383890188";
         service.retryFailedRecharges(id);
     }
+
     @Test
     void findRequestRetryById() {
         final String id = "6f6e1014-457c-4670-b738-d673f2bdc871";
@@ -78,6 +140,7 @@ class BulkRechargeServiceTest {
         assertNotNull(requestRetry);
         log.info(requestRetry);
     }
+
     @Test
     void saveRetryRequest() {
         IndividualRequestRetry requestRetry = IndividualRequestRetry.builder()
@@ -101,8 +164,9 @@ class BulkRechargeServiceTest {
         map.put("retryId", id);
 
         Boolean b = newBulkRechargeMapper.saveSuccessfulRetry(map);
-        assertEquals (b, true);
+        assertEquals(b, true);
     }
+
     @Test
     void saveService() {
 
@@ -110,9 +174,9 @@ class BulkRechargeServiceTest {
         final String accessToken = getUserToken(id);
 
         String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
-        log.info (s);
+        log.info(s);
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
             k.when(K::getUserId).thenReturn(id);
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
@@ -156,7 +220,7 @@ class BulkRechargeServiceTest {
 
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
             k.when(K::getUserId).thenReturn(id);
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
@@ -183,7 +247,6 @@ class BulkRechargeServiceTest {
         dto.setSearchDate(d);
 
 
-
         var x = service.search(dto);
         log.info(x);
         log.info(x.getTotalSize());
@@ -195,7 +258,7 @@ class BulkRechargeServiceTest {
         //final String id = "3ad67afe-77e7-11ec-825f-5c5181925b12";
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
             k.when(K::getUserId).thenReturn(id);
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
@@ -221,23 +284,23 @@ class BulkRechargeServiceTest {
         Recharge recharge = Mockito.mock(Recharge.class);
         Mockito.when(recharge.recharge(any())).thenReturn(rechargeStatus);
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
             k.when(K::getUserId).thenReturn(id);
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
 
             AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
-                        .id(id)
-                        .email(K.getEmail())
-                        .build();
+                    .id(id)
+                    .email(K.getEmail())
+                    .build();
 
             service.runBulkRecharge(asyncRechargeDto);
 
             var y = service.getBulkIndividualRequests(id, 1, 20);
             assertNotNull(y);
-            assert(y.getList().size() > 0);
-            assert(y.getList().get(0).getFailedMessage().equals("Recharge Failed"));
-            assert(y.getList().get(0).getFailed().equals(true));
+            assert (y.getList().size() > 0);
+            assert (y.getList().get(0).getFailedMessage().equals("Recharge Failed"));
+            assert (y.getList().get(0).getFailed().equals(true));
 
             log.info(y);
         }
@@ -259,9 +322,9 @@ class BulkRechargeServiceTest {
 
         var y = service.getBulkIndividualRequests(id, 1, 20);
         assertNotNull(y);
-        assert(y.getList().size() > 0);
-        assert(y.getList().get(0).getFailedMessage().equals("Recharge Failed"));
-        assert(y.getList().get(0).getFailed().equals(true));
+        assert (y.getList().size() > 0);
+        assert (y.getList().get(0).getFailedMessage().equals("Recharge Failed"));
+        assert (y.getList().get(0).getFailed().equals(true));
 
         log.info(y);
     }
@@ -283,7 +346,7 @@ class BulkRechargeServiceTest {
         final String bulkId = "268c0450-172c-4cbd-aad5-9368ace533a6";
 
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
             k.when(K::getUserId).thenReturn(id);
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
@@ -317,7 +380,7 @@ class BulkRechargeServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final String autoId = "02d06cda-64dd-4dbf-8dbe-ffd90dbb1f36";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
             k.when(K::getUserId).thenReturn(id);
             assertThat(K.getUserId()).isEqualTo(id);
             log.info(K.getUserId());
@@ -396,7 +459,7 @@ class BulkRechargeServiceTest {
         HttpEntity<MultiValueMap<String, String>> formEntity = new HttpEntity<>(requestBody, headers);
 
         ResponseEntity<TokenResponseDto> response =
-                restTemplate.exchange (authUrl, HttpMethod.POST, formEntity, TokenResponseDto.class);
+                restTemplate.exchange(authUrl, HttpMethod.POST, formEntity, TokenResponseDto.class);
 
         TokenResponseDto token = response.getBody();
 
@@ -404,6 +467,6 @@ class BulkRechargeServiceTest {
             return null;
         }
 
-        return  token.getAccess_token();
+        return token.getAccess_token();
     }
 }

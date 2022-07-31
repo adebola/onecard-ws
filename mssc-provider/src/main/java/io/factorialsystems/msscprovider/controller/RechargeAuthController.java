@@ -117,4 +117,36 @@ public class RechargeAuthController {
 
         return new ResponseEntity<>(rechargeService.adminSearch(dto), HttpStatus.OK);
     }
+
+    @GetMapping("/single/failed")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> getFailedTransactions(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                   @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(rechargeService.getFailedTransactions(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/single/failedunresolved")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> getFailedUnresolvedTransactions(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                             @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(rechargeService.getFailedUnresolvedTransactions(pageNumber, pageSize), HttpStatus.OK);
+    }
 }

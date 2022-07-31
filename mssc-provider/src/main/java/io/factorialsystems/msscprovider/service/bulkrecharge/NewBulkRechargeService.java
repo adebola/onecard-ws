@@ -19,6 +19,7 @@ import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.service.MailService;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRefundRecharge;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkResolveRecharge;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRetryRecharge;
 import io.factorialsystems.msscprovider.service.file.BulkRequestExcelWriter;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
@@ -57,6 +58,7 @@ public class NewBulkRechargeService {
     private final FileUploader fileUploader;
     private final BulkRetryRecharge bulkRetryRecharge;
     private final BulkRefundRecharge bulkRefundRecharge;
+    private final BulkResolveRecharge bulkResolveRecharge;
     private final ParameterCache parameterCache;
     private final BulkRequestExcelWriter excelWriter;
     private final NewBulkRechargeMapstructMapper mapper;
@@ -255,6 +257,12 @@ public class NewBulkRechargeService {
         }
     }
 
+    @SneakyThrows
+    public void asyncRetryFailedRecharges(String id) {
+        log.info("Submitting request to retry recharge failures for {}", id);
+        jmsTemplate.convertAndSend(JMSConfig.RETRY_RECHARGE_QUEUE, objectMapper.writeValueAsString(id));
+    }
+
     public void retryFailedRecharges(String id) {
         List<IndividualRequest> requests = newBulkRechargeMapper.findBulkIndividualFailedRequests(id);
 
@@ -341,6 +349,50 @@ public class NewBulkRechargeService {
 
     public StatusMessageDto retryFailedRecharge(Integer id) {
         return bulkRetryRecharge.retryIndividualRequestWithoutPayment(id);
+    }
+
+    public ResolveRechargeDto resolveRecharges(String id, ResolveRechargeDto dto) {
+        dto.setRechargeId(id);
+        dto.setResolvedBy(K.getUserName());
+
+        return bulkResolveRecharge.resolveBulk(dto)
+                .orElseThrow(() -> new RuntimeException(String.format("Error Resolving Bulk Requests %s, it might have been resolved, refunded or successfully re-tried", id)));
+    }
+
+    public ResolveRechargeDto resolveRecharge(String id, ResolveRechargeDto dto) {
+        dto.setRechargeId(id);
+        dto.setResolvedBy(K.getUserName());
+
+        return bulkResolveRecharge.resolveIndividual(dto)
+                .orElseThrow(() -> new RuntimeException(String.format("Error Resolving Individual Bulk Requests %s, it might have been resolved, refunded or successfully re-tried", id)));
+    }
+
+    public PagedDto<NewBulkRechargeRequestDto> getFailedRequests(Integer pageNumber, Integer pageSize){
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findFailedRequests();
+
+        return createDto(requests);
+    }
+
+    public PagedDto<NewBulkRechargeRequestDto> getFailedUnresolvedRequests(Integer pageNumber, Integer pageSize){
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findFailedUnResolvedRequests();
+
+        return createDto(requests);
+    }
+
+    public PagedDto<IndividualRequestDto> getFailedIndividuals(String id, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<IndividualRequest> requests = newBulkRechargeMapper.findFailedIndividuals(id);
+
+        return createIndividualDto(requests);
+    }
+
+    public PagedDto<IndividualRequestDto> getFailedUnresolvedIndividuals(String id, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<IndividualRequest> requests = newBulkRechargeMapper.findFailedUnresolvedIndividuals(id);
+
+        return createIndividualDto(requests);
     }
 
     public ByteArrayInputStream generateExcelFile(String id) {

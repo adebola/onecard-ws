@@ -40,7 +40,7 @@ public class BulkRefundRecharge {
             IndividualRequest individualRequest = bulkRechargeMapper.findIndividualRequestById(query);
 
             if (individualRequest != null && individualRequest.getFailed() &&
-                    individualRequest.getRetryId() == null && individualRequest.getRefundId() == null) {
+                    individualRequest.getRetryId() == null && individualRequest.getRefundId() == null && individualRequest.getResolveId() == null) {
                 AsyncRefundRequestDto refundRequest = AsyncRefundRequestDto.builder()
                         .bulkRechargeId(request.getId())
                         .individualRechargeId(id)
@@ -73,7 +73,7 @@ public class BulkRefundRecharge {
         Double aDouble = bulkRechargeMapper.findRefundTotalByRequestId(request.getId());
         BigDecimal totalToRefunded = BigDecimal.valueOf(aDouble == null ? 0 : aDouble);
 
-        if(BigDecimal.ZERO.compareTo(totalToRefunded) == 0) {
+        if (BigDecimal.ZERO.compareTo(totalToRefunded) == 0) {
             log.error(String.format("Nothing to Refund in Recharge Request %s, may have been refunded, retried or resolved", request.getId()));
             return;
         }

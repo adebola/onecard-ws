@@ -272,6 +272,8 @@ create table bulk_individual_requests (
     failed_message varchar(256),
     refund_id varchar(64),
     successful_retry_id varchar(64),
+    resolve_id  varchar(64),
+    FOREIGN KEY (resolve_id) REFERENCES bulk_individual_resolve_request(id),
     FOREIGN KEY (scheduled_request_id) REFERENCES new_scheduled_recharge_requests(id),
     FOREIGN KEY (bulk_request_id) REFERENCES new_bulk_recharge_requests(id),
     FOREIGN KEY (auto_request_id) REFERENCES new_auto_recharge_requests(id),
@@ -291,13 +293,13 @@ create table bulk_individual_request_retries(
 );
 
 create table bulk_individual_resolve_request(
-    id varchar(64),
-    bulk_individual_request_id int,
-    resolved_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    resolved_by VARCHAR(64) NOT NULL,
-    resolution_message varchar(256),
-    FOREIGN KEY (bulk_individual_request_id) REFERENCES bulk_individual_requests(id),
-    PRIMARY KEY (id)
+        id varchar(64) NOT NULL,
+        bulk_request_id varchar(64) NOT NULL,
+        resolved_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        resolved_by VARCHAR(64) NOT NULL,
+        resolution_message varchar(256) NOT NULL,
+        FOREIGN KEY (bulk_request_id) REFERENCES new_bulk_recharge_requests(id),
+        PRIMARY KEY (id)
 );
 
 create table new_scheduled_recharge_requests (

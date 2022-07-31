@@ -196,7 +196,7 @@ public class SingleRechargeService {
             if (status.getStatus() == HttpStatus.OK) {
                 if (request.getUserId() != null) sendMail(request, dto, status);
             } else {
-                singleRefundRecharge.refundRechargeRequest(request);
+                singleRefundRecharge.asyncRefundRecharge(request);
             }
         }
 
@@ -327,6 +327,20 @@ public class SingleRechargeService {
     public SingleRechargeRequestDto getRecharge(String id) {
         SingleRechargeRequest request = singleRechargeMapper.findById(id);
         return rechargeMapstructMapper.rechargeToRechargeDto(request);
+    }
+
+    public PagedDto<SingleRechargeRequestDto> getFailedTransactions(Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<SingleRechargeRequest> requests = singleRechargeMapper.findFailedRequests();
+
+        return createDto(requests);
+    }
+
+    public PagedDto<SingleRechargeRequestDto> getFailedUnresolvedTransactions(Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<SingleRechargeRequest> requests = singleRechargeMapper.findFailedUnResolvedRequests();
+
+        return createDto(requests);
     }
 
     @SneakyThrows

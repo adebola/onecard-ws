@@ -145,6 +145,100 @@ public class BulkRechargeAuthController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public void retryFailedRequests(@PathVariable("id") String id) {
-        newBulkRechargeService.retryFailedRecharges(id);
+        newBulkRechargeService.asyncRetryFailedRecharges(id);
+    }
+
+
+    @GetMapping("/individualrefund/{id}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public void refundFailedRequest(@PathVariable("id") Integer id,
+                                    @RequestParam(value = "bulkId", required = true) String bulkId) {
+        newBulkRechargeService.refundFailedRecharge(id, bulkId);
+    }
+
+    @GetMapping("/bulkrefund/{id}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public void refundFailedRequests(@PathVariable("id") String id) {
+        newBulkRechargeService.refundFailedRecharges(id);
+    }
+
+    @PutMapping("/bulkresolve/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> resolveFailedRequests(@PathVariable("id") String id, @Valid @RequestBody ResolveRechargeDto dto) {
+        return new ResponseEntity<>(newBulkRechargeService.resolveRecharges(id, dto), HttpStatus.OK);
+    }
+
+    @PutMapping("/individualresolve/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> resolveFailedRequest(@PathVariable("id") String id, @Valid @RequestBody ResolveRechargeDto dto) {
+        return new ResponseEntity<>(newBulkRechargeService.resolveRecharge(id, dto), HttpStatus.OK);
+    }
+
+    @GetMapping("/failed")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> getFailedRecharges(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newBulkRechargeService.getFailedRequests(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/failedunresolved")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> getFailedUnresolvedRecharges(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                          @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newBulkRechargeService.getFailedUnresolvedRequests(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/failed/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> getFailedIndividuals(@PathVariable("id") String id,
+                                                  @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                  @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newBulkRechargeService.getFailedIndividuals(id, pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/failedunresolved/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> getFailedUnresolvedIndividuals(@PathVariable("id") String id,
+                                                  @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                  @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newBulkRechargeService.getFailedUnresolvedIndividuals(id, pageNumber, pageSize), HttpStatus.OK);
     }
 }

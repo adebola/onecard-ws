@@ -32,20 +32,13 @@ public class SingleResolveRecharge {
                 && singleRechargeRequest.getRetryId() == null && singleRechargeRequest.getRefundId() == null
                 && singleRechargeRequest.getResolveId() == null) {
 
-            final String id = UUID.randomUUID().toString();
-
-            SingleResolve singleResolve = SingleResolve.builder()
-                    .id(id)
-                    .rechargeId(dto.getRechargeId())
-                    .resolvedBy(dto.getResolvedBy())
-                    .resolutionMessage(dto.getMessage())
-                    .build();
+            SingleResolve singleResolve = createResolve(dto.getRechargeId(), dto.getResolvedBy(), dto.getMessage());
 
             singleRechargeMapper.saveResolution(singleResolve);
 
             Map<String, String> rechargeMap = new HashMap<>();
             rechargeMap.put("id", dto.getRechargeId());
-            rechargeMap.put("resolveId", id);
+            rechargeMap.put("resolveId", singleResolve.getId());
 
             if (singleRechargeMapper.resolveRequest(rechargeMap)) {
                 log.info(String.format("Recharge %s Admin Resolve by %s", singleRechargeRequest.getId(), singleResolve.getResolvedBy()));
@@ -53,11 +46,19 @@ public class SingleResolveRecharge {
                 log.error(String.format("Recharge %s Admin Resolve by %s No Record updated", singleRechargeRequest.getId(), singleResolve.getResolvedBy()));
             }
 
-            dto.setId(id);
-
+            dto.setId(dto.getId());
             return Optional.of(dto);
         }
 
+        log.error("Unable to resolve Single Recharge {}, it did not fail or has been resolved, retried or refunded", dto.getRechargeId());
         return Optional.empty();
+    }
+    static public SingleResolve createResolve(String rechargeId, String resolvedBy, String message) {
+        return SingleResolve.builder()
+                .id(UUID.randomUUID().toString())
+                .rechargeId(rechargeId)
+                .resolvedBy(resolvedBy)
+                .resolutionMessage(message)
+                .build();
     }
 }

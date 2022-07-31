@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.dao;
 
 import com.github.pagehelper.Page;
+import io.factorialsystems.msscprovider.domain.SingleResolve;
 import io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery;
 import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
@@ -42,4 +43,11 @@ public interface NewBulkRechargeMapper {
     Double findRefundTotalByRequestId(String id);
     Boolean saveBulkRefund(Map<String, String> map);
     Boolean saveIndividualRefund(Map<String, String> map);
+    void saveResolution(SingleResolve resolve);
+    Boolean resolveBulkRequest(Map<String, String> map);
+    Boolean resolveIndividualRequest(Map<String, String> map);
+    Page<NewBulkRechargeRequest> findFailedUnResolvedRequests();
+    Page<NewBulkRechargeRequest> findFailedRequests();
+    Page<IndividualRequest> findFailedIndividuals(String id);
+    Page<IndividualRequest> findFailedUnresolvedIndividuals(String id);
 }

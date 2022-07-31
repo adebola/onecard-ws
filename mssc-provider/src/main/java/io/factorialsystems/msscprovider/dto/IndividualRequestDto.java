@@ -37,4 +37,7 @@ public class IndividualRequestDto {
 
     @Null(message = "Successful Retry Id cannot be set")
     private String retryId;
+
+    @Null(message = "ResolveId cannot be set")
+    private String resolveId;
 }
