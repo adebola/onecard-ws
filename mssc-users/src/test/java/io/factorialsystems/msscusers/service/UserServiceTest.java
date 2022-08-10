@@ -1,6 +1,7 @@
 package io.factorialsystems.msscusers.service;
 
 import io.factorialsystems.msscusers.dao.UserMapper;
+import io.factorialsystems.msscusers.domain.search.SearchUserDto;
 import io.factorialsystems.msscusers.dto.KeycloakUserDto;
 import io.factorialsystems.msscusers.dto.PagedDto;
 import io.factorialsystems.msscusers.dto.SimpleUserDto;
@@ -22,9 +23,29 @@ class UserServiceTest {
     UserMapper userMapper;
 
     @Test
+    void findAdminUsers() {
+        var x = userService.findAdminUsers(1, 20);
+        assertNotNull(x);
+        log.info(x.getTotalSize());
+        log.info(x);
+    }
+
+    @Test
+    void findOrdinaryUsers() {
+        var x = userService.findOrdinaryUsers(1, 20);
+        assertNotNull(x);
+        log.info(x.getTotalSize());
+        log.info(x);
+    }
+
+    @Test
     void search() {
         String search = "fol";
-        var x = userMapper.search(search);
+        SearchUserDto dto = new SearchUserDto();
+        dto.setSearch(search);
+        dto.setAdmin(true);
+//        dto.setOrdinary(true);
+        var x = userMapper.search(dto);
         log.info(x);
         log.info(x.size());
     }

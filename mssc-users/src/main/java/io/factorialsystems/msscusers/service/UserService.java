@@ -4,10 +4,12 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.domain.User;
+import io.factorialsystems.msscusers.domain.search.SearchUserDto;
 import io.factorialsystems.msscusers.dto.*;
 import io.factorialsystems.msscusers.exceptions.ResourceNotFoundException;
 import io.factorialsystems.msscusers.mapper.KeycloakRoleMapper;
 import io.factorialsystems.msscusers.mapper.KeycloakUserMapper;
+import io.factorialsystems.msscusers.mapper.dbtransfer.RoleParameter;
 import io.factorialsystems.msscusers.utils.K;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -36,10 +38,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -75,6 +74,18 @@ public class UserService {
         return createDto(userMapper.findAll());
     }
 
+
+    public PagedDto<KeycloakUserDto> findAdminUsers(Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        return createDto(userMapper.findAdminUser());
+    }
+
+
+    public PagedDto<KeycloakUserDto> findOrdinaryUsers(Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        return createDto(userMapper.findOrdinaryUser());
+    }
+
     public KeycloakUserDto findUserById(String id) {
         User user = userMapper.findUserById(id);
         return keycloakUserMapper.userToDto(user);
@@ -94,9 +105,9 @@ public class UserService {
         return findSimpleUserById(id);
     }
 
-    public PagedDto<KeycloakUserDto> searchUser(Integer pageNumber, Integer pageSize, String searchString) {
+    public PagedDto<KeycloakUserDto> searchUser(Integer pageNumber, Integer pageSize, SearchUserDto dto) {
         PageHelper.startPage(pageNumber, pageSize);
-        return createDto(userMapper.search(searchString));
+        return createDto(userMapper.search(dto));
     }
 
     public void updateUser(String id, KeycloakUserDto dto) {
@@ -287,21 +298,20 @@ public class UserService {
         if (user != null && roleIds != null && roleIds.length > 0) {
             List<RoleRepresentation> assignedRoles = user.roles()
                     .getAll()
-                    .getRealmMappings();
+                    .getRealmMappings().stream()
+                    .filter(r -> Arrays.stream(roleIds).anyMatch(i -> i.equals(r.getId())))
+                    .collect(Collectors.toList());
 
-            assignedRoles.removeIf(r -> {
-                for (String roleId : roleIds) {
-                    if (roleId.equals(r.getId())) {
-                        return false;
-                    }
-                }
+            user.roles().realmLevel().remove(assignedRoles);
 
-                return true;
+            Arrays.stream(roleIds).forEach(r -> {
+                userMapper.removeRole(
+                        RoleParameter.builder()
+                                .roleId(r)
+                                .userId(id)
+                                .build()
+                );
             });
-
-            user.roles()
-                    .realmLevel()
-                    .remove(assignedRoles);
         }
     }
 
@@ -309,21 +319,18 @@ public class UserService {
         UserResource user = usersResource.get(id);
 
         if (user != null && roleIds != null && roleIds.length > 0) {
-            List<RoleRepresentation> roles = rolesResource.list();
+            List<RoleRepresentation> roles = rolesResource.list().stream()
+                    .filter(r -> Arrays.stream(roleIds).anyMatch(i -> i.equals(r.getId())))
+                    .collect(Collectors.toList());
 
-            roles.removeIf(r -> {
-                for (String roleId : roleIds) {
-                    if (roleId.equals(r.getId())) {
-                        return false;
-                    }
-                }
+            user.roles().realmLevel().add(roles);
 
-                return true;
-            });
+            // Local Database Implementation of Roles
+            List<RoleParameter> parameters = Arrays.stream(roleIds)
+                    .map(r -> RoleParameter.builder().roleId(r).userId(id).build())
+                    .collect(Collectors.toList());
 
-            user.roles()
-                    .realmLevel()
-                    .add(roles);
+            userMapper.addRoles(parameters);
         }
     }
 

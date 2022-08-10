@@ -1,5 +1,6 @@
 package io.factorialsystems.msscusers.controller;
 
+import io.factorialsystems.msscusers.domain.search.SearchUserDto;
 import io.factorialsystems.msscusers.dto.KeycloakUserDto;
 import io.factorialsystems.msscusers.dto.MessageDto;
 import io.factorialsystems.msscusers.dto.PasswordDto;
@@ -42,6 +43,37 @@ public class UserController {
         }
 
         return new ResponseEntity<>(userService.findUsers(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> getAdminUsers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                           @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(userService.findAdminUsers(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/ordinary")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<?> getOrdinaryUsers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                              @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(userService.findOrdinaryUsers(pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/self")
@@ -91,11 +123,11 @@ public class UserController {
         return new ResponseEntity<>(new MessageDto("Forbidden"), HttpStatus.FORBIDDEN);
     }
 
-    @GetMapping("/search")
+    @PostMapping("/search")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
-    public ResponseEntity<?> searchUsers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
-                                         @RequestParam(value = "pageSize", required = false) Integer pageSize,
-                                         @RequestParam(value = "searchString") String searchString) {
+    public ResponseEntity<?> searchUsers(@Valid @RequestBody SearchUserDto dto,
+                                         @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                         @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
             pageNumber = K.DEFAULT_PAGE_NUMBER;
@@ -105,7 +137,7 @@ public class UserController {
             pageSize = K.DEFAULT_PAGE_SIZE;
         }
 
-        return new ResponseEntity<>(userService.searchUser(pageNumber, pageSize, searchString), HttpStatus.OK);
+        return new ResponseEntity<>(userService.searchUser(pageNumber, pageSize, dto), HttpStatus.OK);
     }
 
     @PutMapping("/password")

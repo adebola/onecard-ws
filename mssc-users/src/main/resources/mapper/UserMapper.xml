@@ -30,23 +30,46 @@
         from users
     </select>
 
+    <select id="findAdminUser" resultMap="userResultMap">
+        select
+        <include refid="Column_List_Short"/>
+        from users u, user_roles r
+        where u.id = r.user_id
+        and r.role_id in (select id from roles where role_group = 1)
+    </select>
+
+    <select id="findOrdinaryUser" resultMap="userResultMap">
+        select
+        <include refid="Column_List_Short"/>
+        from users
+        where id not in  (select user_id from user_roles)
+    </select>
+
     <select id="findByName" resultMap="userResultMap">
         select
         <include refid="Column_List_Short"/>
         from users where user_name = #{name}
     </select>
 
-    <select id="search" parameterType="java.lang.String" resultMap="userResultMap">
+    <select id="search" parameterType="io.factorialsystems.msscusers.domain.search.SearchUserDto" resultMap="userResultMap">
         select
         <include refid="Column_List_Short"/>
         from users
-        where user_name like CONCAT(#{search}, '%')
+        where (user_name like CONCAT(#{search}, '%')
         or
         email like CONCAT(#{search}, '%')
         or
         first_name like CONCAT(#{search}, '%')
         or
-        last_name like CONCAT(#{search}, '%')
+        last_name like CONCAT(#{search}, '%'))
+
+        <if test="ordinary != null">
+            and id not in (select user_id from user_roles)
+        </if>
+
+        <if test="admin != null">
+            and id in (select ur.user_id from user_roles ur, roles r where ur.role_id = r.id and r.role_group = 1)
+        </if>
     </select>
 
     <select id="findUserById" parameterType="java.lang.String" resultMap="userResultMap">
@@ -106,4 +129,15 @@
     <update id="updateProfilePicture" parameterType="java.util.Map">
         update users set profile_picture = #{picture} where id = #{id}
     </update>
+
+    <insert id="addRoles" parameterType="java.util.List">
+        insert into user_roles(role_id, user_id) values
+        <foreach item="item" index="index" collection="list"  separator=",">
+            (#{item.roleId, jdbcType=VARCHAR}, #{item.userId, jdbcType=VARCHAR})
+        </foreach>
+    </insert>
+
+    <delete id="removeRole" parameterType="io.factorialsystems.msscusers.mapper.dbtransfer.RoleParameter">
+       delete from user_roles where user_id = #{userId} and role_id = #{roleId}
+    </delete>
 </mapper>
