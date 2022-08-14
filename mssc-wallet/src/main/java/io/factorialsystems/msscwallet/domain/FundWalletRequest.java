@@ -25,4 +25,5 @@ public class FundWalletRequest {
     private Timestamp createdOn;
     private Boolean closed;
     private Integer fundType;
+    private String actionedBy;
 }

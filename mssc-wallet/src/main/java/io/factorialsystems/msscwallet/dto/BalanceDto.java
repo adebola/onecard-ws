@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
@@ -15,4 +16,7 @@ import java.math.BigDecimal;
 public class BalanceDto {
     @NotNull(message = "Please specify the Balance")
     BigDecimal balance;
+
+    @NotBlank
+    private String narrative;
 }

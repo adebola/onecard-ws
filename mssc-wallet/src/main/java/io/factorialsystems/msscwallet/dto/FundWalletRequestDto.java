@@ -34,6 +34,8 @@ public class FundWalletRequestDto {
     @Null(message = "Fund Type cannot be specified")
     private String type;
 
-    private String redirectUrl;
+    @Null(message = "Actioned By cannot be specified")
+    private String actionedBy;
 
+    private String redirectUrl;
 }

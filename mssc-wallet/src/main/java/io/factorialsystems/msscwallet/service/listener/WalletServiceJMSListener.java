@@ -48,7 +48,7 @@ public class WalletServiceJMSListener {
     public void listenForRefund(String jsonData)  {
         AsyncRefundRequestDto request = objectMapper.readValue(jsonData, AsyncRefundRequestDto.class);
         AccountService accountService = applicationContext.getBean(AccountService.class);
-        accountService.refundWallet(request);
+        accountService.asyncRefundWallet(request);
     }
 
     @JmsListener(destination = JMSConfig.NEW_USER_WALLET_QUEUE)

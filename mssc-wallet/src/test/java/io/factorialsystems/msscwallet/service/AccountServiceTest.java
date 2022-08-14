@@ -1,6 +1,9 @@
 package io.factorialsystems.msscwallet.service;
 
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscwallet.dao.FundWalletMapper;
+import io.factorialsystems.msscwallet.domain.FundWalletRequest;
 import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.exception.ResourceNotFoundException;
 import io.factorialsystems.msscwallet.utils.Security;
@@ -36,6 +39,20 @@ class AccountServiceTest {
     final String realmUser = "realm-admin";
     final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
 
+    @Test
+    void saveFundWalletRequest() {
+        accountService.saveFundWalletRequest(BigDecimal.valueOf(100), 1, "ade", "adebola", "narrative");
+    }
+
+    @Test
+    void testFindByPage() {
+        PageHelper.startPage(0, 100);
+        try (Page<FundWalletRequest> results = fundWalletMapper.findByUserId("e33b6988-e636-44d8-894d-c03c982d8fa5")) {
+            log.info(results.getTotal());
+        } catch (Exception ex) {
+            log.error("Error");
+        }
+    }
     @Test
     void findAccounts() {
         var accounts = accountService.findAccounts(1, 20);
@@ -113,7 +130,7 @@ class AccountServiceTest {
             assertNotNull (dto);
             log.info(String.format("Current Account Balance Before %.2f", dto.getBalance()));
 
-            BalanceDto balanceDto = new BalanceDto(addition);
+            BalanceDto balanceDto = new BalanceDto(addition, "narrative");
             accountService.fundWallet(accountId, balanceDto);
 
             AccountDto newDto = accountService.findAccountById(accountId);
@@ -198,7 +215,7 @@ class AccountServiceTest {
                     .amount(addBalance)
                     .build();
 
-            accountService.refundWallet(id, dto);
+            accountService.asyncRefundWallet(id, dto);
 
             BalanceDto newDto = accountService.findAccountBalance();
             assertEquals(currentDto.getBalance().add(addBalance), newDto.getBalance());
@@ -239,7 +256,7 @@ class AccountServiceTest {
             assert Objects.equals(Security.getUserId(), id);
             log.info(Security.getUserId());
 
-           var y = accountService.findWalletFundings(Security.getUserId(), 1, 20);
+           var y = accountService.findWalletFunding(Security.getUserId(), 1, 20);
            assertNotNull(y);
            assert(y.getTotalSize() > 0);
            log.info("Size of Array : " + y.getTotalSize());

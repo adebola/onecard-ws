@@ -43,16 +43,15 @@ public class AccountController {
     }
 
     @PutMapping("/balance/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('Onecard_Admin')")
-    public void updateAccountBalance(@PathVariable("id") String id, @Valid @RequestBody BalanceDto balanceDto) {
-        accountService.fundWallet(id, balanceDto);
+    public ResponseEntity<?> updateAccountBalance(@PathVariable("id") String id, @Valid @RequestBody BalanceDto balanceDto) {
+        return new ResponseEntity<>( accountService.fundWallet(id, balanceDto), HttpStatus.OK);
     }
 
     @PutMapping("/refund/{id}")
     @PreAuthorize("hasRole('Onecard_Admin')")
     public ResponseEntity<RefundResponseDto> refundWallet(@PathVariable("id") String id, @Valid @RequestBody RefundRequestDto refundRequestDto) {
-        return new ResponseEntity<>(accountService.refundWallet(id, refundRequestDto), HttpStatus.OK);
+        return new ResponseEntity<>(accountService.asyncRefundWallet(id, refundRequestDto), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -96,7 +95,7 @@ public class AccountController {
             pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
-        return new ResponseEntity<>(accountService.findWalletFundings(Security.getUserId(), pageNumber, pageSize), HttpStatus.OK);
+        return new ResponseEntity<>(accountService.findWalletFunding(Security.getUserId(), pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/wallet/{id}")
@@ -113,7 +112,7 @@ public class AccountController {
             pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
-        return new ResponseEntity<>(accountService.findWalletFundings(id, pageNumber, pageSize), HttpStatus.OK);
+        return new ResponseEntity<>(accountService.findWalletFunding(id, pageNumber, pageSize), HttpStatus.OK);
     }
 
     @PostMapping("/transfer")
