@@ -20,6 +20,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.response.SmileValidateRes
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.apachecommons.CommonsLog;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -40,14 +41,20 @@ public class RingoSmileRecharge implements Recharge, DataEnquiry, ParameterCheck
     private final DataPlanMapstructMapper dataPlanMapstructMapper;
 
     @Override
+    @Cacheable("ringosmiledataplans")
     public List<DataPlanDto> getDataPlans(String planCode) {
         String network = RingoRechargeFactory.codeMapper.get(planCode);
         return dataPlanMapstructMapper.listRingoPlanToDto(ringoDataPlanMapper.findByNetworkId(network));
     }
 
     @Override
-    public DataPlanDto getPlan(String id) {
-        return dataPlanMapstructMapper.ringoPlanToDto(ringoDataPlanMapper.findById(id));
+    public DataPlanDto getPlan(String id, String planCode) {
+        return getDataPlans(planCode).stream()
+                .filter(p -> p.getProduct_id().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(String.format("Unable to load Ringo Smile Data Plan %s", id)));
+
+        // return dataPlanMapstructMapper.ringoPlanToDto(ringoDataPlanMapper.findById(id));
     }
 
     @Override

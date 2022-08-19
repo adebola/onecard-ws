@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface DataEnquiry {
     List<DataPlanDto> getDataPlans(String planCode);
-    DataPlanDto getPlan(String id);
+    DataPlanDto getPlan(String id, String planCode);
 }

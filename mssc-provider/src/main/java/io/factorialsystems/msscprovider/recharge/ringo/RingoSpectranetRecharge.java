@@ -2,20 +2,21 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.factorialsystems.msscprovider.dao.RingoDataPlanMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.DataPlanDto;
+import io.factorialsystems.msscprovider.dto.SpectranetRingoDataPlan;
 import io.factorialsystems.msscprovider.mapper.recharge.DataPlanMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.DataEnquiry;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
-import io.factorialsystems.msscprovider.recharge.factory.RingoRechargeFactory;
+import io.factorialsystems.msscprovider.recharge.ringo.dto.FetchSpectranetDataDto;
 import io.factorialsystems.msscprovider.recharge.ringo.request.SpectranetRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.SpectranetResponse;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,21 +24,20 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Collections;
 import java.util.List;
 
-@CommonsLog
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RingoSpectranetRecharge implements Recharge, DataEnquiry, ParameterCheck {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final RingoProperties properties;
-    private final RingoDataPlanMapper ringoDataPlanMapper;
     private final DataPlanMapstructMapper dataPlanMapstructMapper;
 
     @Override
     public RechargeStatus recharge(SingleRechargeRequest request) {
-
         SpectranetRequest spectranetRequest = SpectranetRequest.builder()
                 .amount(request.getServiceCost())
                 .request_id(request.getId())
@@ -59,10 +59,9 @@ public class RingoSpectranetRecharge implements Recharge, DataEnquiry, Parameter
             String errorMessage = null;
 
             if (response != null && response.getMessage() != null) {
-                log.info("Spectranet PIN Request Response Not Null");
                 if (response.getMessage().equalsIgnoreCase("Successful")) {
-                    log.info(response);
                     log.info(String.format("Spectranet data Pin purchase (%.2f) Successful", request.getServiceCost()));
+
                     return RechargeStatus.builder()
                             .status(HttpStatus.OK)
                             .message("Spectranet Purchase Successful Pin (: " + response.getPin().get(0).getPin() + ")" + "Serial")
@@ -87,18 +86,58 @@ public class RingoSpectranetRecharge implements Recharge, DataEnquiry, Parameter
     }
 
     @Override
+    @Cacheable("spectranetdataplans")
     public List<DataPlanDto> getDataPlans(String planCode) {
-        String network = RingoRechargeFactory.codeMapper.get(planCode);
-        return dataPlanMapstructMapper.listRingoPlanToDto(ringoDataPlanMapper.findByNetworkId(network));
+        log.info("Retrieving Data Plan for Spectranet");
+        FetchSpectranetDataDto fetchSpectranetDataDto = FetchSpectranetDataDto.builder()
+                .serviceCode("V-Internet")
+                .type("SPECTRANET")
+                .build();
+
+        HttpHeaders headers = getHeaders();
+
+        try {
+            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(fetchSpectranetDataDto), headers);
+            SpectranetRingoDataPlan response =
+                    restTemplate.postForObject(properties.getAirtimeUrl(), entity, SpectranetRingoDataPlan.class);
+
+            if (response == null || response.getProduct() == null) {
+                log.error("Error retrieving Spectranet Data Plans from provider, response of response product is NULL");
+                return Collections.emptyList();
+            }
+
+            return dataPlanMapstructMapper.listSpectranetPlanToDto(response.getProduct());
+        } catch (JsonProcessingException e) {
+            log.error("Error Processing Spectranet Data Plans Message {}", e.getMessage());
+            return Collections.emptyList();
+        }
+
+//        String network = RingoRechargeFactory.codeMapper.get(planCode);
+//        return dataPlanMapstructMapper.listRingoPlanToDto(ringoDataPlanMapper.findByNetworkId(network));
     }
 
     @Override
-    public DataPlanDto getPlan(String id) {
-        return dataPlanMapstructMapper.ringoPlanToDto(ringoDataPlanMapper.findById(id));
+    public DataPlanDto getPlan(String id, String planCode) {
+        return getDataPlans(planCode).stream()
+                .filter(p -> p.getProduct_id().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(String.format("Unable to load Spwctranet Data Plan %s", id)));
+
+
+        //return dataPlanMapstructMapper.ringoPlanToDto(ringoDataPlanMapper.findById(id));
     }
 
     @Override
     public Boolean check(SingleRechargeRequest request) {
         return request != null;
+    }
+
+    private HttpHeaders getHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add(K.HEADER_EMAIL, properties.getMail());
+        headers.add(K.HEADER_PASSWORD, properties.getPassword());
+
+        return headers;
     }
 }

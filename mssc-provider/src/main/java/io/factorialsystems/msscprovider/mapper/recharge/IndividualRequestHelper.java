@@ -150,7 +150,7 @@ public class IndividualRequestHelper {
                     }
                 }
             } else {
-                DataPlanDto planDto = enquiry.getPlan(individualRequest.getProductId());
+                DataPlanDto planDto = enquiry.getPlan(individualRequest.getProductId(), individualRequest.getServiceCode());
                 individualRequest.setServiceCost(new BigDecimal(planDto.getPrice()));
             }
         }
@@ -235,7 +235,7 @@ public class IndividualRequestHelper {
                         .orElseThrow(RuntimeException::new);
             }
         } else {
-            DataPlanDto planDto = enquiry.getPlan(productId);
+            DataPlanDto planDto = enquiry.getPlan(productId, serviceCode);
             price = Integer.valueOf(planDto.getPrice());
         }
 

@@ -4,9 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.dao.RingoDataPlanMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.domain.RingoDataPlan;
 import io.factorialsystems.msscprovider.dto.DataPlanDto;
-import io.factorialsystems.msscprovider.dto.FetchDataDto;
+import io.factorialsystems.msscprovider.recharge.ringo.dto.FetchDataDto;
 import io.factorialsystems.msscprovider.mapper.recharge.DataPlanMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.DataEnquiry;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
@@ -18,6 +17,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.response.RingoDataRespons
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -87,6 +87,7 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
     }
 
     @Override
+    @Cacheable("ringodataplans")
     public List<DataPlanDto> getDataPlans(String requestCode) {
         String network = RingoRechargeFactory.codeMapper.get(requestCode);
 
@@ -115,13 +116,18 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
     }
 
     @Override
-    public DataPlanDto getPlan(String id) {
-        RingoDataPlan plan = ringoDataPlanMapper.findById(id);
-        if (plan == null) {
-            throw new RuntimeException(String.format("Unable to load Data Plan from Database %s", id));
-        }
+    public DataPlanDto getPlan(String id, String requestCode) {
+        return getDataPlans(requestCode).stream()
+                .filter(p -> p.getProduct_id().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(String.format("Unable to load Ringo Data Plan %s", id)));
 
-        return dataPlanMapper.ringoPlanToDto(plan);
+//        RingoDataPlan plan = ringoDataPlanMapper.findById(id);
+//        if (plan == null) {
+//            throw new RuntimeException(String.format("Unable to load Data Plan from Database %s", id));
+//        }
+//
+//        return dataPlanMapper.ringoPlanToDto(plan);
     }
 
     private HttpHeaders getHeaders() {

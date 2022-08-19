@@ -1,4 +1,4 @@
-package io.factorialsystems.msscprovider.dto;
+package io.factorialsystems.msscprovider.recharge.ringo.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

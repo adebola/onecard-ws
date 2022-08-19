@@ -215,10 +215,10 @@ public class SmileDataRecharge implements Recharge, ParameterCheck, Balance, Dat
     }
 
     @Override
-    public DataPlanDto getPlan(String id) {
+    public DataPlanDto getPlan(String id, String planCode) {
         log.info("Retrieving single smile data plan for id {}", id);
 
-        return getDataPlans("SMILE-DATA").stream()
+        return getDataPlans(planCode).stream()
                 .filter(d -> d.getProduct_id().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException(String.format("Unable to load Smile Data Plan %s", id)));

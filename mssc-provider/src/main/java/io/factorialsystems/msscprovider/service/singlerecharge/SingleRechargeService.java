@@ -31,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
@@ -270,7 +269,6 @@ public class SingleRechargeService {
         return enquiry.getExtraPlans(dto);
     }
 
-    @Cacheable("dataplans")
     public List<DataPlanDto> getDataPlans(String code) {
 
         ServiceAction action = serviceActionMapper.findByCode(code);
@@ -445,7 +443,7 @@ public class SingleRechargeService {
                 }
 
             } else {
-                DataPlanDto planDto = enquiry.getPlan(dto.getProductId());
+                DataPlanDto planDto = enquiry.getPlan(dto.getProductId(), dto.getServiceCode());
                 request.setServiceCost(new BigDecimal(planDto.getPrice()));
             }
         }

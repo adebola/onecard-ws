@@ -78,7 +78,8 @@ public class DstvHelper {
         try {
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(ringoValidateCableRequest), getHeader());
 
-            response = restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoValidateCableResponse.class);
+            response =
+                    restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoValidateCableResponse.class);
 
             if (response != null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())) {
 
@@ -131,7 +132,8 @@ public class DstvHelper {
         try {
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(request), getHeader());
 
-            RingoPayCableResponse response = restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoPayCableResponse.class);
+            RingoPayCableResponse response =
+                    restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoPayCableResponse.class);
             log.info("Cable Recharge Request Response: " + response);
 
             if (response != null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())) {
