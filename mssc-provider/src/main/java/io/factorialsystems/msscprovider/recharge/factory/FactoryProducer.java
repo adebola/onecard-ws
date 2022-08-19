@@ -8,15 +8,16 @@ import org.springframework.stereotype.Component;
 public class FactoryProducer {
 
     public AbstractFactory getFactory(String factoryType) {
-
         if (factoryType.equalsIgnoreCase("Ringo")) {
             return new RingoRechargeFactory();
         } else if (factoryType.equalsIgnoreCase("Crown")) {
             return new EKEDPRechargeFactory();
         } else if (factoryType.equalsIgnoreCase("Energize")) {
             return new JedRechargeFactory();
+        } else if (factoryType.equalsIgnoreCase("Smile")) {
+            return new SmileRechargeFactory();
         }
 
-        return null;
+        throw new RuntimeException(String.format("Unknown Factory Type %s", factoryType));
     }
 }

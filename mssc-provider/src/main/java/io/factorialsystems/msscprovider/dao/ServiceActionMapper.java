@@ -12,6 +12,7 @@ import java.util.Map;
 @Mapper
 public interface ServiceActionMapper {
     Page<ServiceAction> findByProviderId(Integer id);
+    Page<ServiceAction> findAllServices();
     Page<ServiceAction> findByProviderCode(String code);
     ServiceAction findById(Integer id);
     ServiceAction findByCode(String serviceCode);
@@ -20,4 +21,6 @@ public interface ServiceActionMapper {
     List<Action> findAllActions();
     void addRechargeProvider(Map<String, Integer> map);
     void removeRechargeProvider(Map<String, Integer> map);
+    Boolean rechargeProviderServiceExists(Map<String, Integer> map);
+    Boolean amendRechargeProvider(Map<String, Integer> map);
 }

@@ -15,8 +15,24 @@
         <result column="suspended" property="suspended" jdbcType="BOOLEAN"/>
     </resultMap>
 
+    <resultMap id="rechargeProviderResultMapEx" type="io.factorialsystems.msscprovider.domain.RechargeProviderEx">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="weight" property="weight" jdbcType="INTEGER"/>
+    </resultMap>
+
     <sql id="column_list">
-       id, name, wallet_id, code, createdAt, createdBy, activated, activatedBy, activation_date, suspended
+        id,
+        name,
+        wallet_id,
+        code,
+        createdAt,
+        createdBy,
+        activated,
+        activatedBy,
+        activation_date,
+        suspended
     </sql>
 
     <select id="findAll" resultMap="rechargeProviderResultMap">
@@ -31,8 +47,8 @@
         from recharge_providers where id = #{id}
     </select>
 
-    <select id="findByServiceId" parameterType="java.lang.Integer" resultMap="rechargeProviderResultMap">
-        select  rp.id, rp.name, rp.wallet_id, rp.code, rp.createdAt, rp.createdBy, rp.activated, rp.activatedBy, rp.activation_date, rp.suspended
+    <select id="findByServiceId" parameterType="java.lang.Integer" resultMap="rechargeProviderResultMapEx">
+        select rp.id, rp.name, rp.code, psrp.weight
         from recharge_providers rp, provider_services_recharge_providers psrp
         where psrp.provider_service_id= #{id}
         and psrp.recharge_provider_id = rp.id;

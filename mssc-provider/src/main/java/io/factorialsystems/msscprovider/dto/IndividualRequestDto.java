@@ -13,6 +13,10 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IndividualRequestDto {
+
+    @Null(message = "id cannot be set")
+    private Integer id;
+
     @NotEmpty
     private String serviceCode;
 

@@ -47,6 +47,7 @@ public interface NewBulkRechargeMapstructMapper {
     List<IndividualRequest> listIndividualDtoToIndividual(List<IndividualRequestDto> dtos);
 
     @Mappings({
+            @Mapping(source = "id", target = "id"),
             @Mapping(source = "productId", target = "productId"),
             @Mapping(source = "serviceCost", target = "serviceCost"),
             @Mapping(source = "telephone", target = "telephone"),

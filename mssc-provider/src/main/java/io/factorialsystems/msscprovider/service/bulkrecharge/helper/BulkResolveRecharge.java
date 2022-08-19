@@ -6,14 +6,16 @@ import io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
+import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleResolveRecharge;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-
-import static io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleResolveRecharge.createResolve;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -30,7 +32,7 @@ public class BulkResolveRecharge {
             return Optional.empty();
         }
 
-        SingleResolve singleResolve = createResolve(dto.getRechargeId(), dto.getResolvedBy(), dto.getMessage());
+        SingleResolve singleResolve = SingleResolveRecharge.createResolve(dto.getRechargeId(), dto.getResolvedBy(), dto.getMessage());
 
         bulkRechargeMapper.saveResolution(singleResolve);
 
@@ -53,7 +55,7 @@ public class BulkResolveRecharge {
         NewBulkRechargeRequest request = bulkRechargeMapper.findBulkRechargeById(dto.getRechargeId());
 
         if (request == null) {
-            log.error("Unable to Load Parent Bulk Recharge {} for Individual Resolve Request", dto.getRechargeId());
+            log.error("Unable to Load Parent Bulk Recharge {} for Individual Request {}", dto.getRechargeId(), dto.getIndividualId());
             return Optional.empty();
         }
 
@@ -62,7 +64,7 @@ public class BulkResolveRecharge {
                 .userId(request.getUserId())
                 .build();
 
-        IndividualRequest failedRequest = bulkRechargeMapper.findIndividualRequestById(query);
+        IndividualRequest failedRequest = bulkRechargeMapper.findIndividualRequestByQuery(query);
 
         if (failedRequest == null || !failedRequest.getFailed() || failedRequest.getResolveId() != null ||
                 failedRequest.getRefundId() != null || failedRequest.getRetryId() != null) {
@@ -70,7 +72,7 @@ public class BulkResolveRecharge {
             return Optional.empty();
         }
 
-        SingleResolve singleResolve = createResolve(dto.getRechargeId(), dto.getResolvedBy(), dto.getMessage());
+        SingleResolve singleResolve = SingleResolveRecharge.createResolve(dto.getRechargeId(), dto.getResolvedBy(), dto.getMessage());
         bulkRechargeMapper.saveResolution(singleResolve);
 
         Map<String, String> rechargeMap = new HashMap<>();

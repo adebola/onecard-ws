@@ -37,7 +37,7 @@ public class BulkRefundRecharge {
                     .userId(request.getUserId())
                     .build();
 
-            IndividualRequest individualRequest = bulkRechargeMapper.findIndividualRequestById(query);
+            IndividualRequest individualRequest = bulkRechargeMapper.findIndividualRequestByQuery(query);
 
             if (individualRequest != null && individualRequest.getFailed() &&
                     individualRequest.getRetryId() == null && individualRequest.getRefundId() == null && individualRequest.getResolveId() == null) {

@@ -13,6 +13,8 @@ import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
+import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.*;
@@ -109,7 +111,7 @@ public class SingleRechargeService {
             // If a Request is flagged as an Asynchronous request such as Airtime Recharge it will be allowed to
             // If it is a Request with a Paystack payment it must return to the user with the payment details before
             // the actual recharge is performed by calling finishRecharge after payment
-            // If it is a Scheduled or Bulk Request it also will run Asynchronously
+            // If it is a Scheduled or Bulk Request it also will run Asynchronously automatically
 
             if (request.getAsyncRequest() || request.getPaymentMode().equals("paystack")) {
                 return SingleRechargeResponseDto.builder()
@@ -196,6 +198,7 @@ public class SingleRechargeService {
             if (status.getStatus() == HttpStatus.OK) {
                 if (request.getUserId() != null) sendMail(request, dto, status);
             } else {
+                singleRechargeMapper.failRequest(request.getId());
                 singleRefundRecharge.asyncRefundRecharge(request);
             }
         }
@@ -324,6 +327,13 @@ public class SingleRechargeService {
         return createDto(requests);
     }
 
+    public PagedDto<SingleRechargeRequestDto> adminFailedSearch(SearchSingleFailedRechargeDto dto, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<SingleRechargeRequest> requests = singleRechargeMapper.adminFailedSearch(dto);
+
+        return createDto(requests);
+    }
+
     public SingleRechargeRequestDto getRecharge(String id) {
         SingleRechargeRequest request = singleRechargeMapper.findById(id);
         return rechargeMapstructMapper.rechargeToRechargeDto(request);
@@ -333,6 +343,8 @@ public class SingleRechargeService {
         PageHelper.startPage(pageNumber, pageSize);
         Page<SingleRechargeRequest> requests = singleRechargeMapper.findFailedRequests();
 
+        log.info("Retrieving All Single Failed Transactions");
+
         return createDto(requests);
     }
 
@@ -340,6 +352,7 @@ public class SingleRechargeService {
         PageHelper.startPage(pageNumber, pageSize);
         Page<SingleRechargeRequest> requests = singleRechargeMapper.findFailedUnResolvedRequests();
 
+        log.info("Retrieving Failed Unresolved Transactions");
         return createDto(requests);
     }
 

@@ -4,9 +4,11 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
 import io.factorialsystems.msscprovider.domain.Action;
+import io.factorialsystems.msscprovider.domain.ProviderServiceRechargeProvider;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.ServiceActionDto;
+import io.factorialsystems.msscprovider.dto.StatusMessageDto;
 import io.factorialsystems.msscprovider.mapper.action.ServiceActionMapstructMapper;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -22,13 +24,26 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class ServiceActionService {
-
     private final ServiceActionMapper serviceActionMapper;
     private final ServiceActionMapstructMapper serviceActionMapstructMapper;
 
     public PagedDto<ServiceActionDto> getProviderActions(String code, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<ServiceAction> actionsPage = serviceActionMapper.findByProviderCode(code);
+
+        return createDto(actionsPage);
+    }
+
+    public PagedDto<ServiceActionDto> getAllServices(Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<ServiceAction> actionsPage = serviceActionMapper.findAllServices();
+
+        return createDto(actionsPage);
+    }
+
+    public PagedDto<ServiceActionDto> getServicesByProviderId(Integer id, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<ServiceAction> actionsPage = serviceActionMapper.findByProviderId(id);
 
         return createDto(actionsPage);
     }
@@ -107,15 +122,51 @@ public class ServiceActionService {
         serviceActionMapper.removeRechargeProvider(map);
     }
 
-    public void addRechargeProviderToService(Integer rechargeId, Integer serviceId) {
-        Map<String, Integer> map = new HashMap<>();
-        map.put("recharge_id", rechargeId);
-        map.put("service_id", serviceId);
+    public StatusMessageDto addRechargeProviderToService(ProviderServiceRechargeProvider psrp) {
+        Map<String, Integer> map = createMap(psrp);
+
+        if (serviceActionMapper.rechargeProviderServiceExists(map)) {
+            return StatusMessageDto.builder()
+                    .message("The Recharge provider relationship exists")
+                    .status(300)
+                    .build();
+        }
+
         serviceActionMapper.addRechargeProvider(map);
+
+        return StatusMessageDto.builder()
+                .message("Success")
+                .status(200)
+                .build();
+    }
+
+    public StatusMessageDto amendRechargeProviderService(ProviderServiceRechargeProvider psrp) {
+        Map<String, Integer> map = createMap(psrp);
+
+        if (!serviceActionMapper.amendRechargeProvider(map)) {
+            return StatusMessageDto.builder()
+                    .message("The Recharge provider relationship does not exists for modification")
+                    .status(300)
+                    .build();
+        }
+
+        return StatusMessageDto.builder()
+                .message("Success")
+                .status(200)
+                .build();
     }
 
     public List<Action> getActions() {
         return serviceActionMapper.findAllActions();
+    }
+
+    private Map<String, Integer> createMap(ProviderServiceRechargeProvider psrp) {
+        Map<String, Integer> map = new HashMap<>();
+        map.put("recharge_id", psrp.getRechargeId());
+        map.put("service_id", psrp.getServiceId());
+        map.put("weight", psrp.getPriority());
+
+        return map;
     }
 
     private PagedDto<ServiceActionDto> createDto(Page<ServiceAction> actions) {

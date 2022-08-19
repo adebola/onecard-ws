@@ -3,7 +3,7 @@ package io.factorialsystems.msscprovider.service;
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
-import io.factorialsystems.msscprovider.dto.SearchSingleRechargeDto;
+import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
 import io.factorialsystems.msscprovider.utils.K;
@@ -79,7 +79,7 @@ class RechargeServiceTest {
             log.info(K.getUserId());
 
             SingleRechargeRequest request = singleRechargeMapper.findById(rechargeId);
-            singleRefundRecharge.refundRecharge(rechargeId);
+            // singleRefundRecharge.refundRecharge(rechargeId);
         }
     }
 
@@ -145,6 +145,12 @@ class RechargeServiceTest {
         var x = rechargeService.getFailedUnresolvedTransactions(1, 20);
         log.info(x);
         log.info(x.getTotalSize());
+    }
+
+    @Test
+    void getDataPlansEx() {
+        var x = rechargeService.getDataPlans("SMILE-DATA");
+        log.info(x);
     }
 
     @Test

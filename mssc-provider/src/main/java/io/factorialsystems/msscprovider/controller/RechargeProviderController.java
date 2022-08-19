@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.RechargeProviderDto;
+import io.factorialsystems.msscprovider.dto.RechargeProviderExDto;
 import io.factorialsystems.msscprovider.service.RechargeProviderService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,7 @@ public class RechargeProviderController {
     }
 
     @GetMapping("/service/{id}")
-    public ResponseEntity<List<RechargeProviderDto>> getRechargeProviderByService(@PathVariable("id") Integer id) {
+    public ResponseEntity<List<RechargeProviderExDto>> getRechargeProviderByService(@PathVariable("id") Integer id) {
         return new ResponseEntity<>(rechargeProviderService.findByServiceId(id), HttpStatus.OK);
     }
 

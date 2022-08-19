@@ -1,6 +1,8 @@
 package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
+import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
@@ -114,8 +116,16 @@ public class RechargeAuthController {
     @PostMapping("/single/adminsearch")
     @PreAuthorize("hasRole('Onecard_Admin')")
     public ResponseEntity<?> adminSearch(@Valid @RequestBody SearchSingleRechargeDto dto) {
-
         return new ResponseEntity<>(rechargeService.adminSearch(dto), HttpStatus.OK);
+    }
+
+    @PostMapping("/single/adminfailedsearch")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> adminSearch(@Valid @RequestBody SearchSingleFailedRechargeDto dto,
+                                         @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                         @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        return new ResponseEntity<>(rechargeService.adminFailedSearch(dto, pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/single/failed")

@@ -38,10 +38,18 @@
     <select id="findByProviderId" parameterType="java.lang.Integer" resultMap="serviceResultMap">
         select
         <include refid="Column_List"/>
-        from provider_services s, providers p. service_actions sa
+        from provider_services s, providers p, service_actions sa
         where s.provider_id = p.id
         and s.action = sa.id
         and s.provider_id = #{id}
+    </select>
+
+    <select id="findAllServices" resultMap="serviceResultMap">
+        select
+        <include refid="Column_List"/>
+        from provider_services s, providers p, service_actions sa
+        where s.provider_id = p.id
+        and s.action = sa.id
     </select>
 
     <select id="findByProviderCode" parameterType="java.lang.String" resultMap="serviceResultMap">
@@ -109,7 +117,20 @@
         and provider_service_id = #{service_id}
     </delete>
 
+    <select id="rechargeProviderServiceExists" parameterType="java.util.Map" resultType="java.lang.Boolean">
+        select exists(select 1 from provider_services_recharge_providers
+                      where recharge_provider_id = #{recharge_id}
+                      and provider_service_id = #{service_id})
+    </select>
+
     <insert id="addRechargeProvider" parameterType="java.util.Map">
-        call sp_addRechargeProvider(#{recharge_id}, #{service_id})
+        insert into  provider_services_recharge_providers(provider_service_id, recharge_provider_id, weight)
+        values(#{service_id}, #{recharge_id}, #{weight});
     </insert>
+
+    <update id="amendRechargeProvider" parameterType="java.util.Map">
+        update provider_services_recharge_providers set weight = #{weight}
+        where recharge_provider_id = #{recharge_id}
+        and provider_service_id = #{service_id}
+    </update>
 </mapper>

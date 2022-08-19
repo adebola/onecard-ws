@@ -6,6 +6,7 @@ import io.factorialsystems.msscprovider.dao.RechargeProviderMapper;
 import io.factorialsystems.msscprovider.domain.RechargeProvider;
 import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.RechargeProviderDto;
+import io.factorialsystems.msscprovider.dto.RechargeProviderExDto;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeProviderMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.Balance;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
@@ -49,8 +50,8 @@ public class RechargeProviderService {
         return dto;
     }
 
-    public List<RechargeProviderDto> findByServiceId(Integer id) {
-        return rechargeMapstructMapper.listRechargeToRechargeDto(rechargeMapper.findByServiceId(id));
+    public List<RechargeProviderExDto> findByServiceId(Integer id) {
+        return rechargeMapstructMapper.listRechargeProviderExToRechargeProviderExDto(rechargeMapper.findByServiceId(id));
     }
 
     public RechargeProviderDto save(RechargeProviderDto dto) {

@@ -1,7 +1,9 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
 import io.factorialsystems.msscprovider.domain.RechargeProvider;
+import io.factorialsystems.msscprovider.domain.RechargeProviderEx;
 import io.factorialsystems.msscprovider.dto.RechargeProviderDto;
+import io.factorialsystems.msscprovider.dto.RechargeProviderExDto;
 import io.factorialsystems.msscprovider.mapper.DateMapper;
 import org.mapstruct.Mapper;
 
@@ -12,4 +14,6 @@ public interface RechargeProviderMapstructMapper {
     RechargeProviderDto rechargeToRechargeDto(RechargeProvider provider);
     RechargeProvider rechargeDtoToRecharge(RechargeProviderDto dto);
     List<RechargeProviderDto> listRechargeToRechargeDto(List<RechargeProvider> providers);
+    RechargeProviderExDto rechargeProviderExToRechargeProviderExDto(RechargeProviderEx provider);
+    List<RechargeProviderExDto> listRechargeProviderExToRechargeProviderExDto(List<RechargeProviderEx> providers);
 }

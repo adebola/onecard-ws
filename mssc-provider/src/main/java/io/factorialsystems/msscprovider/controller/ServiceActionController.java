@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.domain.Action;
+import io.factorialsystems.msscprovider.domain.ProviderServiceRechargeProvider;
 import io.factorialsystems.msscprovider.dto.MessageDto;
 import io.factorialsystems.msscprovider.dto.ServiceActionDto;
 import io.factorialsystems.msscprovider.service.ServiceActionService;
@@ -19,7 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/provider/service")
 public class ServiceActionController {
-
     private final ServiceActionService actionService;
 
     @GetMapping
@@ -36,6 +36,21 @@ public class ServiceActionController {
         }
 
         return new ResponseEntity<>(actionService.getProviderActions(code, pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllServices(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                            @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(actionService.getAllServices(pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -105,10 +120,13 @@ public class ServiceActionController {
         actionService.removeRechargeProviderFromService(rechargeId, serviceId);
     }
 
-    @GetMapping("/add")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void addRechargeProviderToService(@RequestParam("rechargeId") Integer rechargeId,
-                                             @RequestParam("serviceId") Integer serviceId) {
-        actionService.addRechargeProviderToService(rechargeId, serviceId);
+    @PostMapping("/add")
+    public ResponseEntity<?> addRechargeProviderToService(@Valid @RequestBody ProviderServiceRechargeProvider psrp) {
+        return new ResponseEntity<>(actionService.addRechargeProviderToService(psrp), HttpStatus.OK);
+    }
+
+    @PutMapping("/amend")
+    public ResponseEntity<?> amendRechargeProviderService(@Valid @RequestBody ProviderServiceRechargeProvider psrp) {
+       return new ResponseEntity<>(actionService.amendRechargeProviderService(psrp), HttpStatus.OK);
     }
 }

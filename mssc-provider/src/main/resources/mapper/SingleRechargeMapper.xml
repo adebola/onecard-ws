@@ -95,6 +95,10 @@
         values(#{id}, #{requestId}, #{successful}, #{statusMessage}, #{retriedBy}, #{recipient})
     </insert>
 
+    <update id="failRequest" parameterType="java.lang.String">
+        update providerdb.recharge_requests set failed = true where id = #{id}
+    </update>
+
     <update id="saveSuccessfulRetry" parameterType="java.util.Map">
         update providerdb.recharge_requests set successful_retry_id = #{retryId} where id = #{id}
     </update>
@@ -166,12 +170,36 @@
         and r.service_id = p.id
     </select>
 
-    <select id="adminSearch" parameterType="io.factorialsystems.msscprovider.dto.SearchSingleRechargeDto" resultMap="rechargeResultMap">
+    <select id="adminSearch" parameterType="io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
         from recharge_requests r, provider_services p
         where user_id = #{userId}
         and r.service_id = p.id
+
+        <if test="searchRecipient != null">
+            and r.recipient like CONCAT(#{searchRecipient}, '%')
+        </if>
+
+        <if test="searchProduct != null">
+            and p.service_code like CONCAT(#{searchProduct}, '%')
+        </if>
+
+        <if test="searchDate != null">
+            and date(r.createdAt) = date(#{searchDate})
+        </if>
+    </select>
+
+    <select id="adminFailedSearch" parameterType="io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.service_id = p.id
+        and r.failed = true
+
+        <if test="unresolved != null">
+           and r.successful_retry_id is NULL and r.refund_id is NULL and r.resolve_id is NULL
+        </if>
 
         <if test="searchRecipient != null">
             and r.recipient like CONCAT(#{searchRecipient}, '%')

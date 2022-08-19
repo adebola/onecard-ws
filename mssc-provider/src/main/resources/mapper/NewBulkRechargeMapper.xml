@@ -102,7 +102,16 @@
         from bulk_individual_request_retries where id = #{id}
     </select>
 
-    <select id="findIndividualRequestById" parameterType="io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery" resultMap="individualRequestResultMap">
+    <select id="findIndividualRequestById" parameterType="java.lang.Integer" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, new_bulk_recharge_requests n, provider_services p
+        where b.bulk_request_id = n.id
+        and b.service_id = p.id
+        and b.id = #{id}
+    </select>
+
+    <select id="findIndividualRequestByQuery" parameterType="io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery" resultMap="individualRequestResultMap">
         select
         <include refid="individual_column_list"/>
         from bulk_individual_requests b, new_bulk_recharge_requests n, provider_services p
@@ -236,7 +245,30 @@
         and user_id = #{userId}
     </select>
 
-    <select id="searchIndividual" parameterType="io.factorialsystems.msscprovider.dto.SearchIndividualDto" resultMap="individualRequestResultMap">
+    <select id="searchFailedIndividual" parameterType="io.factorialsystems.msscprovider.dto.search.SearchIndividualDto" resultMap="individualRequestResultMap">
+        select
+        <include refid="individual_column_list"/>
+        from bulk_individual_requests b, provider_services p
+        where b.bulk_request_id = #{bulkId}
+        and b.service_id = p.id
+        and b.failed = true
+
+        <if test="unresolved != null">
+            and b.resolve_id is NULL
+            and b.refund_id is NULL
+            and b.successful_retry_id is NULL
+        </if>
+
+        <if test="recipient != null">
+            and b.recipient like CONCAT(#{recipient}, '%')
+        </if>
+
+        <if test="product != null">
+            and p.service_code like CONCAT(#{product}, '%')
+        </if>
+    </select>
+
+    <select id="searchIndividual" parameterType="io.factorialsystems.msscprovider.dto.search.SearchIndividualDto" resultMap="individualRequestResultMap">
         select
         <include refid="individual_column_list"/>
         from bulk_individual_requests b, provider_services p
@@ -255,12 +287,34 @@
         </if>
     </select>
 
-    <select id="search" parameterType="io.factorialsystems.msscprovider.dto.SearchBulkRechargeDto" resultMap="newBulkRechargeResultMap">
+    <select id="search" parameterType="io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto" resultMap="newBulkRechargeResultMap">
         select
         <include refid="bulk_column_list"/>
         from new_bulk_recharge_requests
         where user_id = #{userId}
 
+        <if test="searchDate != null">
+            and date(createdAt) = date(#{searchDate})
+        </if>
+
+        <if test="searchId != null">
+            and id like CONCAT(#{searchId}, '%')
+        </if>
+    </select>
+
+    <select id="adminFailedSearch" parameterType="io.factorialsystems.msscprovider.dto.search.SearchBulkFailedRechargeDto" resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_column_list"/>
+        from providerdb.new_bulk_recharge_requests
+        where id in (select distinct bulk_request_id
+                     from bulk_individual_requests
+                     where failed = true
+                    <if test="unresolved != null">
+                        and resolve_id is NULL
+                        and refund_id is NULL
+                        and successful_retry_id is NULL
+                    </if>
+                     )
         <if test="searchDate != null">
             and date(createdAt) = date(#{searchDate})
         </if>
@@ -337,7 +391,8 @@
         and b.failed = true
         and b.successful_retry_id is NULL
         and b.refund_id is NULL
-        AND B.resolve_id IS NULL
+        AND b.resolve_id IS NULL
         and b.service_id = p.id
     </select>
 </mapper>
+

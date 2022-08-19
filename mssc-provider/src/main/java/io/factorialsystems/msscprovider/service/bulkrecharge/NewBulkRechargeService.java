@@ -12,9 +12,14 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.search.SearchBulkFailedRechargeDto;
+import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
+import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.NewBulkRechargeMapstructMapper;
-import io.factorialsystems.msscprovider.recharge.*;
+import io.factorialsystems.msscprovider.recharge.ParameterCheck;
+import io.factorialsystems.msscprovider.recharge.Recharge;
+import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.service.MailService;
@@ -270,6 +275,8 @@ public class NewBulkRechargeService {
             final String message = String.format("Processing Failed Recharges for %s, size %d", id, requests.size());
             log.info(message);
             bulkRetryRecharge.retryRequestsWithoutPayment(requests);
+        } else {
+            log.info("Request to retry bulk recharges for {} is empty nothing todo", id);
         }
     }
 
@@ -326,6 +333,8 @@ public class NewBulkRechargeService {
         return createIndividualDto(requests);
     }
 
+    // Search Individual Requests if a particular Bulk Recharge, searches can be made by
+    // a combination of recipient, status or product all 3 can be submitted in one request
     public PagedDto<IndividualRequestDto> searchIndividual(SearchIndividualDto dto, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<IndividualRequest> requests = newBulkRechargeMapper.searchIndividual(dto);
@@ -333,6 +342,7 @@ public class NewBulkRechargeService {
         return createIndividualDto(requests);
     }
 
+    // Search Bulk Recharges by Id or Date or Both
     public PagedDto<NewBulkRechargeRequestDto> search(SearchBulkRechargeDto dto) {
         PageHelper.startPage(dto.getPageNumber(), dto.getPageSize());
         Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.search(dto);
@@ -340,6 +350,22 @@ public class NewBulkRechargeService {
         return createDto(requests);
     }
 
+    // Search for Failed BulkRecharges
+    public PagedDto<NewBulkRechargeRequestDto> adminFailedSearch(SearchBulkFailedRechargeDto dto, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.adminFailedSearch(dto);
+
+        return createDto(requests);
+    }
+
+    public PagedDto<IndividualRequestDto> adminIndividualFailedSearch(SearchIndividualDto dto, Integer pageNumber, Integer pageSize) {
+        PageHelper.startPage(pageNumber, pageSize);
+        Page<IndividualRequest> requests = newBulkRechargeMapper.searchFailedIndividual(dto);
+
+        return createIndividualDto(requests);
+    }
+
+    // Search Bulk Recharge By Date
     public PagedDto<NewBulkRechargeRequestDto> searchByDate(Date date, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.searchByDate(new SearchByDate(date));
@@ -359,8 +385,7 @@ public class NewBulkRechargeService {
                 .orElseThrow(() -> new RuntimeException(String.format("Error Resolving Bulk Requests %s, it might have been resolved, refunded or successfully re-tried", id)));
     }
 
-    public ResolveRechargeDto resolveRecharge(String id, ResolveRechargeDto dto) {
-        dto.setRechargeId(id);
+    public ResolveRechargeDto resolveRecharge(Integer id, ResolveRechargeDto dto) {
         dto.setResolvedBy(K.getUserName());
 
         return bulkResolveRecharge.resolveIndividual(dto)

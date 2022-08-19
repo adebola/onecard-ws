@@ -376,15 +376,27 @@ BEGIN
     select provider_code, recharge_provider_code, service_action, async;
 END;
 
-create procedure sp_addRechargeProvider(IN provider_id INT, IN service_id INT)
+create procedure sp_addRechargeProvider(IN provider_id INT, IN service_id INT, IN weight_value INT)
 BEGIN
-   IF NOT EXISTS(select * from provider_services_recharge_providers
+   IF NOT EXISTS(select 1 from provider_services_recharge_providers
                  where recharge_provider_id = provider_id
                  and provider_service_id = service_id) THEN
 
-          insert into  provider_services_recharge_providers(provider_service_id, recharge_provider_id)
-          values(service_id, provider_id);
+          insert into  provider_services_recharge_providers(provider_service_id, recharge_provider_id, weight)
+          values(service_id, provider_id, weight_value);
        END IF;
+END;
+
+create procedure sp_amendRechargeProvider(IN provider_id INT, IN service_id INT, IN weight_value INT)
+BEGIN
+    IF EXISTS(select 1 from provider_services_recharge_providers
+                  where recharge_provider_id = provider_id
+                  and provider_service_id = service_id) THEN
+
+        update provider_services_recharge_providers set weight = weight_value
+        where recharge_provider_id = provider_id
+        and provider_service_id = service_id;
+    END IF;
 END;
 
 insert into service_actions (action)

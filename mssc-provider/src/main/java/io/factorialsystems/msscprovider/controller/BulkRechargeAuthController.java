@@ -2,6 +2,9 @@ package io.factorialsystems.msscprovider.controller;
 
 
 import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.search.SearchBulkFailedRechargeDto;
+import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
+import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -93,6 +96,39 @@ public class BulkRechargeAuthController {
         return new ResponseEntity<>(newBulkRechargeService.search(dto), HttpStatus.OK);
     }
 
+    @PostMapping("/individual/failed-search")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> searchFailedIndividual(@Valid @RequestBody SearchIndividualDto dto,
+                                                    @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newBulkRechargeService.adminIndividualFailedSearch(dto, pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @PostMapping("/adminfailedsearch")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> adminFailedSearch(@Valid @RequestBody SearchBulkFailedRechargeDto dto,
+                                               @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                               @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = K.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = K.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(newBulkRechargeService.adminFailedSearch(dto, pageNumber, pageSize), HttpStatus.OK);
+    }
+
     @GetMapping("/individual/{id}")
     public ResponseEntity<?> getBulkIndividualRequest(@PathVariable("id") String id,
                                                       @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
@@ -110,9 +146,9 @@ public class BulkRechargeAuthController {
     }
 
     @PostMapping("/individual/search")
-    public ResponseEntity<?> searchIndividualByStatus(@Valid @RequestBody SearchIndividualDto dto,
-                                                      @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
-                                                      @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+    public ResponseEntity<?> searchIndividual(@Valid @RequestBody SearchIndividualDto dto,
+                                              @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                              @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (pageNumber == null || pageNumber < 0) {
             pageNumber = K.DEFAULT_PAGE_NUMBER;
         }
@@ -172,7 +208,7 @@ public class BulkRechargeAuthController {
 
     @PutMapping("/individualresolve/{id}")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
-    public ResponseEntity<?> resolveFailedRequest(@PathVariable("id") String id, @Valid @RequestBody ResolveRechargeDto dto) {
+    public ResponseEntity<?> resolveFailedRequest(@PathVariable("id") Integer id, @Valid @RequestBody ResolveRechargeDto dto) {
         return new ResponseEntity<>(newBulkRechargeService.resolveRecharge(id, dto), HttpStatus.OK);
     }
 
@@ -228,8 +264,8 @@ public class BulkRechargeAuthController {
     @GetMapping("/failedunresolved/{id}")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public ResponseEntity<?> getFailedUnresolvedIndividuals(@PathVariable("id") String id,
-                                                  @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
-                                                  @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+                                                            @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                            @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
             pageNumber = K.DEFAULT_PAGE_NUMBER;

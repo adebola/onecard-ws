@@ -20,253 +20,253 @@ Generated on: 2021.12.19 at 01:39:42 PM WAT
             
         <bindings if-exists="true" scd="~tns:validationParams">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.ValidationParams"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.ValidationParams"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:validationInfo">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.ValidationInfo"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.ValidationInfo"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:transactionParams">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.TransactionParams"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.TransactionParams"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:orderDetails">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.OrderDetails"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.OrderDetails"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:baseResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.BaseResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.BaseResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:chargeWalletV2">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.ChargeWalletV2"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.ChargeWalletV2"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:chargeWalletV2Response">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.ChargeWalletV2Response"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.ChargeWalletV2Response"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:customerInfo">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.CustomerInfo"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.CustomerInfo"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:customerInfoResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.CustomerInfoResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.CustomerInfoResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:getBalance">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.GetBalance"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.GetBalance"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:getBalanceResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.GetBalanceResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.GetBalanceResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:getOrderDetailsV2">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.GetOrderDetailsV2"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.GetOrderDetailsV2"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:getOrderDetailsV2Response">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.GetOrderDetailsV2Response"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.GetOrderDetailsV2Response"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:getTransactionHistoryV2">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.GetTransactionHistoryV2"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.GetTransactionHistoryV2"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:getTransactionHistoryV2Response">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.GetTransactionHistoryV2Response"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.GetTransactionHistoryV2Response"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:login">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.Login"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.Login"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:loginResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.LoginResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.LoginResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:logout">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.Logout"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.Logout"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:logoutResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.LogoutResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.LogoutResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:notifyForReversal">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.NotifyForReversal"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.NotifyForReversal"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:notifyForReversalResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.NotifyForReversalResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.NotifyForReversalResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:notifyReversalResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.NotifyReversalResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.NotifyReversalResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:sessionResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.SessionResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.SessionResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:stagedCashin">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.StagedCashin"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.StagedCashin"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:startSession">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.StartSession"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.StartSession"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:startSessionResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.StartSessionResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.StartSessionResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:validateCustomer">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.ValidateCustomer"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.ValidateCustomer"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:validateCustomerResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.ValidateCustomerResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.ValidateCustomerResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:validatePayment">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.ValidatePayment"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.ValidatePayment"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:validatePaymentResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.ValidatePaymentResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.ValidatePaymentResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:validatePaymentResponseV2">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.ValidatePaymentResponseV2"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.ValidatePaymentResponseV2"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:walletResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.WalletResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.WalletResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:orderDetailsResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.OrderDetailsResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.OrderDetailsResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:tokenData">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.TokenData"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.TokenData"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:token">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.Token"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.Token"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:debt">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.Debt"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.Debt"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:fixed">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.Fixed"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.Fixed"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:vendStatus">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.VendStatus"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.VendStatus"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:util">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.Util"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.Util"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:billingHistoryResponse">
                   
-            <class ref="io.factorialsystems.msscprovider.wsdl.BillingHistoryResponse"/>
+            <class ref="io.factorialsystems.msscprovider.wsdl.ekedp.BillingHistoryResponse"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:transactionStatus">
                   
-            <typesafeEnumClass ref="io.factorialsystems.msscprovider.wsdl.TransactionStatus"/>
+            <typesafeEnumClass ref="io.factorialsystems.msscprovider.wsdl.ekedp.TransactionStatus"/>
                 
         </bindings>
             
         <bindings if-exists="true" scd="~tns:itronResponse">
                   
-            <typesafeEnumClass ref="io.factorialsystems.msscprovider.wsdl.ItronResponse"/>
+            <typesafeEnumClass ref="io.factorialsystems.msscprovider.wsdl.ekedp.ItronResponse"/>
                 
         </bindings>
           

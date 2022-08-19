@@ -7,8 +7,9 @@ import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
-import io.factorialsystems.msscprovider.dto.SearchBulkRechargeDto;
-import io.factorialsystems.msscprovider.dto.SearchIndividualDto;
+import io.factorialsystems.msscprovider.dto.search.SearchBulkFailedRechargeDto;
+import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
+import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
 import io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -33,7 +34,8 @@ public interface NewBulkRechargeMapper {
     Page<IndividualRequest> findPagedBulkIndividualRequests(String id);
     List<IndividualRequest> findBulkIndividualFailedRequests(String id);
     Page<NewBulkRechargeRequest> findBulkRequestByAutoId(Map<String, String> parameters);
-    IndividualRequest findIndividualRequestById(IndividualRequestQuery query);
+    IndividualRequest findIndividualRequestByQuery(IndividualRequestQuery query);
+    IndividualRequest findIndividualRequestById(Integer id);
     void saveRequestRetry(IndividualRequestRetry requestRetry);
     Boolean setIndividualRequestSuccess(Integer id);
     Page<IndividualRequest> searchIndividual(SearchIndividualDto dto);
@@ -50,4 +52,6 @@ public interface NewBulkRechargeMapper {
     Page<NewBulkRechargeRequest> findFailedRequests();
     Page<IndividualRequest> findFailedIndividuals(String id);
     Page<IndividualRequest> findFailedUnresolvedIndividuals(String id);
+    Page<NewBulkRechargeRequest> adminFailedSearch(SearchBulkFailedRechargeDto dto);
+    Page<IndividualRequest> searchFailedIndividual(SearchIndividualDto dto);
 }

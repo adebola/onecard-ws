@@ -1,7 +1,6 @@
 package io.factorialsystems.msscprovider.service.bulkrecharge.helper;
 
 import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
-import io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
@@ -160,13 +159,7 @@ public class BulkRetryRecharge {
 
     // Common Code - Load Individual Request from Database
     private Optional<IndividualRequest> getIndividualRequest(Integer id) {
-
-        IndividualRequestQuery query = IndividualRequestQuery.builder()
-                .id(id)
-                .userId(K.getUserId())
-                .build();
-
-        IndividualRequest individualRequest = newBulkRechargeMapper.findIndividualRequestById(query);
+        IndividualRequest individualRequest = newBulkRechargeMapper.findIndividualRequestById(id);
 
         if (individualRequest == null || !individualRequest.getFailed()) {
             return Optional.empty();

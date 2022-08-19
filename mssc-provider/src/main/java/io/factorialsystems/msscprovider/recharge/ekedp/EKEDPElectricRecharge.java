@@ -6,7 +6,7 @@ import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.factory.EKEDPRechargeFactory;
-import io.factorialsystems.msscprovider.wsdl.*;
+import io.factorialsystems.msscprovider.wsdl.ekedp.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
