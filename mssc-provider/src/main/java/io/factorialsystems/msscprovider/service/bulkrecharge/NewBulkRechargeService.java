@@ -11,7 +11,10 @@ import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.MailMessageDto;
+import io.factorialsystems.msscprovider.dto.PagedDto;
+import io.factorialsystems.msscprovider.dto.RequestTransactionDto;
+import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
@@ -137,6 +140,8 @@ public class NewBulkRechargeService {
             AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
                     .id(requestId)
                     .email(K.getEmail())
+                    .name(K.getUserName())
+                    .balance(requestDto.getBalance())
                     .build();
 
             log.info(String.format("Sending message for Asynchronous processing of Bulk Recharge Request (%s)", requestId));
@@ -259,7 +264,7 @@ public class NewBulkRechargeService {
             }
 
             retryFailedRecharges(id);
-            sendReport(dto);
+            sendReport(dto, request);
             refundFailedRecharges(id);
         } catch (Exception ex) {
             log.error(String.format("Unknown Error Running Bulk Recharge %s Reason %s", id, ex.getMessage()));
@@ -440,11 +445,22 @@ public class NewBulkRechargeService {
         return excelWriter.bulkRequestToExcel(individualRequests, title);
     }
 
-    private void sendReport(AsyncRechargeDto dto) {
+    private void sendReport(AsyncRechargeDto dto, NewBulkRechargeRequest request) {
+
+        if (dto.getEmail() == null || dto.getName() == null) {
+            log.info("Unable to Send E-mail for Bulk Transaction, No E-mail Address found");
+            return;
+        }
+
+       String dateString = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
+
+        final String messageBody = String.format("Dear %s\n\n Please find attached report for your Bulk Recharge\nCarried out on %s\nCurrent Balance %.2f",
+                dto.getName(), dateString, request.getTotalServiceCost());
+
         MailMessageDto mailMessageDto = MailMessageDto.builder()
-                .body("Please find attached report for recent Bulk Recharge")
+                .body(messageBody)
                 .to(dto.getEmail())
-                .subject("Recharge Report")
+                .subject("Bulk Recharge Report")
                 .build();
 
         InputStreamResource resource = new InputStreamResource(generateExcelFile(dto.getId()));
