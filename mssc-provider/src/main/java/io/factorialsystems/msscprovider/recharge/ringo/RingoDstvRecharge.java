@@ -1,8 +1,8 @@
 package io.factorialsystems.msscprovider.recharge.ringo;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.ExtraDataPlanDto;
-import io.factorialsystems.msscprovider.dto.ExtraPlanRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.ExtraDataPlanDto;
+import io.factorialsystems.msscprovider.dto.recharge.ExtraPlanRequestDto;
 import io.factorialsystems.msscprovider.recharge.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

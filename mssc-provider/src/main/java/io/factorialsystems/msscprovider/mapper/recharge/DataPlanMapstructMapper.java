@@ -1,8 +1,8 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
 import io.factorialsystems.msscprovider.domain.RingoDataPlan;
-import io.factorialsystems.msscprovider.dto.DataPlanDto;
-import io.factorialsystems.msscprovider.dto.SpectranetRingoDataPlan;
+import io.factorialsystems.msscprovider.dto.recharge.DataPlanDto;
+import io.factorialsystems.msscprovider.dto.recharge.SpectranetRingoDataPlan;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

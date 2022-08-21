@@ -3,7 +3,7 @@ package io.factorialsystems.msscprovider.mapper.provider;
 import io.factorialsystems.msscprovider.dao.ProviderCategoryMapper;
 import io.factorialsystems.msscprovider.domain.Provider;
 import io.factorialsystems.msscprovider.domain.ProviderCategory;
-import io.factorialsystems.msscprovider.dto.ProviderDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 

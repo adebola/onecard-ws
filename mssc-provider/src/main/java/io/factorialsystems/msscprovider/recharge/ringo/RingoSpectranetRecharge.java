@@ -2,9 +2,10 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.factorialsystems.msscprovider.config.CacheProxy;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.DataPlanDto;
-import io.factorialsystems.msscprovider.dto.SpectranetRingoDataPlan;
+import io.factorialsystems.msscprovider.dto.recharge.DataPlanDto;
+import io.factorialsystems.msscprovider.dto.recharge.SpectranetRingoDataPlan;
 import io.factorialsystems.msscprovider.mapper.recharge.DataPlanMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.DataEnquiry;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
@@ -31,6 +32,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class RingoSpectranetRecharge implements Recharge, DataEnquiry, ParameterCheck {
+    private final CacheProxy cacheProxy;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final RingoProperties properties;
@@ -88,7 +90,8 @@ public class RingoSpectranetRecharge implements Recharge, DataEnquiry, Parameter
     @Override
     @Cacheable("spectranetdataplans")
     public List<DataPlanDto> getDataPlans(String planCode) {
-        log.info("Retrieving Data Plan for Spectranet");
+        log.info("Retrieving Data Plan for Spectranet code {}", planCode);
+
         FetchSpectranetDataDto fetchSpectranetDataDto = FetchSpectranetDataDto.builder()
                 .serviceCode("V-Internet")
                 .type("SPECTRANET")
@@ -118,7 +121,9 @@ public class RingoSpectranetRecharge implements Recharge, DataEnquiry, Parameter
 
     @Override
     public DataPlanDto getPlan(String id, String planCode) {
-        return getDataPlans(planCode).stream()
+        log.info("Retrieving single spectranet data plan for id {}, code {}", id, planCode);
+
+        return cacheProxy.getRingoSpectranetDataPlans(planCode).stream()
                 .filter(p -> p.getProduct_id().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException(String.format("Unable to load Spwctranet Data Plan %s", id)));

@@ -5,7 +5,7 @@ import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscprovider.dao.ProviderCategoryMapper;
 import io.factorialsystems.msscprovider.domain.ProviderCategory;
 import io.factorialsystems.msscprovider.mapper.category.ProviderCategoryMapstructMapper;
-import io.factorialsystems.msscprovider.dto.ProviderCategoryDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderCategoryDto;
 import io.factorialsystems.msscprovider.dto.PagedDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

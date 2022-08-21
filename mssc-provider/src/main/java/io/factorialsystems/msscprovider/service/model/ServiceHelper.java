@@ -1,7 +1,7 @@
 package io.factorialsystems.msscprovider.service.model;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
-import io.factorialsystems.msscprovider.dto.PaymentRequestDto;
+import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.slf4j.Slf4j;

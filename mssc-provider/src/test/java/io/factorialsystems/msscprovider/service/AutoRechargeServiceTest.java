@@ -1,8 +1,8 @@
 package io.factorialsystems.msscprovider.service;
 
-import io.factorialsystems.msscprovider.dto.AutoIndividualRequestDto;
-import io.factorialsystems.msscprovider.dto.AutoRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.AutoRechargeResponseDto;
+import io.factorialsystems.msscprovider.dto.recharge.AutoIndividualRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.AutoRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.AutoRechargeResponseDto;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;

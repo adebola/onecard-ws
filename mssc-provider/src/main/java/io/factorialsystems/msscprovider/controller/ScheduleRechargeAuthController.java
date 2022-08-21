@@ -2,8 +2,8 @@ package io.factorialsystems.msscprovider.controller;
 
 
 import io.factorialsystems.msscprovider.dto.DateDto;
-import io.factorialsystems.msscprovider.dto.MessageDto;
-import io.factorialsystems.msscprovider.dto.NewScheduledRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
+import io.factorialsystems.msscprovider.dto.recharge.NewScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.service.NewScheduledRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;

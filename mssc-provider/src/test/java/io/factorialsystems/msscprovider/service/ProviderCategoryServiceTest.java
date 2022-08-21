@@ -1,7 +1,7 @@
 package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dto.PagedDto;
-import io.factorialsystems.msscprovider.dto.ProviderCategoryDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderCategoryDto;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

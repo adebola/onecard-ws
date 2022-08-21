@@ -1,7 +1,8 @@
 package io.factorialsystems.msscprovider.recharge.smile;
 
+import io.factorialsystems.msscprovider.config.CacheProxy;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.DataPlanDto;
+import io.factorialsystems.msscprovider.dto.recharge.DataPlanDto;
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.wsdl.smile.*;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.ws.soap.client.SoapFaultClientException;
 
 import javax.xml.bind.JAXBElement;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,28 +24,37 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class SmileDataRecharge implements Recharge, ParameterCheck, Balance, DataEnquiry, ReQuery {
+    private final CacheProxy cacheProxy;
     private final SmileProperties properties;
     private final ObjectFactory objectFactory;
     private final WebServiceTemplate webServiceTemplate;
 
     @Override
     public BigDecimal getBalance() {
-        final String sessionId = startSession()
-                .orElseThrow(() -> new RuntimeException("Error Loading Smile Session Id"));
+        Optional<String> optionalSession = this.startSession();
 
-        BalanceQuery balanceQuery = new BalanceQuery();
-        TPGWContext context = new TPGWContext();
-        context.setSessionId(sessionId);
-        balanceQuery.setTPGWContext(context);
-        balanceQuery.setAccountId(Long.parseLong(properties.getSourceAccount()));
+        if (optionalSession.isPresent()) {
+            String sessionId = optionalSession.get();
+            BalanceQuery balanceQuery = new BalanceQuery();
+            TPGWContext context = new TPGWContext();
+            context.setSessionId(sessionId);
+            balanceQuery.setTPGWContext(context);
+            balanceQuery.setAccountId(Long.parseLong(properties.getSourceAccount()));
 
-        JAXBElement<BalanceQuery> jaxbElement = objectFactory.createBalanceQuery(balanceQuery);
+            JAXBElement<BalanceQuery> jaxbElement = objectFactory.createBalanceQuery(balanceQuery);
 
-        JAXBElement<BalanceResult> result =
-                (JAXBElement<BalanceResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
+            try {
+                JAXBElement<BalanceResult> result =
+                        (JAXBElement<BalanceResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
 
-        if (result != null && result.getValue() != null) {
-            return BigDecimal.valueOf(result.getValue().getAvailableBalanceInCents() / 100);
+                if (result != null && result.getValue() != null) {
+                    return BigDecimal.valueOf(result.getValue().getAvailableBalanceInCents() / 100);
+                }
+            } catch (SoapFaultClientException faultClientException) {
+                log.error("Error Retrieving Smile Balance");
+                log.error(faultClientException.getMessage());
+                log.error(faultClientException.getFaultStringOrReason());
+            }
         }
 
         return BigDecimal.ZERO;
@@ -82,41 +93,53 @@ public class SmileDataRecharge implements Recharge, ParameterCheck, Balance, Dat
         String errorMessage = null;
 
         try {
-            final String sessionId = startSession()
-                    .orElseThrow(() -> new RuntimeException("Error Loading Smile Session Id"));
+            Optional<String> optionalSession = this.startSession();
 
-            Optional<SmileCustomer> customer = validateAccount(request.getRecipient(), sessionId);
+            if (optionalSession.isPresent()) {
+                String sessionId = optionalSession.get();
 
-            if (customer.isEmpty()) {
-                return RechargeStatus.builder()
-                        .status(HttpStatus.BAD_REQUEST)
-                        .message(String.format("Invalid Customer Id %s", request.getRecipient()))
-                        .build();
-            }
+                Optional<SmileCustomer> customer = validateAccount(request.getRecipient(), sessionId);
 
-            BuyBundle buyBundle = new BuyBundle();
-            buyBundle.setUniqueTransactionId(request.getId());
-            buyBundle.setBundleTypeCode(Integer.parseInt(request.getProductId()));
-            buyBundle.setQuantityBought(1);
-            buyBundle.setCustomerAccountId(Long.parseLong(request.getRecipient()));
-            buyBundle.setCustomerTenderedAmountInCents(request.getServiceCost().multiply(BigDecimal.valueOf(100)).doubleValue());
+                if (customer.isEmpty()) {
+                    return RechargeStatus.builder()
+                            .status(HttpStatus.BAD_REQUEST)
+                            .message(String.format("Error Validating Customer %s", request.getRecipient()))
+                            .build();
+                }
 
-            TPGWContext tpgwContext = new TPGWContext();
-            tpgwContext.setSessionId(sessionId);
+                BuyBundle buyBundle = new BuyBundle();
+                buyBundle.setUniqueTransactionId(request.getId());
+                buyBundle.setBundleTypeCode(Integer.parseInt(request.getProductId()));
+                buyBundle.setQuantityBought(1);
+                buyBundle.setCustomerAccountId(Long.parseLong(request.getRecipient()));
+                buyBundle.setCustomerTenderedAmountInCents(request.getServiceCost().multiply(BigDecimal.valueOf(100)).doubleValue());
 
-            buyBundle.setTPGWContext(tpgwContext);
+                TPGWContext tpgwContext = new TPGWContext();
+                tpgwContext.setSessionId(sessionId);
 
-            JAXBElement<BuyBundle> jaxbElement = objectFactory.createBuyBundle(buyBundle);
+                buyBundle.setTPGWContext(tpgwContext);
 
-            JAXBElement<BuyBundleResult> result =
-                    (JAXBElement<BuyBundleResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
+                JAXBElement<BuyBundle> jaxbElement = objectFactory.createBuyBundle(buyBundle);
 
-            if (result != null && result.getValue() != null) {
-                log.info(String.format("Smile data Recharge for (%s) Successful Plan (%s)", request.getRecipient(), request.getProductId()));
-                return RechargeStatus.builder()
-                        .status(HttpStatus.OK)
-                        .message("Smile Data Recharge Successful")
-                        .build();
+                try {
+                    JAXBElement<BuyBundleResult> result =
+                            (JAXBElement<BuyBundleResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
+
+                    if (result != null && result.getValue() != null) {
+                        log.info(String.format("Smile data Recharge for (%s) Successful Plan (%s)", request.getRecipient(), request.getProductId()));
+
+                        return RechargeStatus.builder()
+                                .status(HttpStatus.OK)
+                                .message("Smile Data Recharge Successful")
+                                .build();
+                    }
+                } catch (SoapFaultClientException faultClientException) {
+                    log.error("Error Recharging {}", request.getId());
+                    log.error(faultClientException.getMessage());
+                    log.error(faultClientException.getFaultStringOrReason());
+
+                    errorMessage = String.format("Reason: %s, Message: %s", faultClientException.getFaultStringOrReason(), faultClientException.getMessage());
+                }
             }
         } catch (Exception ex) {
             errorMessage = ex.getMessage();
@@ -131,6 +154,98 @@ public class SmileDataRecharge implements Recharge, ParameterCheck, Balance, Dat
                 .status(HttpStatus.BAD_REQUEST)
                 .message(errorMessage)
                 .build();
+    }
+
+    @Override
+    @Cacheable("smiledataplans")
+    public List<DataPlanDto> getDataPlans(String planCode) {
+        log.info("Getting Smile Data Plans code {}", planCode);
+
+        Optional<String> optionalSession = startSession();
+
+        if (optionalSession.isPresent()) {
+            final String sessionId = optionalSession.get();
+
+            BundleCatalogueQuery bundleCatalogueQuery = new BundleCatalogueQuery();
+            TPGWContext context = new TPGWContext();
+            context.setSessionId(sessionId);
+            bundleCatalogueQuery.setTPGWContext(context);
+
+            JAXBElement<BundleCatalogueQuery> jaxbElement = objectFactory.createBundleCatalogueQuery(bundleCatalogueQuery);
+
+            JAXBElement<BundleCatalogueResult> result =
+                    (JAXBElement<BundleCatalogueResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
+
+            if (result != null && result.getValue() != null) {
+                BundleCatalogueResult bundleCatalogueResult = result.getValue();
+                return bundleCatalogueResult.getBundleList().getBundle().stream()
+                        .map(bundle -> {
+                            return DataPlanDto.builder()
+                                    .price(String.valueOf(bundle.getBundlePrice() / 100))
+                                    .network("SMILE")
+                                    .product_id(String.valueOf(bundle.getBundleTypeCode()))
+                                    .validity(String.valueOf(bundle.getValidityDays()))
+                                    .allowance(bundle.getBundleDescription())
+                                    .build();
+                        }).collect(Collectors.toList());
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    @Override
+    public DataPlanDto getPlan(String id, String planCode) {
+        log.info("Retrieving single smile data plan for id {}, code {}", id, planCode);
+
+        return cacheProxy.getSmileDataPlans(planCode).stream()
+                .filter(d -> d.getProduct_id().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(String.format("Unable to load Smile Data Plan %s", id)));
+    }
+
+    @Override
+    public ReQueryRequestStatus reQueryRequest(ReQueryRequest request) {
+        Optional<String> optionalSession = startSession();
+
+        if (optionalSession.isPresent()) {
+            TransactionStatusQuery transactionStatusQuery = new TransactionStatusQuery();
+            transactionStatusQuery.setUniqueTransactionId(request.getId());
+
+            TPGWContext context = new TPGWContext();
+            context.setSessionId(optionalSession.get());
+            transactionStatusQuery.setTPGWContext(context);
+
+            JAXBElement<TransactionStatusQuery> jaxbElement = objectFactory.createTransactionStatusQuery(transactionStatusQuery);
+
+            try {
+                JAXBElement<TransactionStatusResult> result =
+                        (JAXBElement<TransactionStatusResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
+
+                if (result != null && result.getValue() != null) {
+                    TransactionStatusResult transactionStatusResult = result.getValue();
+
+                   if (transactionStatusResult.getTransactionStatus() != null) {
+                       switch (transactionStatusResult.getTransactionStatus()) {
+                           case "SUCCESSFUL":
+                               return ReQueryRequestStatus.SUCCESSFUL;
+
+                           case "NOT FOUND":
+                               return ReQueryRequestStatus.NOTFOUND;
+
+                           case "FAILED":
+                               return ReQueryRequestStatus.FAILED;
+                       }
+                   }
+                }
+            } catch (SoapFaultClientException faultClientException) {
+                log.error("Error ReQuerying Recharging {}", request.getId());
+                log.error(faultClientException.getMessage());
+                log.error(faultClientException.getFaultStringOrReason());
+            }
+        }
+
+        return ReQueryRequestStatus.UNKNOWN;
     }
 
     private Optional<SmileCustomer> validateAccount(String recipient, String sessionId) {
@@ -148,8 +263,12 @@ public class SmileDataRecharge implements Recharge, ParameterCheck, Balance, Dat
         try {
             result =
                     (JAXBElement<ValidateAccountResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
-        } catch (SoapFaultClientException so) {
-            return  Optional.empty();
+        } catch (SoapFaultClientException faultClientException) {
+            log.error("Error Validating Soap Customer {}", recipient);
+            log.error(faultClientException.getMessage());
+            log.error(faultClientException.getFaultStringOrReason());
+
+            return Optional.empty();
         }
 
         if (result != null && result.getValue() != null) {
@@ -169,63 +288,18 @@ public class SmileDataRecharge implements Recharge, ParameterCheck, Balance, Dat
 
         JAXBElement<Authenticate> jaxbElement = objectFactory.createAuthenticate(authenticate);
 
-        JAXBElement<AuthenticateResult> result =
-                (JAXBElement<AuthenticateResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
+        try {
+            JAXBElement<AuthenticateResult> result =
+                    (JAXBElement<AuthenticateResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
 
-        if (result != null && result.getValue() != null && result.getValue().getSessionId() != null) {
-            return Optional.of(result.getValue().getSessionId());
+            if (result != null && result.getValue() != null && result.getValue().getSessionId() != null) {
+                return Optional.of(result.getValue().getSessionId());
+            }
+        } catch (SoapFaultClientException faultClientException) {
+            log.error(faultClientException.getMessage());
+            log.error(faultClientException.getFaultStringOrReason());
         }
 
         return Optional.empty();
-    }
-
-    @Override
-    @Cacheable("smiledataplans")
-    public List<DataPlanDto> getDataPlans(String planCode) {
-        log.info("Getting Smile Data Plans");
-
-        final String sessionId = startSession()
-                .orElseThrow(() -> new RuntimeException("Error Loading Smile Session Id in Data Plan Request"));
-
-        BundleCatalogueQuery bundleCatalogueQuery = new BundleCatalogueQuery();
-        TPGWContext context = new TPGWContext();
-        context.setSessionId(sessionId);
-        bundleCatalogueQuery.setTPGWContext(context);
-
-        JAXBElement<BundleCatalogueQuery> jaxbElement = objectFactory.createBundleCatalogueQuery(bundleCatalogueQuery);
-
-        JAXBElement<BundleCatalogueResult> result =
-                (JAXBElement<BundleCatalogueResult>) webServiceTemplate.marshalSendAndReceive(properties.getUrl(), jaxbElement);
-
-        if (result != null && result.getValue() != null) {
-            BundleCatalogueResult bundleCatalogueResult = result.getValue();
-            return bundleCatalogueResult.getBundleList().getBundle().stream()
-                    .map(bundle -> {
-                        return DataPlanDto.builder()
-                                .price(String.valueOf(bundle.getBundlePrice() / 100))
-                                .network("SMILE")
-                                .product_id(String.valueOf(bundle.getBundleTypeCode()))
-                                .validity(String.valueOf(bundle.getValidityDays()))
-                                .allowance(bundle.getBundleDescription())
-                                .build();
-                    }).collect(Collectors.toList());
-        }
-
-        return null;
-    }
-
-    @Override
-    public DataPlanDto getPlan(String id, String planCode) {
-        log.info("Retrieving single smile data plan for id {}", id);
-
-        return getDataPlans(planCode).stream()
-                .filter(d -> d.getProduct_id().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException(String.format("Unable to load Smile Data Plan %s", id)));
-    }
-
-    @Override
-    public String reQueryRequest(ReQueryRequest request) {
-        return null;
     }
 }

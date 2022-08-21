@@ -13,8 +13,11 @@ import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.*;
@@ -91,6 +94,8 @@ public class SingleRechargeService {
                         AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
                                 .id(request.getId())
                                 .email(K.getEmail())
+                                .name(K.getUserName())
+                                .balance(paymentRequest.getBalance())
                                 .build();
                         jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(asyncRechargeDto));
                     } catch (JsonProcessingException e) {
@@ -122,10 +127,12 @@ public class SingleRechargeService {
                         .paymentMode(paymentRequest.getPaymentMode())
                         .redirectUrl(paymentRequest.getRedirectUrl())
                         .build();
-            } else {
+            } else { // Synchronous Wallet Payment
                 AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
                         .id(dto.getId())
                         .email(K.getEmail())
+                        .name(K.getUserName())
+                        .balance(paymentRequest.getBalance())
                         .build();
 
                 RechargeStatus status = finishLocalRecharge(request, asyncRechargeDto);
@@ -223,25 +230,34 @@ public class SingleRechargeService {
 
     public static void sendMail(SingleRechargeRequest request, AsyncRechargeDto dto, RechargeStatus status) {
 
-        if (dto.getEmail() == null) {
+        if (dto.getEmail() == null || dto.getName() == null) {
             log.info("Unable to Send E-mail for Transaction, No E-mail Address found");
+            return;
         }
 
         String result = null;
 
         if (status.getStatus() == HttpStatus.OK) {
-            result = "Succeeded";
+            result = " is successful";
         } else {
-            result = String.format("Failed:, Reason %s", status.getMessage());
+            result = "Failed";
+            //result = String.format("Failed:, Reason %s", status.getMessage());
         }
 
-        final String message =
-                String.format("The Recharge of %s to %s for %.2f %s", request.getServiceCode(), request.getRecipient(), request.getServiceCost(), result);
+        String message = null;
+
+        if (dto.getBalance() == null) {
+            message = String.format("Dear %s\n\nYour recharge of %s to %s for %.2f %s",
+                    dto.getName(), request.getServiceCode(), request.getRecipient(), request.getServiceCost(), result);
+        } else {
+            message = String.format("Dear %s\n\nYour recharge of %s to %s for %.2f %s current wallet balance %.2f",
+                    dto.getName(), request.getServiceCode(), request.getRecipient(), request.getServiceCost(), result,dto.getBalance());
+        }
 
         MailMessageDto mailMessageDto = MailMessageDto.builder()
                 .body(message)
                 .to(dto.getEmail())
-                .subject("Recharge Report")
+                .subject("Single Recharge Report")
                 .build();
 
         MailService mail = ApplicationContextProvider.getBean(MailService.class);
@@ -272,8 +288,6 @@ public class SingleRechargeService {
     public List<DataPlanDto> getDataPlans(String code) {
 
         ServiceAction action = serviceActionMapper.findByCode(code);
-
-//        || !Objects.equals(action.getActionId(), DATA_ACTION)
         if (action == null) {
             throw new RuntimeException(String.format("Unknown data plan (%s) Or Data Plan is not for DATA", code));
         }

@@ -1,7 +1,7 @@
 package io.factorialsystems.msscprovider.controller;
 
-import io.factorialsystems.msscprovider.dto.MessageDto;
-import io.factorialsystems.msscprovider.dto.ProviderDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
 import io.factorialsystems.msscprovider.service.ProviderService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;

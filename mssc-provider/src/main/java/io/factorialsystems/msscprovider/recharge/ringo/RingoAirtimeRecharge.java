@@ -109,7 +109,7 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, 
                 return new BigDecimal(response.getWallet().getWallet().getBalance());
             }
 
-            return new BigDecimal(0);
+            return BigDecimal.ZERO;
 
         } catch (JsonProcessingException e) {
             log.error("Ringo Recharge Exception {}", e.getMessage());
@@ -117,17 +117,8 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, 
         }
     }
 
-    private HttpHeaders getHeader() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(K.HEADER_EMAIL, ringoProperties.getMail());
-        headers.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
-
-        return headers;
-    }
-
     @Override
-    public String reQueryRequest(ReQueryRequest request) {
+    public ReQueryRequestStatus reQueryRequest(ReQueryRequest request) {
         HttpHeaders headers = getHeader();
 
         RingoReQueryRequest ringoReQueryRequest = new RingoReQueryRequest();
@@ -139,10 +130,32 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, 
             RingoReQueryResponse response =
                     restTemplate.postForObject("https://www.api.ringo.ng/api/b2brequery", entity, RingoReQueryResponse.class);
 
-            return response.getMessage();
+            if (response != null && response.getMessage() != null && !response.getMessage().isEmpty()) {
+                switch (response.getMessage()) {
+                    case "failed":
+                        return ReQueryRequestStatus.FAILED;
+
+                    case "pending":
+                        return ReQueryRequestStatus.PENDING;
+
+                    case "success":
+                        return ReQueryRequestStatus.SUCCESSFUL;
+                }
+            }
+
         } catch (JsonProcessingException e) {
             log.error("Ringo ReQuery Exception {}", e.getMessage());
-            throw new RuntimeException(e.getMessage());
         }
+
+        return ReQueryRequestStatus.UNKNOWN;
+    }
+
+    private HttpHeaders getHeader() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add(K.HEADER_EMAIL, ringoProperties.getMail());
+        headers.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
+
+        return headers;
     }
 }

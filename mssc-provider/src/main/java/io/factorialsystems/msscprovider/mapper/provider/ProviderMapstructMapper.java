@@ -2,7 +2,7 @@ package io.factorialsystems.msscprovider.mapper.provider;
 
 import io.factorialsystems.msscprovider.domain.Provider;
 import io.factorialsystems.msscprovider.mapper.DateMapper;
-import io.factorialsystems.msscprovider.dto.ProviderDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -4,7 +4,7 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.NewScheduledRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.NewScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

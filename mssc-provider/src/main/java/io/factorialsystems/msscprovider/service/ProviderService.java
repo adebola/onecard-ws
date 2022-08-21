@@ -5,7 +5,7 @@ import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscprovider.dao.ProviderMapper;
 import io.factorialsystems.msscprovider.domain.Provider;
 import io.factorialsystems.msscprovider.dto.PagedDto;
-import io.factorialsystems.msscprovider.dto.ProviderDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
 import io.factorialsystems.msscprovider.mapper.provider.ProviderMapstructMapper;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;

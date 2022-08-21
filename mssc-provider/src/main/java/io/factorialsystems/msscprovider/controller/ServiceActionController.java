@@ -2,7 +2,7 @@ package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.domain.Action;
 import io.factorialsystems.msscprovider.domain.ProviderServiceRechargeProvider;
-import io.factorialsystems.msscprovider.dto.MessageDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.dto.ServiceActionDto;
 import io.factorialsystems.msscprovider.service.ServiceActionService;
 import io.factorialsystems.msscprovider.utils.K;

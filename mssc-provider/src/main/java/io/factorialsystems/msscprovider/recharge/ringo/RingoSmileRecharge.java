@@ -3,10 +3,11 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.factorialsystems.msscprovider.config.CacheProxy;
 import io.factorialsystems.msscprovider.dao.RingoDataPlanMapper;
 import io.factorialsystems.msscprovider.domain.RingoDataPlan;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.DataPlanDto;
+import io.factorialsystems.msscprovider.dto.recharge.DataPlanDto;
 import io.factorialsystems.msscprovider.mapper.recharge.DataPlanMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.DataEnquiry;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
@@ -34,6 +35,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class RingoSmileRecharge implements Recharge, DataEnquiry, ParameterCheck {
+    private CacheProxy cacheProxy;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final RingoProperties properties;
@@ -49,7 +51,7 @@ public class RingoSmileRecharge implements Recharge, DataEnquiry, ParameterCheck
 
     @Override
     public DataPlanDto getPlan(String id, String planCode) {
-        return getDataPlans(planCode).stream()
+        return cacheProxy.getRingoSmileDataPlans(planCode).stream()
                 .filter(p -> p.getProduct_id().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException(String.format("Unable to load Ringo Smile Data Plan %s", id)));

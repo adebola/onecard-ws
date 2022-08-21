@@ -8,7 +8,7 @@ import io.factorialsystems.msscprovider.domain.ProviderServiceRechargeProvider;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.ServiceActionDto;
-import io.factorialsystems.msscprovider.dto.StatusMessageDto;
+import io.factorialsystems.msscprovider.dto.status.StatusMessageDto;
 import io.factorialsystems.msscprovider.mapper.action.ServiceActionMapstructMapper;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;

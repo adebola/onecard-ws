@@ -2,7 +2,7 @@ package io.factorialsystems.msscprovider.mapper.recharge;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest;
-import io.factorialsystems.msscprovider.dto.NewScheduledRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.NewScheduledRechargeRequestDto;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

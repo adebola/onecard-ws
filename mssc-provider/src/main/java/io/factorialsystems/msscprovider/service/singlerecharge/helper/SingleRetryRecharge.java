@@ -5,13 +5,10 @@ import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequestRetry;
-import io.factorialsystems.msscprovider.dto.AsyncRechargeDto;
-import io.factorialsystems.msscprovider.dto.SimpleUserDto;
+import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
+import io.factorialsystems.msscprovider.dto.user.SimpleUserDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
-import io.factorialsystems.msscprovider.recharge.ReQuery;
-import io.factorialsystems.msscprovider.recharge.ReQueryRequest;
-import io.factorialsystems.msscprovider.recharge.Recharge;
-import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
@@ -85,9 +82,9 @@ public class SingleRetryRecharge {
 
             ReQueryRequest reQueryRequest = new ReQueryRequest();
             reQueryRequest.setId(request.getId());
-            String result = reQuery.reQueryRequest(reQueryRequest);
+            ReQueryRequestStatus result = reQuery.reQueryRequest(reQueryRequest);
 
-            if (result.equalsIgnoreCase("failed")) {
+            if (result == ReQueryRequestStatus.FAILED) {
                 final String retryId = UUID.randomUUID().toString();
 
                 // temporarily reset the id for the request, it will be used as unique identifier in the recharge

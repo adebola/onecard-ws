@@ -2,8 +2,8 @@ package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.service.ProviderCategoryService;
 import io.factorialsystems.msscprovider.utils.K;
-import io.factorialsystems.msscprovider.dto.MessageDto;
-import io.factorialsystems.msscprovider.dto.ProviderCategoryDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderCategoryDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;

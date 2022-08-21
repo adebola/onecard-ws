@@ -2,8 +2,8 @@ package io.factorialsystems.msscprovider.mapper.recharge;
 
 import io.factorialsystems.msscprovider.domain.RechargeProvider;
 import io.factorialsystems.msscprovider.domain.RechargeProviderEx;
-import io.factorialsystems.msscprovider.dto.RechargeProviderDto;
-import io.factorialsystems.msscprovider.dto.RechargeProviderExDto;
+import io.factorialsystems.msscprovider.dto.provider.RechargeProviderDto;
+import io.factorialsystems.msscprovider.dto.provider.RechargeProviderExDto;
 import io.factorialsystems.msscprovider.mapper.DateMapper;
 import org.mapstruct.Mapper;
 

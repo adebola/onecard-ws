@@ -2,8 +2,8 @@ package io.factorialsystems.msscprovider.mapper.recharge;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
-import io.factorialsystems.msscprovider.dto.IndividualRequestDto;
-import io.factorialsystems.msscprovider.dto.NewBulkRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.NewBulkRechargeRequestDto;
 import io.factorialsystems.msscprovider.utils.K;
 import org.springframework.beans.factory.annotation.Autowired;
 

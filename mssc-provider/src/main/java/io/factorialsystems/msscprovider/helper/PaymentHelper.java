@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.helper;
 
-import io.factorialsystems.msscprovider.dto.PaymentRequestDto;
+import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.*;

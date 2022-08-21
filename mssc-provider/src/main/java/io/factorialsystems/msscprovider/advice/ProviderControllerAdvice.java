@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.advice;
 
-import io.factorialsystems.msscprovider.dto.MessageDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.exception.FileFormatException;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;

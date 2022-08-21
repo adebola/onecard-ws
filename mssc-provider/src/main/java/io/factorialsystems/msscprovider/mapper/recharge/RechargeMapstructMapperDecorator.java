@@ -4,8 +4,8 @@ import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.ScheduledRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.ScheduledRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.utils.K;
 import org.springframework.beans.factory.annotation.Autowired;
 

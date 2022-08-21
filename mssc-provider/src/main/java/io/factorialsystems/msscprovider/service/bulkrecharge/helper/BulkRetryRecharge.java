@@ -4,7 +4,7 @@ import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.StatusMessageDto;
+import io.factorialsystems.msscprovider.dto.status.StatusMessageDto;
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -59,11 +59,11 @@ public class BulkRetryRecharge {
 
         ReQueryRequest reQueryRequest = new ReQueryRequest();
         reQueryRequest.setId(individualRequest.getExternalRequestId());
-        String result = reQuery.get().reQueryRequest(reQueryRequest);
+        ReQueryRequestStatus result = reQuery.get().reQueryRequest(reQueryRequest);
 
         log.info(String.format("Query Bulk Individual Recharge %d result %s", individualRequest.getId(), result));
 
-        if (result.equalsIgnoreCase("failed")) {
+        if (result == ReQueryRequestStatus.FAILED) {
             final String requestRetryId = UUID.randomUUID().toString();
 
             SingleRechargeRequest singleRechargeRequest = SingleRechargeRequest.builder()

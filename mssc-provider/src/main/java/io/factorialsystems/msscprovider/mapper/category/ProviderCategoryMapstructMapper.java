@@ -6,7 +6,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 
 import io.factorialsystems.msscprovider.domain.ProviderCategory;
-import io.factorialsystems.msscprovider.dto.ProviderCategoryDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderCategoryDto;
 
 import java.util.List;
 

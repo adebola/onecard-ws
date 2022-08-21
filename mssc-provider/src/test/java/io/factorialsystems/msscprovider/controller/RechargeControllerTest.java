@@ -1,13 +1,11 @@
 package io.factorialsystems.msscprovider.controller;
 
-import io.factorialsystems.msscprovider.dto.SingleRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @CommonsLog
 class RechargeControllerTest {

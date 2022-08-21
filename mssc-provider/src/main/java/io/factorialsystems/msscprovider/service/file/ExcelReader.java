@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.service.file;
 
-import io.factorialsystems.msscprovider.dto.IndividualRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
 import io.factorialsystems.msscprovider.exception.FileFormatException;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.slf4j.Slf4j;

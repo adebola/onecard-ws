@@ -4,7 +4,7 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.AutoIndividualReq
 import io.factorialsystems.msscprovider.domain.rechargerequest.AutoRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.ShortAutoRechargeRequest;
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.mapper.DateMapper;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;

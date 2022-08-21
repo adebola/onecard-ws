@@ -4,7 +4,7 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.AutoIndividualReq
 import io.factorialsystems.msscprovider.domain.rechargerequest.AutoRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.ShortAutoRechargeRequest;
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.service.AutoRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
 import org.springframework.beans.factory.annotation.Autowired;

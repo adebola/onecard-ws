@@ -4,7 +4,7 @@ import io.factorialsystems.msscprovider.service.ProviderService;
 import io.factorialsystems.msscprovider.service.ServiceActionService;
 import io.factorialsystems.msscprovider.utils.K;
 import io.factorialsystems.msscprovider.dto.PagedDto;
-import io.factorialsystems.msscprovider.dto.ProviderDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
 import io.factorialsystems.msscprovider.dto.ServiceActionDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

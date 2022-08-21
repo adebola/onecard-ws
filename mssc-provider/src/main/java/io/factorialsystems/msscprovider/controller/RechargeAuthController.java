@@ -1,8 +1,12 @@
 package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
+import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeResponseDto;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.utils.K;
@@ -33,6 +37,7 @@ public class RechargeAuthController {
                 AsyncRechargeDto.builder()
                         .id(id)
                         .email(K.getEmail())
+                        .name(K.getUserName())
                         .build()
         );
 

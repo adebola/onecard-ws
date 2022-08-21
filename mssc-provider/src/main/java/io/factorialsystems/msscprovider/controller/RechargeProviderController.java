@@ -1,7 +1,7 @@
 package io.factorialsystems.msscprovider.controller;
 
-import io.factorialsystems.msscprovider.dto.RechargeProviderDto;
-import io.factorialsystems.msscprovider.dto.RechargeProviderExDto;
+import io.factorialsystems.msscprovider.dto.provider.RechargeProviderDto;
+import io.factorialsystems.msscprovider.dto.provider.RechargeProviderExDto;
 import io.factorialsystems.msscprovider.service.RechargeProviderService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;

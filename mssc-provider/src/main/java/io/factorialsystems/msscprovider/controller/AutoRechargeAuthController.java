@@ -1,7 +1,7 @@
 package io.factorialsystems.msscprovider.controller;
 
-import io.factorialsystems.msscprovider.dto.AutoRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.AutoUploadFileRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.AutoRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.AutoUploadFileRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.DateDto;
 import io.factorialsystems.msscprovider.service.AutoRechargeService;
 import io.factorialsystems.msscprovider.utils.K;

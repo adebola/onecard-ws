@@ -2,16 +2,17 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.factorialsystems.msscprovider.config.CacheProxy;
 import io.factorialsystems.msscprovider.dao.RingoDataPlanMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.DataPlanDto;
-import io.factorialsystems.msscprovider.recharge.ringo.dto.FetchDataDto;
+import io.factorialsystems.msscprovider.dto.recharge.DataPlanDto;
 import io.factorialsystems.msscprovider.mapper.recharge.DataPlanMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.DataEnquiry;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.factory.RingoRechargeFactory;
+import io.factorialsystems.msscprovider.recharge.ringo.dto.FetchDataDto;
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoDataRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoDataResponse;
 import io.factorialsystems.msscprovider.utils.K;
@@ -31,6 +32,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class RingoMobileDataRecharge implements Recharge, DataEnquiry, ParameterCheck {
+    private final CacheProxy cacheProxy;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final RingoProperties ringoProperties;
@@ -89,6 +91,8 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
     @Override
     @Cacheable("ringodataplans")
     public List<DataPlanDto> getDataPlans(String requestCode) {
+        log.info("Retrieving Data Plan for Ringo code {}", requestCode);
+
         String network = RingoRechargeFactory.codeMapper.get(requestCode);
 
         if (network == null) {
@@ -107,8 +111,6 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
             DataPlanDto[] response =
                     restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, DataPlanDto[].class);
 
-            log.info(String.format("Retrieving Data Plan for Network %s", network));
-
             return List.of(response != null ? response : new DataPlanDto[0]);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e.getMessage());
@@ -117,7 +119,9 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
 
     @Override
     public DataPlanDto getPlan(String id, String requestCode) {
-        return getDataPlans(requestCode).stream()
+        log.info("Retrieving single ringo data plan for id {}, code {}", id, requestCode);
+
+        return cacheProxy.getRingoMobileDataPlans(requestCode).stream()
                 .filter(p -> p.getProduct_id().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException(String.format("Unable to load Ringo Data Plan %s", id)));

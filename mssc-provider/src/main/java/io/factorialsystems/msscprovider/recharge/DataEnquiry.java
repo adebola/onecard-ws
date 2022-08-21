@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.recharge;
 
-import io.factorialsystems.msscprovider.dto.DataPlanDto;
+import io.factorialsystems.msscprovider.dto.recharge.DataPlanDto;
 
 import java.util.List;
 
