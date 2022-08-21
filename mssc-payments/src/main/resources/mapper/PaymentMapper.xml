@@ -15,6 +15,7 @@
         <result column="payment_created" property="paymentCreated" jdbcType="TIMESTAMP" />
         <result column="payment_verified" property="paymentVerified" jdbcType="TIMESTAMP" />
         <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
+        <result column="balance" property="balance" jdbcType="DECIMAL"/>
     </resultMap>
 
     <resultMap id="refundResultMap" type="io.factorialsystems.msscpayments.domain.RefundRequest">
@@ -38,7 +39,8 @@
         message,
         payment_created,
         payment_verified,
-        payment_mode
+        payment_mode,
+        balance
     </sql>
 
     <sql id="refund_column_list">
@@ -106,6 +108,7 @@
             <if test="message != null">message=#{message},</if>
             <if test="verified != null">verified=#{verified},</if>
             <if test="verified != null">payment_verified=NOW(),</if>
+            <if test="balance != null">balance=#{balance},</if>
         </set>
         where id = #{id}
     </update>

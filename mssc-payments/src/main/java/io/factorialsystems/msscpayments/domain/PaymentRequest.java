@@ -26,4 +26,5 @@ public class PaymentRequest {
     private Timestamp paymentCreated;
     private Timestamp paymentVerified;
     private Boolean reversed;
+    private BigDecimal balance;
 }

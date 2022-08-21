@@ -33,4 +33,7 @@ public class PaymentRequestDto {
 
     @NotNull(message = "Please select payment mode")
     private String paymentMode;
+
+    @Null
+    private BigDecimal balance;
 }

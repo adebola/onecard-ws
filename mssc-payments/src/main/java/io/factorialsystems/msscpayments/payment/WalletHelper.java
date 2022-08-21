@@ -18,7 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -69,18 +68,10 @@ public class WalletHelper implements Payment {
 
             if (Objects.equals(status, SUCCESS)) {
                 paymentRequest.setMessage("SUCCESS");
-                paymentRequest.setStatus(status);
                 paymentRequest.setVerified(true);
-                paymentRequest.setPaymentVerified(new Timestamp(System.currentTimeMillis()));
-
-                paymentMapper.update(paymentRequest);
                 log.info(String.format("Successful Wallet Payment for (%s) Amount (%.2f)", paymentRequest.getId(), paymentRequest.getAmount().doubleValue()));
-
             } else if (Objects.equals(status, INSUFFICIENT_BALANCE)) {
                 paymentRequest.setMessage("INSUFFICIENT FUNDS");
-                paymentRequest.setStatus(status);
-                paymentRequest.setVerified(false);
-
                 paymentMapper.update(paymentRequest);
                 log.error(String.format("UnSuccessful Wallet Payment for (%s) Amount (%.2f) Insufficient Funds", paymentRequest.getId(), paymentRequest.getAmount().doubleValue()));
             } else {
@@ -88,6 +79,9 @@ public class WalletHelper implements Payment {
                 throw new RuntimeException("Invalid Wallet Payment Status");
             }
 
+            paymentRequest.setStatus(status);
+            paymentRequest.setBalance(response.getBalance());
+            paymentMapper.update(paymentRequest);
         } catch (JsonProcessingException jex) {
             log.error(jex.getMessage());
             throw new RuntimeException(jex.getMessage());

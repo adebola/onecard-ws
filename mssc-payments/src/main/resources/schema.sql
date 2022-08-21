@@ -12,6 +12,7 @@ create table payment
     payment_created   timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
     payment_verified  timestamp,
     payment_mode      varchar (32)                        NOT NULL,
+    balance           decimal(10, 2),
     INDEX access_index_idx (access_code),
     PRIMARY KEY (id)
 );

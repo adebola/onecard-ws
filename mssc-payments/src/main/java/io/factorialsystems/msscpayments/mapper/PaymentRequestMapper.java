@@ -15,7 +15,8 @@ public interface PaymentRequestMapper {
             @Mapping(source = "redirectUrl", target = "redirectUrl"),
             @Mapping(source = "verified", target = "verified"),
             @Mapping(source = "message", target = "message"),
-            @Mapping(source = "status", target = "status")
+            @Mapping(source = "status", target = "status"),
+            @Mapping(source = "balance", target = "balance")
     })
     PaymentRequestDto requestToDto(PaymentRequest request);
 
@@ -28,7 +29,8 @@ public interface PaymentRequestMapper {
             @Mapping(target = "paymentCreated", ignore = true),
             @Mapping(target = "paymentVerified", ignore = true),
             @Mapping(target = "reference", ignore = true),
-            @Mapping(target = "verified", ignore = true)
+            @Mapping(target = "verified", ignore = true),
+            @Mapping(target = "balance", ignore = true)
     })
     PaymentRequest requestDtoToRequest(PaymentRequestDto dto);
 }

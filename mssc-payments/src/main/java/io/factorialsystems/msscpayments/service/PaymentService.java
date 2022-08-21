@@ -131,10 +131,10 @@ public class PaymentService {
                         .build();
             }
 
-            log.info(String.format("reversing %s Payment Id %s for %.2f", request.getPaymentMode(), request.getId(), request.getAmount()));
+            log.info(String.format("Refunding %s Payment Id %s for %.2f", request.getPaymentMode(), request.getId(), request.getAmount()));
 
             final String accessToken = Optional.ofNullable(K.getAccessToken())
-                    .orElseThrow(() -> new RuntimeException("No Access Token User Must be logged "));
+                    .orElseThrow(() -> new RuntimeException("No Access Token User Must be logged On"));
 
             RestTemplate restTemplate = new RestTemplate();
 
