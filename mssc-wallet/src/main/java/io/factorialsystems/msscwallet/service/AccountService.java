@@ -257,6 +257,7 @@ public class AccountService {
 
             return WalletResponseDto.builder()
                     .status(200)
+                    .balance(newFromBalance)
                     .message(message)
                     .build();
         } else {
@@ -450,6 +451,7 @@ public class AccountService {
 
             return WalletResponseDto.builder()
                     .message("Successful")
+                    .balance(newValue)
                     .status(200)
                     .build();
         }
