@@ -1,8 +1,10 @@
 package io.factorialsystems.mssccommunication.service.mail;
 
 import io.factorialsystems.mssccommunication.document.MailMessage;
+import io.factorialsystems.mssccommunication.domain.MailConstant;
 import io.factorialsystems.mssccommunication.dto.MailMessageDto;
 import io.factorialsystems.mssccommunication.mapper.MailMessageMapper;
+import io.factorialsystems.mssccommunication.repository.MailConstantsRepository;
 import io.factorialsystems.mssccommunication.repository.MailMessageRepository;
 import io.factorialsystems.mssccommunication.service.file.FileService;
 import io.factorialsystems.mssccommunication.service.file.UploadFile;
@@ -29,6 +31,9 @@ public class MailService {
     private final JavaMailSender mailSender;
     private final MailMessageMapper mailMessageMapper;
     private final MailMessageRepository mailMessageRepository;
+    private final MailConstantsRepository mailConstantsRepository;
+
+    private String mailFooter;
 
     @Value("${user.mail}")
     private String fromAddress;
@@ -66,8 +71,10 @@ public class MailService {
                     MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
                     StandardCharsets.UTF_8.name());
 
+            final String emailBody = String.format("%s \n\n\n\n\n\n\n\n\n\n\n %s", mail.getBody(), getMailFooter());
+
             helper.setTo(mail.getTo());
-            helper.setText(mail.getBody(), false);
+            helper.setText(emailBody, false);
             helper.setSubject(mail.getSubject());
             helper.setFrom(mail.getFrom());
 
@@ -88,5 +95,17 @@ public class MailService {
     private String extractFilename(String path) {
         String result = path.substring(path.lastIndexOf('/') + 1);
         return result.substring(result.lastIndexOf('\\') + 1);
+    }
+
+    private String getMailFooter() {
+        if (this.mailFooter == null) {
+            MailConstant mailConstant = mailConstantsRepository.getMailFooter();
+
+            if (mailConstant != null && mailConstant.getValue() != null) {
+                this.mailFooter = mailConstant.getValue();
+            }
+        }
+
+        return this.mailFooter;
     }
 }
