@@ -455,7 +455,7 @@ public class NewBulkRechargeService {
        String dateString = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
 
         final String messageBody = String.format("Dear %s\n\n Please find attached report for your Bulk Recharge\nCarried out on %s\nCurrent Balance %.2f",
-                dto.getName(), dateString, request.getTotalServiceCost());
+                dto.getName(), dateString, dto.getBalance());
 
         MailMessageDto mailMessageDto = MailMessageDto.builder()
                 .body(messageBody)
