@@ -136,12 +136,13 @@ public class UserService {
                 user.update(representation);
                 userMapper.update(u);
 
-                final String userString = u.getUsername().equals(K.getUserName()) ? "You" : "Onecard";
+                final String message = String.format("Dear %s %s\n\nYour Profile has successfully been changed",
+                        representation.getFirstName(), representation.getLastName());
 
                 MailMessageDto mailMessageDto = MailMessageDto.builder()
                         .subject("User Profile Changed")
                         .to(u.getEmail())
-                        .body(String.format("Your Profile has successfully been changed by %s", userString))
+                        .body(message)
                         .build();
 
                 mailService.sendMailWithOutAttachment(mailMessageDto);
@@ -159,11 +160,15 @@ public class UserService {
             credential.setTemporary(false);
 
             user.resetPassword(credential);
+            UserRepresentation userRepresentation = user.toRepresentation();
+
+            final String message = String.format("Dear %s %s\n\nYou have successfully changed your password",
+                    userRepresentation.getFirstName(), userRepresentation.getLastName());
 
             MailMessageDto mailMessageDto = MailMessageDto.builder()
                     .subject("User Password Changed")
-                    .to(user.toRepresentation().getEmail())
-                    .body("Your Password has been successfully changed")
+                    .to(userRepresentation.getEmail())
+                    .body(message)
                     .build();
 
             mailService.sendMailWithOutAttachment(mailMessageDto);
@@ -207,7 +212,9 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         final String date = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
-        final String message = String.format("You logged on to Onecard at %s", date);
+
+        final String message = String.format("Dear %s %s\n\nYou have successfully logged on to your Onecard Recharge Suite.\n%s",
+                user.getFirstName(), user.getLastName(), date);
 
         MailMessageDto mailMessageDto = MailMessageDto.builder()
                 .subject("Onecard Login Alert")
@@ -332,6 +339,16 @@ public class UserService {
 
             userMapper.addRoles(parameters);
         }
+    }
+
+    public UserIdListDto getUserNameListFromIds(UserIdListDto dto) {
+        List<String> ids = dto.getEntries()
+                .stream()
+                .map(UserEntryDto::getId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        return new UserIdListDto(userMapper.getUserNamesFromIds(ids));
     }
 
     public PagedDto<KeycloakUserDto> findUserByOrganizationId(String id, Integer pageNumber, Integer pageSize) {

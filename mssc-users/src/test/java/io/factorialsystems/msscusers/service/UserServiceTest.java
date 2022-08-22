@@ -10,6 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @CommonsLog
@@ -150,6 +153,16 @@ class UserServiceTest {
 //        String[] role = {"6da965d4-b6db-426a-9918-179bfcde04e6"};
 //
 //        userService.removeRoles(id, role);
+    }
+
+    @Test
+    void userNameList() {
+       List<String> ids = Arrays.asList("28e05596-9ad0-4187-ac11-fd93fb7701af", "3ad67afe-77e7-11ec-825f-5c5181925b12");
+
+        //String[] ids = {"28e05596-9ad0-4187-ac11-fd93fb7701af", "3ad67afe-77e7-11ec-825f-5c5181925b12"};
+
+        var x = userMapper.getUserNamesFromIds(ids);
+        log.info(x);
     }
 
 }

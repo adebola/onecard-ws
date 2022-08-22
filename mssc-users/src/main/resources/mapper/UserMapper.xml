@@ -16,6 +16,11 @@
         <result column="profile_picture" property="profilePicture" jdbcType="VARCHAR"/>
     </resultMap>
 
+    <resultMap id="userEntryResultMap" type="io.factorialsystems.msscusers.dto.UserEntryDto">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="user_name" property="name" jdbcType="VARCHAR"/>
+    </resultMap>
+
     <sql id="Column_List_Long">
        id, user_name, first_name, last_name, email, enabled, email_verified, created_date, wallet_id, organization_id, profile_picture
     </sql>
@@ -136,6 +141,16 @@
             (#{item.roleId, jdbcType=VARCHAR}, #{item.userId, jdbcType=VARCHAR})
         </foreach>
     </insert>
+
+    <select id="getUserNamesFromIds" resultMap="userEntryResultMap">
+        select id, user_name from users where
+            id in
+            <if test="ids != null and ids.size > 0">
+                <foreach item="item" index="index" collection="ids" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+    </select>
 
     <delete id="removeRole" parameterType="io.factorialsystems.msscusers.mapper.dbtransfer.RoleParameter">
        delete from user_roles where user_id = #{userId} and role_id = #{roleId}

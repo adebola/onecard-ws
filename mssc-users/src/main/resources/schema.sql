@@ -26,6 +26,19 @@ create table users (
     PRIMARY KEY (id)
 );
 
+create table roles (
+    id varchar(64) NOT NULL,
+    role_name varchar(64) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+create table user_roles (
+    role_id varchar(64) NOT NULL,
+    user_id varchar(64) NOT NULL,
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 create table beneficiary (
     id int AUTO_INCREMENT NOT NULL,
     user_id VARCHAR(64) NOT NULL,
@@ -55,3 +68,8 @@ create table beneficiary_group_users (
     FOREIGN KEY (beneficiary_group_id) REFERENCES beneficiary_group (id),
     UNIQUE idx_id_group_id(beneficiary_id, beneficiary_group_id)
 );
+
+insert into roles(id, role_name)
+values ('e9ce2988-5a5a-4dd7-9a58-419397301f91', 'Onecard_Admin'),
+       ('9a3e18db-41f3-478d-a6e9-484e89951022', 'Onecard_Operator'),
+       ('55a710f0-d038-4e4e-9de5-d2ebe4644875', 'Onecard_Agent');

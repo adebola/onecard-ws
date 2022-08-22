@@ -4,6 +4,7 @@ import io.factorialsystems.msscusers.domain.search.SearchUserDto;
 import io.factorialsystems.msscusers.dto.KeycloakUserDto;
 import io.factorialsystems.msscusers.dto.MessageDto;
 import io.factorialsystems.msscusers.dto.PasswordDto;
+import io.factorialsystems.msscusers.dto.UserIdListDto;
 import io.factorialsystems.msscusers.service.UserService;
 import io.factorialsystems.msscusers.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
-     public ResponseEntity<?> getUsers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+    public ResponseEntity<?> getUsers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                        @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
@@ -45,6 +46,11 @@ public class UserController {
         return new ResponseEntity<>(userService.findUsers(pageNumber, pageSize), HttpStatus.OK);
     }
 
+    @PostMapping("/usernames")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<UserIdListDto> getUserNameListFromIds(@Valid @RequestBody UserIdListDto dto) {
+        return new ResponseEntity<>(userService.getUserNameListFromIds(dto), HttpStatus.OK);
+    }
 
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")

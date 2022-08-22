@@ -3,8 +3,10 @@ package io.factorialsystems.msscusers.dao;
 import com.github.pagehelper.Page;
 import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.domain.search.SearchUserDto;
+import io.factorialsystems.msscusers.dto.UserEntryDto;
 import io.factorialsystems.msscusers.mapper.dbtransfer.RoleParameter;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
@@ -26,4 +28,5 @@ public interface UserMapper {
     void updateProfilePicture(Map<String, String> params);
     void addRoles(List<RoleParameter> roleParameters);
     void removeRole(RoleParameter roleParameter);
+    List<UserEntryDto> getUserNamesFromIds(@Param("ids") List<String> ids);
 }
