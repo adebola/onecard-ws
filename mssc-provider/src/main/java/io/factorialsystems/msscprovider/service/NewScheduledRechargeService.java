@@ -20,7 +20,7 @@ import io.factorialsystems.msscprovider.helper.TransactionHelper;
 import io.factorialsystems.msscprovider.mapper.recharge.NewBulkRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.mapper.recharge.NewScheduledRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
-import io.factorialsystems.msscprovider.service.file.BulkRequestExcelWriter;
+import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
@@ -43,7 +43,7 @@ public class NewScheduledRechargeService {
     @Value("${api.local.host.baseurl}")
     private String baseLocalUrl;
     private final FileUploader fileUploader;
-    private final BulkRequestExcelWriter excelWriter;
+    private final ExcelWriter excelWriter;
     private final NewBulkRechargeMapper newBulkRechargeMapper;
     private final NewBulkRechargeService newBulkRechargeService;
     private final NewScheduledRechargeMapper newScheduledRechargeMapper;

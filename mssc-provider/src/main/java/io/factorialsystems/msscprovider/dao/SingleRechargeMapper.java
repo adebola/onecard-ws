@@ -14,6 +14,7 @@ import java.util.Map;
 
 @Mapper
 public interface SingleRechargeMapper {
+    List<SingleRechargeRequest> findByUserId(String id);
     SingleRechargeRequest findById(String id);
     void save(SingleRechargeRequest request);
     List<RechargeFactoryParameters> factory(Integer id);
@@ -31,6 +32,7 @@ public interface SingleRechargeMapper {
     void saveResolution(SingleResolve resolve);
     Boolean resolveRequest(Map<String, String> rechargeMap);
     Page<SingleRechargeRequest> findFailedRequests();
+    List<SingleRechargeRequest> findListFailedRequests();
     Page<SingleRechargeRequest> findFailedUnResolvedRequests();
     Boolean failRequest(String id);
 }

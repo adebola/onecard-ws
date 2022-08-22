@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.controller;
 
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeResponseDto;
@@ -12,7 +12,10 @@ import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeSer
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -163,5 +166,27 @@ public class RechargeAuthController {
         }
 
         return new ResponseEntity<>(rechargeService.getFailedUnresolvedTransactions(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @GetMapping("/single/download/{id}")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<Resource> generateExcelFileByUserId(@PathVariable("id") String id) {
+        final String filename = String.format("%s.%s", id, "xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(rechargeService.getRechargesByUserId(id));
+    }
+
+    @GetMapping("/single/downloadfailed")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<Resource> generateFailedExcelFile(@PathVariable("id") String id) {
+        final String filename = String.format("%s.%s", id, "xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(rechargeService.getFailedRecharges());
     }
 }

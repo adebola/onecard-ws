@@ -12,7 +12,10 @@ import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.MailMessageDto;
+import io.factorialsystems.msscprovider.dto.PagedDto;
+import io.factorialsystems.msscprovider.dto.RequestTransactionDto;
+import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
@@ -26,6 +29,7 @@ import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.recharge.ringo.response.ProductItem;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.service.MailService;
+import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleDownloadRecharge;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleResolveRecharge;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRetryRecharge;
@@ -34,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
@@ -56,7 +61,9 @@ public class SingleRechargeService {
     private final SingleRechargeMapper singleRechargeMapper;
     private final SingleRefundRecharge singleRefundRecharge;
     private final SingleResolveRecharge singleResolveRecharge;
+    private final SingleDownloadRecharge singleDownloadRecharge;
     private final RechargeMapstructMapper rechargeMapstructMapper;
+
 
     private static String BASE_LOCAL_STATIC;
 
@@ -368,6 +375,13 @@ public class SingleRechargeService {
         return createDto(requests);
     }
 
+    public InputStreamResource getRechargesByUserId(String id) {
+        return singleDownloadRecharge.downloadByUserId(id);
+    }
+
+    public InputStreamResource getFailedRecharges() {
+        return singleDownloadRecharge.downloadFailed();
+    }
     @SneakyThrows
     public static void saveTransaction(SingleRechargeRequest request) {
 

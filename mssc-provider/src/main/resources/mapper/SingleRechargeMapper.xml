@@ -111,6 +111,14 @@
         and r.service_id = p.id
     </select>
 
+    <select id="findByUserId" parameterType="java.lang.String" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.user_id = #{id}
+        and r.service_id = p.id
+    </select>
+
     <select id="factory" parameterType="java.lang.Integer" resultMap="factoryResultMap">
         {call sp_factory(#{id, jdbcType = INTEGER, mode = IN})}
     </select>
@@ -226,6 +234,14 @@
     </select>
 
     <select id="findFailedRequests" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.service_id = p.id
+        and r.failed = true
+    </select>
+
+    <select id="findListFailedRequests" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
         from recharge_requests r, provider_services p

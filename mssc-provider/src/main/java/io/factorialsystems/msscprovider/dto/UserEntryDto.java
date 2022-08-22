@@ -1,4 +1,4 @@
-package io.factorialsystems.msscapiuser.security;
+package io.factorialsystems.msscprovider.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Context {
-    private String token;
+public class UserEntryDto {
+    private String id;
+    private String name;
 }

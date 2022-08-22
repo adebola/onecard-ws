@@ -35,7 +35,7 @@ import io.factorialsystems.msscprovider.service.MailService;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRefundRecharge;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkResolveRecharge;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRetryRecharge;
-import io.factorialsystems.msscprovider.service.file.BulkRequestExcelWriter;
+import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
@@ -74,7 +74,7 @@ public class NewBulkRechargeService {
     private final BulkRefundRecharge bulkRefundRecharge;
     private final BulkResolveRecharge bulkResolveRecharge;
     private final ParameterCache parameterCache;
-    private final BulkRequestExcelWriter excelWriter;
+    private final ExcelWriter excelWriter;
     private final NewBulkRechargeMapstructMapper mapper;
     private final NewBulkRechargeMapper newBulkRechargeMapper;
 
