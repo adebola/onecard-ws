@@ -1,10 +1,7 @@
 package io.factorialsystems.msscusers.controller;
 
 import io.factorialsystems.msscusers.domain.search.SearchUserDto;
-import io.factorialsystems.msscusers.dto.KeycloakUserDto;
-import io.factorialsystems.msscusers.dto.MessageDto;
-import io.factorialsystems.msscusers.dto.PasswordDto;
-import io.factorialsystems.msscusers.dto.UserIdListDto;
+import io.factorialsystems.msscusers.dto.*;
 import io.factorialsystems.msscusers.service.UserService;
 import io.factorialsystems.msscusers.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +45,7 @@ public class UserController {
 
     @PostMapping("/usernames")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
-    public ResponseEntity<UserIdListDto> getUserNameListFromIds(@Valid @RequestBody UserIdListDto dto) {
+    public ResponseEntity<UserEntryListDto> getUserNameListFromIds(@Valid @RequestBody UserIdListDto dto) {
         return new ResponseEntity<>(userService.getUserNameListFromIds(dto), HttpStatus.OK);
     }
 

@@ -341,14 +341,8 @@ public class UserService {
         }
     }
 
-    public UserIdListDto getUserNameListFromIds(UserIdListDto dto) {
-        List<String> ids = dto.getEntries()
-                .stream()
-                .map(UserEntryDto::getId)
-                .distinct()
-                .collect(Collectors.toList());
-
-        return new UserIdListDto(userMapper.getUserNamesFromIds(ids));
+    public UserEntryListDto getUserNameListFromIds(UserIdListDto dto) {
+        return new UserEntryListDto(userMapper.getUserNamesFromIds(dto.getEntries()));
     }
 
     public PagedDto<KeycloakUserDto> findUserByOrganizationId(String id, Integer pageNumber, Integer pageSize) {
