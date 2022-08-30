@@ -34,5 +34,6 @@ public interface SingleRechargeMapper {
     Page<SingleRechargeRequest> findFailedRequests();
     List<SingleRechargeRequest> findListFailedRequests();
     Page<SingleRechargeRequest> findFailedUnResolvedRequests();
+    List<SingleRechargeRequest> findListUnresolvedFailedRequests();
     Boolean failRequest(String id);
 }

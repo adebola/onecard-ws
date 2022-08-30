@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -173,6 +174,52 @@ public class BulkRechargeAuthController {
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(file);
     }
+
+    @GetMapping("/download-failed")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<Resource> failed(@RequestParam(value = "type") String type) {
+        final String filename = String.format("%s.%s", UUID.randomUUID(), "xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(newBulkRechargeService.failed(type));
+    }
+
+    @GetMapping("/download-failed-individual")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<Resource> failedIndividual(@RequestParam(value = "id") String id,
+                                                     @RequestParam(value = "type") String type) {
+        final String filename = String.format("%s.%s", UUID.randomUUID(), "xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(newBulkRechargeService.failedIndividual(id, type));
+    }
+
+    @GetMapping("/download-user-bulk/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<Resource> downloadUserBulk(@PathVariable("id") String id) {
+        final String filename = String.format("%s.%s", id, "xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(newBulkRechargeService.downloadUserBulk(id));
+    }
+
+    @GetMapping("/download-user-individual/{id}")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<Resource> downloadUserBulkIndividual(@PathVariable("id") String id) {
+        final String filename = String.format("%s.%s", id, "xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(newBulkRechargeService.downloadUserIndividual(id));
+    }
+
 
     @GetMapping("/individualretry/{id}")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")

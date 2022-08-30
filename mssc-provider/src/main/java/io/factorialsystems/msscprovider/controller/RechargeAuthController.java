@@ -21,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -171,7 +172,7 @@ public class RechargeAuthController {
     @GetMapping("/single/download/{id}")
     @PreAuthorize("hasRole('Onecard_Admin')")
     public ResponseEntity<Resource> generateExcelFileByUserId(@PathVariable("id") String id) {
-        final String filename = String.format("%s.%s", id, "xlsx");
+        final String filename = String.format("%s.%s", id, "xls");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
@@ -181,12 +182,12 @@ public class RechargeAuthController {
 
     @GetMapping("/single/downloadfailed")
     @PreAuthorize("hasRole('Onecard_Admin')")
-    public ResponseEntity<Resource> generateFailedExcelFile(@PathVariable("id") String id) {
-        final String filename = String.format("%s.%s", id, "xlsx");
+    public ResponseEntity<Resource> generateFailedExcelFile(@RequestParam(value = "type", required = true) String type) {
+        final String filename = String.format("%s.%s", UUID.randomUUID(), "xls");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
-                .body(rechargeService.getFailedRecharges());
+                .body(rechargeService.getFailedRecharges(type));
     }
 }

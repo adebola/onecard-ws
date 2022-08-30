@@ -32,6 +32,7 @@ import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.service.MailService;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkDownloadRecharge;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRefundRecharge;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkResolveRecharge;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRetryRecharge;
@@ -53,10 +54,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -73,12 +71,15 @@ public class NewBulkRechargeService {
     private final BulkRetryRecharge bulkRetryRecharge;
     private final BulkRefundRecharge bulkRefundRecharge;
     private final BulkResolveRecharge bulkResolveRecharge;
+    private final BulkDownloadRecharge bulkDownloadRecharge;
     private final ParameterCache parameterCache;
     private final ExcelWriter excelWriter;
     private final NewBulkRechargeMapstructMapper mapper;
     private final NewBulkRechargeMapper newBulkRechargeMapper;
 
     public void uploadRecharge(MultipartFile file) {
+        log.info("Bulk recharge via File upload");
+
         UploadFile uploadFile = fileUploader.uploadFile(file);
         ExcelReader excelReader = new ExcelReader(uploadFile);
 
@@ -442,8 +443,18 @@ public class NewBulkRechargeService {
 
         String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
         final String title = String.format("BulkRecharge Request (%s) Created On (%s)", id, s);
-        return excelWriter.bulkRequestToExcel(individualRequests, title);
+        return excelWriter.bulkIndividualRequestToExcel(individualRequests, title);
     }
+
+    public InputStreamResource failed(String type) {
+        return bulkDownloadRecharge.failed(type);
+    }
+
+    public InputStreamResource failedIndividual(String id, String type) { return bulkDownloadRecharge.failedIndividual(id, type); }
+
+    public InputStreamResource downloadUserBulk(String id) { return bulkDownloadRecharge.userBulk(id); }
+
+    public InputStreamResource downloadUserIndividual(String id) { return  bulkDownloadRecharge.userIndividuals(id); }
 
     private void sendReport(AsyncRechargeDto dto, NewBulkRechargeRequest request) {
 

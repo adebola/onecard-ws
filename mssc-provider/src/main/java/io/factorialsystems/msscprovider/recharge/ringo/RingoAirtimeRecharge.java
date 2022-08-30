@@ -77,7 +77,7 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, 
                     .message(errorMessage)
                     .build();
 
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             log.error("Ringo Recharge Exception {}", e.getMessage());
             return RechargeStatus.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)

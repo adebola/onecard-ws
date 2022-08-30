@@ -248,4 +248,15 @@
         where r.service_id = p.id
         and r.failed = true
     </select>
+
+    <select id="findListUnresolvedFailedRequests" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.service_id = p.id
+        and r.failed = true
+        and refund_id is NULL
+        and resolve_id is NULL
+        and successful_retry_id is NULL
+    </select>
 </mapper>

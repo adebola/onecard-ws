@@ -83,8 +83,12 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
                     .message("Ringo Data Recharge failure")
                     .build();
 
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e.getMessage());
+        } catch (Exception e) {
+            log.error("Ringo Data Recharge Exception {}", e.getMessage());
+            return RechargeStatus.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build();
         }
     }
 

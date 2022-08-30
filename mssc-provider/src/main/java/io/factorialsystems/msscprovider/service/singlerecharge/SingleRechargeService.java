@@ -376,11 +376,11 @@ public class SingleRechargeService {
     }
 
     public InputStreamResource getRechargesByUserId(String id) {
-        return singleDownloadRecharge.downloadByUserId(id);
+        return singleDownloadRecharge.downloadFailedByUserId(id);
     }
 
-    public InputStreamResource getFailedRecharges() {
-        return singleDownloadRecharge.downloadFailed();
+    public InputStreamResource getFailedRecharges(String type) {
+        return singleDownloadRecharge.downloadFailed(type);
     }
     @SneakyThrows
     public static void saveTransaction(SingleRechargeRequest request) {

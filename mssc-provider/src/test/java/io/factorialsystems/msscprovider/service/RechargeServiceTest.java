@@ -247,7 +247,7 @@ class RechargeServiceTest {
             k.when(K::getAccessToken).thenReturn(accessToken);
             assertThat(K.getAccessToken()).isEqualTo(accessToken);
 
-            InputStreamResource resource = rechargeService.getFailedRecharges();
+            InputStreamResource resource = rechargeService.getFailedRecharges("all");
             File targetFile = new File("test2.xlsx");
             OutputStream outputStream = new FileOutputStream(targetFile);
             byte[] buffer = resource.getInputStream().readAllBytes();

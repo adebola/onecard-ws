@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.service.singlerecharge.helper;
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.UserEntryDto;
+import io.factorialsystems.msscprovider.dto.UserEntryListDto;
 import io.factorialsystems.msscprovider.dto.UserIdListDto;
 import io.factorialsystems.msscprovider.dto.user.SimpleUserDto;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
@@ -30,7 +31,7 @@ public class SingleDownloadRecharge {
     @Value("${api.local.host.baseurl}")
     private String baseUrl;
 
-    public InputStreamResource downloadByUserId(String id) {
+    public InputStreamResource downloadFailedByUserId(String id) {
         Optional<SimpleUserDto> userById = userService.getUserById(id);
 
         String title = null;
@@ -45,26 +46,31 @@ public class SingleDownloadRecharge {
         return new InputStreamResource(excelWriter.singleRequestToExcel(requests, null, title));
     }
 
-    public InputStreamResource downloadFailed() {
-        List<SingleRechargeRequest> requests = singleRechargeMapper.findListFailedRequests();
+    public InputStreamResource downloadFailed(String type) {
+        List<SingleRechargeRequest> requests;
 
-        List<UserEntryDto> userEntries = requests.stream()
+        if (type.equals("all")) {
+            requests = singleRechargeMapper.findListFailedRequests();
+        } else {
+           requests = singleRechargeMapper.findListUnresolvedFailedRequests();
+        }
+
+        List<String> ids = requests.stream()
                 .map(SingleRechargeRequest::getUserId)
                 .filter(Objects::nonNull)
                 .distinct()
-                .map(r -> new UserEntryDto(r, null))
                 .collect(Collectors.toList());
 
-        UserIdListDto dto = new UserIdListDto(userEntries);
+        UserIdListDto dto = new UserIdListDto(ids);
 
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getInterceptors().add(new RestTemplateInterceptor());
 
-        UserIdListDto userIdListDto =
-                restTemplate.postForObject(baseUrl + "/api/v1/user/usernames", dto, UserIdListDto.class);
+        UserEntryListDto userEntries =
+                restTemplate.postForObject(baseUrl + "/api/v1/user/usernames", dto, UserEntryListDto.class);
 
-        if (userIdListDto != null && userIdListDto.getEntries() != null && userIdListDto.getEntries().size() > 0) {
-            Map<String, String> userIdMap = userIdListDto.getEntries().stream()
+        if (userEntries != null && userEntries.getEntries() != null && userEntries.getEntries().size() > 0) {
+            Map<String, String> userIdMap = userEntries.getEntries().stream()
                     .collect(Collectors.toMap(UserEntryDto::getId, UserEntryDto::getName));
 
             return new InputStreamResource(excelWriter.singleRequestToExcel(requests, userIdMap, "Failed Single Recharges"));

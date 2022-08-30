@@ -1,7 +1,10 @@
 package io.factorialsystems.msscprovider.service.file;
 
+import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
+import io.factorialsystems.msscprovider.dto.MailMessageDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
 import io.factorialsystems.msscprovider.exception.FileFormatException;
+import io.factorialsystems.msscprovider.service.MailService;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -12,6 +15,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.FileSystemResource;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -63,38 +67,23 @@ public class ExcelReader {
                 for (Cell cell : row) {
                     switch (cell.getColumnIndex()) {
                         case SERVICE_CODE_COLUMN:
-                            dto.setServiceCode(cell.getStringCellValue());
+                            dto.setServiceCode(readStringValue(cell, true));
                             break;
 
                         case PRODUCT_ID_COLUMN:
-                            final String productId = cell.getStringCellValue();
-
-                            if (productId != null && productId.trim().length() > 0) {
-                                dto.setProductId(productId.trim());
-                            }
-
+                            dto.setProductId(readStringValue(cell, false));
                             break;
 
                         case SERVICE_COST_COLUMN:
-                            final double cost = cell.getNumericCellValue();
-
-                            if(cost > 0) {
-                                dto.setServiceCost(BigDecimal.valueOf(cost));
-                            }
-
+                            dto.setServiceCost(readDoubleValue(cell, false));
                             break;
 
                         case TELEPHONE_COLUMN:
-                            final String telephone = cell.getStringCellValue();
-
-                            if (telephone != null && telephone.trim().length() > 0) {
-                                dto.setTelephone(telephone.trim());
-                            }
-
+                            dto.setTelephone(readStringValue(cell, false));
                             break;
 
                         case RECIPIENT_COLUMN:
-                            dto.setRecipient(cell.getStringCellValue());
+                            dto.setRecipient(readStringValue(cell, true));
                             break;
 
                         default:
@@ -115,24 +104,68 @@ public class ExcelReader {
 
         String extension = FilenameUtils.getExtension(uploadFile.getFileName());
 
-        try {
+        String errorMessage = "Error";
 
+        try {
             if (extension.equals("xls")) {
                 return readXLSContents(uploadFile.getFile());
             } else if (extension.equals("xlsx")) {
                 return readXLSXContents(uploadFile.getFile());
             } else {
-                final String errorMessage = String.format("Invalid File extension : (%s)", extension);
+                errorMessage = String.format("Invalid File extension : (%s)", extension);
                 log.error(errorMessage);
                 throw new RuntimeException(errorMessage);
             }
         } catch (Exception ex) {
-                final String errorMessage = String.format("File %s format error: %s Uploaded By (%s)", uploadFile.getFileName(), ex.getMessage(), K.getUserName());
-                log.error(errorMessage);
-                throw new FileFormatException(errorMessage);
-            } finally {
-                // uploadFile.getFile().delete();
-            }
+            errorMessage = String.format("File %s format error: %s Uploaded By (%s)", uploadFile.getFileName(), ex.getMessage(), K.getUserName());
+            log.error(errorMessage);
+            throw new FileFormatException(errorMessage);
+        } finally {
+            FileSystemResource fileSystemResource = new FileSystemResource(uploadFile.getFile());
+            MailService mailService = ApplicationContextProvider.getBean(MailService.class);
+
+            MailMessageDto mailMessageDto = MailMessageDto.builder()
+                    .body(errorMessage)
+                    .to("adeomoboya@gmail.com")
+                    .subject("Bulk Recharge File Upload Error")
+                    .build();
+
+            mailService.sendMailWithAttachment(fileSystemResource, mailMessageDto);
+            // uploadFile.getFile().delete();
         }
     }
+
+    private String readStringValue(Cell cell, boolean mandatory) {
+        final String value = cell.getStringCellValue();
+
+        if (value != null && value.trim().length() > 0) {
+            return value.trim();
+        } else if (!mandatory) {
+            return null;
+        } else {
+            throw new RuntimeException("String value read is either NULL or Empty");
+        }
+    }
+
+    private BigDecimal readDoubleValue(Cell cell, boolean mandatory) {
+        double cost = 0;
+
+        try {
+            cost = cell.getNumericCellValue();
+        } catch (Exception ex) {
+            log.error("Non-Numeric Value Found in Cost, Numeric Value expected");
+            log.error(ex.getMessage());
+
+            cost = Double.parseDouble(cell.getStringCellValue());
+        }
+
+        if (cost > 0) {
+            return BigDecimal.valueOf(cost);
+        } else if (!mandatory){
+            return null;
+        } else {
+            throw new RuntimeException("Invalid or No Value in Numeric Field");
+        }
+    }
+}
 

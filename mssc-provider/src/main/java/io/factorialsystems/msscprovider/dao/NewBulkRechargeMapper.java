@@ -29,6 +29,7 @@ public interface NewBulkRechargeMapper {
     Boolean setEmailId(Map<String, String> parameters);
     void failIndividualRequest(IndividualRequestFailureNotification n);
     Page<NewBulkRechargeRequest> findBulkRequestByUserId(String id);
+    List<NewBulkRechargeRequest> findListBulkRequestByUserId(String id);
     Page<NewBulkRechargeRequest> searchByDate(SearchByDate searchByDate);
     Page<NewBulkRechargeRequest> search(SearchBulkRechargeDto dto);
     Page<IndividualRequest> findPagedBulkIndividualRequests(String id);
@@ -49,9 +50,13 @@ public interface NewBulkRechargeMapper {
     Boolean resolveBulkRequest(Map<String, String> map);
     Boolean resolveIndividualRequest(Map<String, String> map);
     Page<NewBulkRechargeRequest> findFailedUnResolvedRequests();
+    List<NewBulkRechargeRequest> findListFailedUnResolvedRequests();
     Page<NewBulkRechargeRequest> findFailedRequests();
+    List<NewBulkRechargeRequest> findListFailedRequests();
     Page<IndividualRequest> findFailedIndividuals(String id);
+    List<IndividualRequest> findListFailedIndividuals(String id);
     Page<IndividualRequest> findFailedUnresolvedIndividuals(String id);
+    List<IndividualRequest> findListFailedUnresolvedIndividuals(String id);
     Page<NewBulkRechargeRequest> adminFailedSearch(SearchBulkFailedRechargeDto dto);
     Page<IndividualRequest> searchFailedIndividual(SearchIndividualDto dto);
 }

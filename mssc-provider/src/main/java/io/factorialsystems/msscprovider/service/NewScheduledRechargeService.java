@@ -245,7 +245,7 @@ public class NewScheduledRechargeService {
 
         final String title = String.format("ScheduledRecharge Request (%s) Created On (%s)", id, s);
 
-        return excelWriter.bulkRequestToExcel(individualRequests, title);
+        return excelWriter.bulkIndividualRequestToExcel(individualRequests, title);
     }
 
     private PagedDto<IndividualRequestDto> createIndividualDto(Page<IndividualRequest> requests) {

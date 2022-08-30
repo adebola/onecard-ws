@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserIdListDto {
+public class UserEntryListDto {
     @NotEmpty
-    List<String> entries;
+    List<UserEntryDto> entries;
 }
