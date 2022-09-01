@@ -219,7 +219,7 @@ public class NewBulkRechargeService {
 
                         // Work Around for Ringo, which has scaling issues
                         try {
-                            Thread.sleep(1000);
+                            Thread.sleep(500);
                         } catch (InterruptedException e) {
                             log.error(String.format("Thread Sleep error : %s", e.getMessage()));
                         }
@@ -234,6 +234,12 @@ public class NewBulkRechargeService {
                                     .build();
 
                             newBulkRechargeMapper.failIndividualRequest(notification);
+                        } else if (parameter.getHasResults()) { // if successful recharge and request has results
+                            Map<String, String> resultMap = new HashMap<>();
+                            resultMap.put(id, String.valueOf(individualRequest.getId()));
+                            resultMap.put("results", rechargeStatus.getResults());
+
+                            newBulkRechargeMapper.saveResults(resultMap);
                         }
                     } else {
                         final String errorMessage =

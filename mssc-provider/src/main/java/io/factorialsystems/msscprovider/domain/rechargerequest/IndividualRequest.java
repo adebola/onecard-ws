@@ -27,4 +27,5 @@ public class IndividualRequest {
     private String refundId;
     private String retryId;
     private String resolveId;
+    private String results;
 }

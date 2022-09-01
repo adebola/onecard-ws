@@ -59,4 +59,5 @@ public interface NewBulkRechargeMapper {
     List<IndividualRequest> findListFailedUnresolvedIndividuals(String id);
     Page<NewBulkRechargeRequest> adminFailedSearch(SearchBulkFailedRechargeDto dto);
     Page<IndividualRequest> searchFailedIndividual(SearchIndividualDto dto);
+    Boolean saveResults(Map<String, String> resultMap);
 }

@@ -23,7 +23,9 @@ import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,6 +47,15 @@ class RechargeServiceTest {
     final String realmUser = "realm-admin";
     final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
 
+    @Test
+    void testCloseRequest() {
+        Map<String, String> resultsMap = new HashMap<>();
+        resultsMap.put("id", "04c462eb-720c-4c0b-b908-bdbefaf63ec8");
+        resultsMap.put("results", null);
+        //resultsMap.put("results", "Results");
+
+        singleRechargeMapper.closeRequest(resultsMap);
+    }
     @Test
     void resolveRecharge() {
         final String id = "04c462eb-720c-4c0b-b908-bdbefaf63ec8";

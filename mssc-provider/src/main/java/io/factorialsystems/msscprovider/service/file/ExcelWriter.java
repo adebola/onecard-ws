@@ -19,11 +19,11 @@ import java.util.Map;
 
 @Component
 public class ExcelWriter {
-    private static final String[] BULK_INDIVIDUAL_HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "Status", "Reason", "Retry", "Refund", "Resolve" };
-    private static final String[] BULK_HEADERS_WITH_USER = { "#", "Id", "User", "Cost (₦)", "Payment Mode", "date" };
-    private static final String[] BULK_HEADERS = { "#", "Id", "Cost (₦)", "Payment Mode", "date" };
-    private static final String[] SINGLE_HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "Date", "Status", "Retry", "Refund", "Resolve" };
-    private static final String[] SINGLE_HEADERS_WITH_USER = { "#", "Recipient", "Product", "Cost (₦)", "Date", "Status", "Retry", "Refund","Resolve", "User" };
+    private static final String[] BULK_INDIVIDUAL_HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "Status", "Reason", "Retry", "Refund", "Resolve", "Results" };
+    private static final String[] BULK_HEADERS_WITH_USER = { "#", "Id", "User", "Cost (₦)", "Payment Mode", "Date" };
+    private static final String[] BULK_HEADERS = { "#", "Id", "Cost (₦)", "Payment Mode", "Date" };
+    private static final String[] SINGLE_HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "Date", "Status", "Retry", "Refund", "Resolve", "Results" };
+    private static final String[] SINGLE_HEADERS_WITH_USER = { "#", "Recipient", "Product", "Cost (₦)", "Date", "Status", "Retry", "Refund","Resolve", "User", "Results" };
     private static final String SHEET = "onecard";
 
     public ByteArrayInputStream bulkRequestToExcel(List<NewBulkRechargeRequest> requests, Map<String, String> entryMap, String title) {
@@ -133,6 +133,10 @@ public class ExcelWriter {
                     row.createCell(4).setCellValue("Success");
                 }
 
+                if (individualRequest.getResults() != null) {
+                    row.createCell(9).setCellValue(individualRequest.getResults());
+                }
+
                 rowIdx++;
             }
 
@@ -203,6 +207,10 @@ public class ExcelWriter {
 
                 if (entryMap != null && request.getUserId() != null) {
                     row.createCell(9).setCellValue(entryMap.get(request.getUserId()));
+                }
+
+                if (request.getResults() != null) {
+                    row.createCell(10).setCellValue(request.getResults());
                 }
 
                 rowIdx++;

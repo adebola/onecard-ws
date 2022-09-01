@@ -42,4 +42,5 @@ public class SingleRechargeRequest {
     private String retryId;
     private String refundId;
     private String resolveId;
+    private String results;
 }

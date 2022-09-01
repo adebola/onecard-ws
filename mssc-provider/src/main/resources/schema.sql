@@ -111,6 +111,7 @@ create table recharge_requests (
     failed_message varchar(256),
     successful_retry_id int,
     refund_id varchar(64),
+    results varchar(128),
     FOREIGN KEY (successful_retry_id) REFERENCES  single_recharge_request_retries (id),
     FOREIGN KEY (scheduled_request_id) REFERENCES scheduled_recharge(id),
     FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
@@ -361,8 +362,10 @@ BEGIN
     DECLARE service_action VARCHAR(64);
     DECLARE recharge_provider_code VARCHAR(64);
     DECLARE async BOOLEAN;
+    DECLARE has_results BOOLEAN;
 
-    select p.code, sa.action, ps.async into provider_code, service_action, async from providers p, provider_services ps, service_actions sa
+    select p.code, sa.action, ps.async, ps.has_results into provider_code, service_action, async, has_results
+    from providers p, provider_services ps, service_actions sa
     where ps.id = provider_service_id
     and  ps.action = sa.id
     and ps.provider_id = p.id;
@@ -373,7 +376,7 @@ BEGIN
     order by psrp.weight desc
     limit 1;
 
-    select provider_code, recharge_provider_code, service_action, async;
+    select provider_code, recharge_provider_code, service_action, async, has_results;
 END;
 
 create procedure sp_addRechargeProvider(IN provider_id INT, IN service_id INT, IN weight_value INT)

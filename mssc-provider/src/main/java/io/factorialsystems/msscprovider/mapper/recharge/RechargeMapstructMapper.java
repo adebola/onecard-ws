@@ -28,7 +28,8 @@ public interface RechargeMapstructMapper {
             @Mapping(source = "refundId", target = "refundId"),
             @Mapping(source = "retryId", target = "retryId"),
             @Mapping(source = "resolveId", target = "resolveId"),
-            @Mapping(source = "failed", target = "failed")
+            @Mapping(source = "failed", target = "failed"),
+            @Mapping(source = "results", target = "results")
     })
     SingleRechargeRequestDto rechargeToRechargeDto(SingleRechargeRequest request);
     List<SingleRechargeRequestDto> listRechargeToRechargeDto(List<SingleRechargeRequest> requests);
@@ -47,7 +48,8 @@ public interface RechargeMapstructMapper {
             @Mapping(target = "authorizationUrl", ignore = true),
             @Mapping(target = "createdDate", ignore = true),
             @Mapping(target = "closed", ignore = true),
-            @Mapping(target = "paymentId", ignore = true)
+            @Mapping(target = "paymentId", ignore = true),
+            @Mapping(target = "results", ignore = true)
     })
     SingleRechargeRequest rechargeDtoToRecharge(SingleRechargeRequestDto dto);
 

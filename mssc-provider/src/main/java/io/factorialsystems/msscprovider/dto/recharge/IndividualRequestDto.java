@@ -44,4 +44,7 @@ public class IndividualRequestDto {
 
     @Null(message = "ResolveId cannot be set")
     private String resolveId;
+
+    @Null(message = "Results cannot be set")
+    private String results;
 }

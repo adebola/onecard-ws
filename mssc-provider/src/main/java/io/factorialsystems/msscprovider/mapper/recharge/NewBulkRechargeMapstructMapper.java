@@ -57,7 +57,8 @@ public interface NewBulkRechargeMapstructMapper {
             @Mapping(source = "failedMessage", target = "failedMessage"),
             @Mapping(source = "refundId", target = "refundId"),
             @Mapping(source = "retryId", target = "retryId"),
-            @Mapping(source = "resolveId", target = "resolveId")
+            @Mapping(source = "resolveId", target = "resolveId"),
+            @Mapping(source = "results", target = "results")
     })
     IndividualRequestDto individualToIndividualDto(IndividualRequest request);
     List<IndividualRequestDto> listIndividualToIndividualDto(List<IndividualRequest> requests);

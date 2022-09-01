@@ -54,6 +54,17 @@ class BulkRechargeServiceTest {
     final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
 
     @Test
+    void testSaveResults() {
+        Map<String, String> resultsMap = new HashMap<>();
+        resultsMap.put("id", "1");
+        //resultsMap.put("results", null);
+        resultsMap.put("results", "Results");
+
+        newBulkRechargeMapper.saveResults(resultsMap);
+    }
+
+
+    @Test
     void findFailedRecharges() {
         var x = service.getFailedRequests(1, 20);
         log.info(x);
@@ -285,7 +296,7 @@ class BulkRechargeServiceTest {
     void runRechargeFail() {
         final String id = "158f4d0b-19be-4d8d-8c83-398383890188";
 
-        RechargeStatus rechargeStatus = new RechargeStatus("Recharge Failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        RechargeStatus rechargeStatus = new RechargeStatus("Recharge Failed", HttpStatus.INTERNAL_SERVER_ERROR, "");
         Recharge recharge = Mockito.mock(Recharge.class);
         Mockito.when(recharge.recharge(any())).thenReturn(rechargeStatus);
 

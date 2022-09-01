@@ -13,6 +13,7 @@ import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.ringo.dto.FetchSpectranetDataDto;
 import io.factorialsystems.msscprovider.recharge.ringo.request.SpectranetRequest;
+import io.factorialsystems.msscprovider.recharge.ringo.response.SpectranetPIN;
 import io.factorialsystems.msscprovider.recharge.ringo.response.SpectranetResponse;
 import io.factorialsystems.msscprovider.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -60,13 +61,17 @@ public class RingoSpectranetRecharge implements Recharge, DataEnquiry, Parameter
 
             String errorMessage = null;
 
-            if (response != null && response.getMessage() != null) {
+            if (response != null && response.getMessage() != null && response.getPin() != null && response.getPin().size() > 0) {
                 if (response.getMessage().equalsIgnoreCase("Successful")) {
                     log.info(String.format("Spectranet data Pin purchase (%.2f) Successful", request.getServiceCost()));
 
+                    SpectranetPIN pin = response.getPin().get(0);
+                    final String results = String.format("Pin: %s, Serial: %s", pin.getPin(), pin.getSerial());
+
                     return RechargeStatus.builder()
                             .status(HttpStatus.OK)
-                            .message("Spectranet Purchase Successful Pin (: " + response.getPin().get(0).getPin() + ")" + "Serial")
+                            .message(String.format("Spectranet Purchase Successful, %s", results))
+                            .results(results)
                             .build();
                 } else {
                     errorMessage = String.format("Error Acquiring Spectranet PIN message (%s)", response.getMessage());

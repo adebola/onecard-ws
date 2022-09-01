@@ -201,7 +201,11 @@ public class SingleRechargeService {
             Recharge recharge = factory.getRecharge(parameter.getServiceAction());
             status = recharge.recharge(request);
 
-            singleRechargeMapper.closeRequest(request.getId());
+            Map<String, String> resultsMap = new HashMap<>();
+            resultsMap.put("id", request.getId());
+            resultsMap.put("results", status.getResults());
+
+            singleRechargeMapper.closeRequest(resultsMap);
 
             // If it is a scheduled Recharge, it will have been paid for and transaction logged at the time it was Scheduled
             if (request.getScheduledRequestId() == null) {

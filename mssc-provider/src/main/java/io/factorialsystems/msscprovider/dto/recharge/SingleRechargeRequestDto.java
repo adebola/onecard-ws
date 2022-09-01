@@ -49,4 +49,7 @@ public class SingleRechargeRequestDto {
 
     @Null(message = "resolveId cannot be set")
     private String resolveId;
+
+    @Null(message = "results cannot be set")
+    private String results;
 }
