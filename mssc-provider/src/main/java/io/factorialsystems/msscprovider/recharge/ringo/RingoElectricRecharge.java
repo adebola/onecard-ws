@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 @Slf4j
 @Component
@@ -40,6 +39,8 @@ public class RingoElectricRecharge implements Recharge, ParameterCheck, ExtraDat
 
     @Override
     public RechargeStatus recharge(SingleRechargeRequest request) {
+
+        String errorMessage = "Electric Error Recharging via Ringo";
 
         ExtraPlanRequestDto dto = ExtraPlanRequestDto.builder()
                 .accountType(request.getAccountType())
@@ -70,30 +71,32 @@ public class RingoElectricRecharge implements Recharge, ParameterCheck, ExtraDat
                         restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoElectricResponse.class);
 
                 if (response != null && response.getMessage() != null && response.getMessage().equalsIgnoreCase("Successful")) {
+                    final String results = String.format("Token: %s Units: %s", response.getToken(), response.getUnit());
                     final String message =
-                            String.format("%s: units of Electricity, Token: %s, for %s, Transaction Reference %s", response.getUnit(), response.getToken(), response.getDisco(), response.getTransRef());
+                            String.format("%s: units of Electricity, Token: %s, for %s, Transaction Reference %s",
+                                    response.getUnit(), response.getToken(), response.getDisco(), response.getTransRef());
 
                     log.info("Successful Ringo Electric Recharge {}", message);
 
                     return RechargeStatus.builder()
                             .status(HttpStatus.OK)
+                            .results(results)
                             .message(message)
                             .build();
                 }
 
-                log.info("Ringo Electric Recharge failure {}", cost);
-                return RechargeStatus.builder()
-                        .status(HttpStatus.BAD_REQUEST)
-                        .message(Objects.requireNonNull(response, "Ringo Recharge Response Object is NULL").getMessage())
-                        .build();
+                errorMessage = String.format("Error Recharging %s via Ringo", request.getServiceCode());
 
-            } catch (JsonProcessingException e) {
-                log.error("Ringo Electric Recharge Exception {}", e.getMessage());
-                throw new RuntimeException(e.getMessage());
+            } catch (Exception e) {
+                errorMessage = String.format("Ringo Electric Recharge Error %s", e.getMessage());
             }
         }
 
-        throw new RuntimeException("Unknown Verification Error during Ringo Electricity recharge");
+        log.error(errorMessage);
+        return RechargeStatus.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .message(errorMessage)
+                .build();
     }
 
     @Override

@@ -55,13 +55,15 @@ public class JedElectricRecharge implements Recharge, ParameterCheck, ExtraDataE
                     restTemplate.postForObject(properties.getUrl() + "/makePayment.php", postEntity, JedPaymentResponse.class);
 
             if (paymentResponse != null && paymentResponse.getStatus() != null && paymentResponse.getStatus().equals("100")) {
-                final String message = String.format("Jos Electric Token %s for Units %s", paymentResponse.getPayDetails().getToken(), paymentResponse.getPayDetails().getUnits());
+               JedPaymentResponse.PayDetails payDetails = paymentResponse.getPayDetails();
+               final String results = String.format("Token: %s, Units: %s", payDetails.getToken(), payDetails.getUnits());
 
-                log.info("Successful JED Electric Recharge {}", message);
+                log.info("Successful JED Electric Recharge {}", results);
 
                 return RechargeStatus.builder()
                         .status(HttpStatus.OK)
-                        .message(message)
+                        .message(results)
+                        .results(results)
                         .build();
             }
 
