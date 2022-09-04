@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscwallet.dao.AdjustmentMapper">
+    <resultMap id="adjustResultMap" type="io.factorialsystems.msscwallet.domain.Adjustment">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="adjusted_value" property="adjustedValue" jdbcType="VARCHAR"/>
+        <result column="previous_value" property="previousValue" jdbcType="VARCHAR"/>
+        <result column="adjusted_on" property="adjustedOn" jdbcType="TIMESTAMP"/>
+        <result column="adjusted_by" property="adjustedBy" jdbcType="VARCHAR"/>
+        <result column="account_id" property="accountId" jdbcType="VARCHAR"/>
+        <result column="narrative" property="narrative" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="column_List">
+      id, adjustment_value, adjusted_on, adjusted_by, account_id, adjustment_narrative
+    </sql>
+
+    <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.Adjustment">
+        insert into adjustments(id, adjusted_value, previous_value, adjusted_by, account_id, narrative) values
+            (#{id, jdbcType=VARCHAR}, #{adjustedValue, jdbcType=DECIMAL}, #{previousValue, jdbcType=DECIMAL},
+             #{adjustedBy, jdbcType=VARCHAR}, #{accountId, jdbcType=VARCHAR}, #{narrative, jdbcType=VARCHAR})
+    </insert>
+</mapper>

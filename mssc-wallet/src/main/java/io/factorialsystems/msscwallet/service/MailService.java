@@ -1,13 +1,17 @@
 package io.factorialsystems.msscwallet.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.factorialsystems.msscwallet.config.JMSConfig;
 import io.factorialsystems.msscwallet.dto.MailMessageDto;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -19,6 +23,9 @@ import org.springframework.web.client.RestTemplate;
 public class MailService {
     private static final String WITHOUT_ATTACHMENT_URL = "/api/v1/mail";
     private static final String WITH_ATTACHMENT_URL = "/api/v1/mail/attachment";
+
+    private final JmsTemplate jmsTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${api.host.baseurl}")
     private String baseUrl;
@@ -44,5 +51,10 @@ public class MailService {
         HttpEntity<MultiValueMap<String, Object>> formEntity = new HttpEntity<>(requestBody, headers);
 
         return restTemplate.postForObject(baseUrl + WITH_ATTACHMENT_URL, formEntity, String.class);
+    }
+
+    @SneakyThrows
+    public void pushMailMessage(MailMessageDto dto) {
+        jmsTemplate.convertAndSend(JMSConfig.SEND_MAIL_QUEUE, objectMapper.writeValueAsString(dto));
     }
 }

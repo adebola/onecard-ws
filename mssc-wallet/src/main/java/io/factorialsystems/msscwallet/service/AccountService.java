@@ -3,6 +3,7 @@ package io.factorialsystems.msscwallet.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import io.factorialsystems.msscwallet.config.ApplicationContextProvider;
 import io.factorialsystems.msscwallet.config.JMSConfig;
 import io.factorialsystems.msscwallet.dao.AccountMapper;
 import io.factorialsystems.msscwallet.dao.FundWalletMapper;
@@ -40,7 +41,6 @@ public class AccountService {
     private final ObjectMapper objectMapper;
     private final AccountMapper accountMapper;
     private final FundWalletMapper fundWalletMapper;
-    private final TransactionMapper transactionMapper;
     private final AccountMapstructMapper accountMapstructMapper;
     private final FundWalletMapstructMapper fundWalletMapstructMapper;
 
@@ -181,13 +181,16 @@ public class AccountService {
             log.info(auditMessage);
             auditService.auditEvent(auditMessage, Constants.ACCOUNT_BALANCE_FUNDED);
 
+            final String message = String.format("Dear %s, You have Successfully funded your wallet by %.2f, Your new Balance is %.2f",
+                    Security.getUserName(), request.getAmount(), newBalance);
+
             MailMessageDto mailMessageDto = MailMessageDto.builder()
-                    .body(String.format("You have Successfully funded your wallet by %.2f New Balance is %.2f", request.getAmount(), newBalance))
+                    .body(message)
                     .to(Security.getEmail())
                     .subject("Fund Wallet report")
                     .build();
 
-            pushMailMessage(mailMessageDto);
+            mailService.pushMailMessage(mailMessageDto);
 
             return new MessageDto("Wallet Successfully Funded");
         }
@@ -252,8 +255,8 @@ public class AccountService {
                     .body(String.format("You have successfully funded %s by %.2f, your new Balance is %.2f", toSimpleDto.getUserName(), dto.getAmount(), newFromBalance))
                     .build();
 
-            pushMailMessage(toDto);
-            pushMailMessage(fromDto);
+            mailService.pushMailMessage(toDto);
+            mailService.pushMailMessage(fromDto);
 
             return WalletResponseDto.builder()
                     .status(200)
@@ -339,13 +342,16 @@ public class AccountService {
                 Optional.ofNullable(restTemplate.getForObject(baseLocalUrl + "/api/v1/user/simple/" + id, SimpleUserDto.class))
                         .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", id));
 
+        final String message = String.format("Dear %s %s\n\nYour account has been refunded with %.2f by Onecard Admin. Your new balance is %.2f",
+                simpleUserDto.getFirstName(), simpleUserDto.getLastName(), dto.getAmount(), newBalance);
+
         MailMessageDto mailMessageDto = MailMessageDto.builder()
                 .subject("Wallet Refund")
-                .body(String.format("Your account has been refunded By Onecard in the sum of %.2f, your new balance is %.2f", dto.getAmount(), newBalance))
+                .body(message)
                 .to(simpleUserDto.getEmail())
                 .build();
 
-        pushMailMessage(mailMessageDto);
+        mailService.pushMailMessage(mailMessageDto);
 
         return RefundResponseDto.builder()
                 .status(200)
@@ -405,13 +411,16 @@ public class AccountService {
         if (simpleUserDto != null) {
             log.info(String.format("Sending Notification of Admin Wallet Update to %s", simpleUserDto.getEmail()));
 
+            final String message = String.format("Dear %s %s\n\nYour account has been funded by OneCard Admin with %.2f.\nYour New Balance is Now %.2f",
+                    simpleUserDto.getFirstName(), simpleUserDto.getUserName(), dto.getBalance(), newBalance);
+
             MailMessageDto mailMessageDto = MailMessageDto.builder()
                     .to(simpleUserDto.getEmail())
-                    .body(String.format("Your account Balance has been funded by Onecard Admin by %.2f Your New Balance is Now %.2f", dto.getBalance(), newBalance))
+                    .body(message)
                     .subject("Wallet Funded")
                     .build();
 
-            pushMailMessage(mailMessageDto);
+            mailService.pushMailMessage(mailMessageDto);
 
         } // To be Modified to search for E-Mail Addresses of Users in Organization and Notify them accordingly
 
@@ -477,21 +486,10 @@ public class AccountService {
 
     public PagedDto<FundWalletRequestDto> findWalletFunding(String userId, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
-
         Page<FundWalletRequest> requests = fundWalletMapper.findByUserId(userId);
-
-        if (!requests.isEmpty()) {
-            log.info("First Column actionedBy {}", requests.get(0).getActionedBy());
-        }
-
-        log.info("Pages {}, Page Size {} Page Number {} Total {}", requests.getPages(), requests.getPageSize(), requests.getPageNum(), requests.getTotal());
-
         return createFundDto(requests);
     }
 
-    public void sendMailMessage(MailMessageDto dto) {
-        mailService.sendMailWithOutAttachment(dto);
-    }
 
     private Boolean checkPayment(String id) {
         RestTemplate restTemplate = new RestTemplate();
@@ -501,8 +499,8 @@ public class AccountService {
         return dto != null ? dto.getVerified() : false;
     }
 
-    public String saveFundWalletRequest(BigDecimal amount, Integer fundType,
-                                         String userId, String actionedBy, String narrative) {
+    public static String saveFundWalletRequest(BigDecimal amount, Integer fundType, String userId,
+                                               String actionedBy, String narrative) {
 
         final String id = UUID.randomUUID().toString();
 
@@ -519,14 +517,10 @@ public class AccountService {
                 .message(narrative)
                 .build();
 
-        fundWalletMapper.saveClosedAndVerified(request);
+        FundWalletMapper walletMapper = ApplicationContextProvider.getBean(FundWalletMapper.class);
+        walletMapper.saveClosedAndVerified(request);
 
         return id;
-    }
-
-    @SneakyThrows
-    private void pushMailMessage(MailMessageDto dto) {
-        jmsTemplate.convertAndSend(JMSConfig.SEND_MAIL_QUEUE, objectMapper.writeValueAsString(dto));
     }
 
     private PagedDto<FundWalletRequestDto> createFundDto(Page<FundWalletRequest> requests) {
@@ -549,7 +543,7 @@ public class AccountService {
         return pagedDto;
     }
 
-    private void saveTransaction(BigDecimal amount, String accountId, String narrative) {
+    public static void saveTransaction(BigDecimal amount, String accountId, String narrative) {
         Transaction transaction = Transaction.builder()
                 .accountId(accountId)
                 .recipient(accountId)
@@ -559,6 +553,6 @@ public class AccountService {
                 .requestId("NOT APPLICABLE")
                 .build();
 
-        transactionMapper.save(transaction);
+        ApplicationContextProvider.getBean(TransactionMapper.class).save(transaction);
     }
 }

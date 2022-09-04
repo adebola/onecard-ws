@@ -13,14 +13,17 @@ public class Constants {
     public static final String ACCOUNT_BALANCE_FUNDED = "Account Balance Funded";
     public static final String  ACCOUNT_BALANCE_REFUNDED = "Account Balance Refunded";
     public static final String ACCOUNT_BALANCE_UPDATED = "Account Balance Updated";
+    public static final String ACCOUNT_BALANCE_ADJUSTED = "Account Balance Adjusted";
     public static final int WALLET_SELF_FUNDED = 1;
     public static final int WALLET_ONECARD_FUNDED = 2;
     public static final int WALLET_USER_FUNDED = 3;
     public static final int WALLET_USER_DEBITED = 4;
     public static final int WALLET_ONECARD_REFUNDED = 5;
+    public static final int WALLET_ONECARD_ADJUSTED = 6;
     public static final String WALLET_SELF_FUNDED_STRING = "Self Funded";
     public static final String WALLET_ONECARD_FUNDED_STRING = "Onecard Funded";
     public static final String WALLET_USER_FUNDED_STRING = "User Funded";
     public static final String WALLET_USER_DEBIT_STRING = "User Debit";
     public static final String WALLET_ONECARD_REFUNDED_STRING = "Onecard Refund";
+    public static final String WALLET_ONECARD_ADJUSTED_STRING = "Adjusted by Admin";
 }

@@ -55,6 +55,10 @@ public class FundWalletMapstructMapperDecorator implements FundWalletMapstructMa
                 dto.setType(Constants.WALLET_ONECARD_REFUNDED_STRING);
                 break;
 
+            case Constants.WALLET_ONECARD_ADJUSTED:
+                dto.setType(Constants.WALLET_ONECARD_ADJUSTED_STRING);
+                break;
+
             default:
                 throw new RuntimeException(String.format("Invalid Fund Wallet Request Type %d unable to convert", request.getFundType()));
         }

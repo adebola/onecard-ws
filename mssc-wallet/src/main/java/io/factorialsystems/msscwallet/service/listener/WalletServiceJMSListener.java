@@ -11,6 +11,7 @@ import io.factorialsystems.msscwallet.domain.User;
 import io.factorialsystems.msscwallet.domain.UserWallet;
 import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.service.AccountService;
+import io.factorialsystems.msscwallet.service.MailService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class WalletServiceJMSListener {
     private final ApplicationContext applicationContext;
     private final RestTemplate restTemplate;
     private final AccountMapper accountMapper;
-    private final AccountService accountService;
+    private final MailService mailService;
     private final TransactionMapper transactionMapper;
 
     @Value("${api.host.baseurl}")
@@ -219,7 +220,7 @@ public class WalletServiceJMSListener {
 
         try {
             MailMessageDto mailMessageDto = objectMapper.readValue(jsonData, MailMessageDto.class);
-            accountService.sendMailMessage(mailMessageDto);
+            mailService.sendMailWithOutAttachment(mailMessageDto);
         } catch (JsonProcessingException e) {
             log.error("Error Processing JMS Message to send E-mail Reason : " + e.getMessage());
         }

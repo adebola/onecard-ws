@@ -2,6 +2,7 @@ package io.factorialsystems.msscwallet.controller;
 
 import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.service.AccountService;
+import io.factorialsystems.msscwallet.service.AdjustmentService;
 import io.factorialsystems.msscwallet.utils.Constants;
 import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import javax.validation.Valid;
 @RequestMapping("/api/v1/account")
 public class AccountController {
     private final AccountService accountService;
+    private final AdjustmentService adjustmentService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('Onecard_Admin')")
@@ -118,6 +120,12 @@ public class AccountController {
     @PostMapping("/transfer")
     public ResponseEntity<?> transferFunds(@Valid @RequestBody TransferFundsDto dto) {
         return new ResponseEntity<>(accountService.transferFunds(dto), HttpStatus.OK);
+    }
+
+    @PostMapping("/adjust")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<?> adjustAccount(@Valid @RequestBody AdjustmentRequestDto adjustmentRequestDto) {
+        return  new ResponseEntity<>(adjustmentService.adjustBalance(adjustmentRequestDto), HttpStatus.OK);
     }
 
 //

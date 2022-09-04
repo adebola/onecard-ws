@@ -51,3 +51,15 @@ create table fund_wallet_request (
     closed BOOLEAN DEFAULT FALSE
 );
 
+create table adjustments(
+    id varchar(64) NOT NULL,
+    adjusted_value DECIMAL(10, 2) NOT NULL,
+    previous_value DECIMAL(10, 2) NOT NULL,
+    adjusted_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    adjusted_by varchar(64) NOT NULL,
+    account_id varchar(64) NOT NULL,
+    narrative varchar(512),
+    FOREIGN KEY (account_id) REFERENCES accounts(id),
+    PRIMARY KEY (id)
+);
+
