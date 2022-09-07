@@ -1,10 +1,10 @@
-package io.factorialsystems.mssccontent;
+package io.factorialsystems.msscapiuser;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class MsscContentApplicationTests {
+class MsscApiuserApplicationTests {
 
     @Test
     void contextLoads() {

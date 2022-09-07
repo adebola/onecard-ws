@@ -1,13 +1,13 @@
-package io.factorialsystems.mssccontent;
+package io.factorialsystems.msscapiuser;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class MsscContentApplication {
+public class MsscApiuserApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(MsscContentApplication.class, args);
+        SpringApplication.run(MsscApiuserApplication.class, args);
     }
 
 }
