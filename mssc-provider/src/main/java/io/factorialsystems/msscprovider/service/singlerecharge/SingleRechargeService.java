@@ -64,7 +64,6 @@ public class SingleRechargeService {
     private final SingleDownloadRecharge singleDownloadRecharge;
     private final RechargeMapstructMapper rechargeMapstructMapper;
 
-
     private static String BASE_LOCAL_STATIC;
 
     @Value("${api.local.host.baseurl}")
@@ -213,7 +212,10 @@ public class SingleRechargeService {
             }
 
             if (status.getStatus() == HttpStatus.OK) {
-                if (request.getUserId() != null) sendMail(request, dto, status);
+                if (request.getUserId() != null) {
+                    request.setResults(status.getResults());
+                    sendMail(request, dto, status);
+                }
             } else {
                 singleRechargeMapper.failRequest(request.getId());
                 singleRefundRecharge.asyncRefundRecharge(request);
@@ -252,7 +254,6 @@ public class SingleRechargeService {
             result = " is successful";
         } else {
             result = "Failed";
-            //result = String.format("Failed:, Reason %s", status.getMessage());
         }
 
         String message = null;
@@ -263,6 +264,10 @@ public class SingleRechargeService {
         } else {
             message = String.format("Dear %s\n\nYour recharge of %s to %s for %.2f %s current wallet balance %.2f",
                     dto.getName(), request.getServiceCode(), request.getRecipient(), request.getServiceCost(), result,dto.getBalance());
+        }
+
+        if (request.getResults() != null) {
+            message = String.format("%s \n\nRecharge Results are %s", message, request.getResults());
         }
 
         MailMessageDto mailMessageDto = MailMessageDto.builder()
@@ -299,6 +304,7 @@ public class SingleRechargeService {
     public List<DataPlanDto> getDataPlans(String code) {
 
         ServiceAction action = serviceActionMapper.findByCode(code);
+
         if (action == null) {
             throw new RuntimeException(String.format("Unknown data plan (%s) Or Data Plan is not for DATA", code));
         }
@@ -307,6 +313,14 @@ public class SingleRechargeService {
                 .orElseThrow(() -> new RuntimeException(String.format("Factory not found for Product with code (%s)", code)));
 
         DataEnquiry enquiry = factory.getPlans(code);
+
+        if (enquiry == null) {
+            final String message = String.format("Unable to get data plans for service: %s", code);
+            log.error(message);
+
+            throw new ResourceNotFoundException("DataEnquiry", "code", code);
+        }
+
         return enquiry.getDataPlans(code);
     }
 
