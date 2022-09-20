@@ -3,10 +3,10 @@ package io.factorialsystems.msscprovider.service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscprovider.dao.AutoRechargeMapper;
-import io.factorialsystems.msscprovider.domain.rechargerequest.*;
 import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.query.SearchByString;
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.domain.rechargerequest.*;
+import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.AutoRechargeMapstructMapper;
@@ -14,7 +14,7 @@ import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeServ
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -84,7 +84,7 @@ public class AutoRechargeService {
 
         autoRechargeMapper.saveRecipients(request.getRecipients());
 
-        log.info(String.format("AutoRecharge (%s) Saved Successfully by (%s)", id, K.getUserName()));
+        log.info(String.format("AutoRecharge (%s) Saved Successfully by (%s)", id, ProviderSecurity.getUserName()));
 
         return AutoRechargeResponseDto.builder()
                 .id(id)
@@ -186,7 +186,7 @@ public class AutoRechargeService {
 
     public PagedDto<ShortAutoRechargeRequestDto> findUserRecharges(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
-        return createShortDto(autoRechargeMapper.findAutoRechargeByUserId(K.getUserId()));
+        return createShortDto(autoRechargeMapper.findAutoRechargeByUserId(ProviderSecurity.getUserId()));
     }
 
     public PagedDto<NewBulkRechargeRequestDto> getBulkRecharges(String id, Integer pageNumber, Integer pageSize) {
@@ -220,7 +220,7 @@ public class AutoRechargeService {
         Map<String, String> weeklyMap = new HashMap<>();
         weeklyMap.put("dayOfWeek", String.valueOf(dayOfWeek));
         weeklyMap.put("weekId", String.valueOf(weekOfYear));
-        weeklyMap.put("userId", K.getUserId());
+        weeklyMap.put("userId", ProviderSecurity.getUserId());
 
         log.info(String.format("Running Weekly Recharge for %s of  Week (%d) of the Year", days[dayOfWeek - 1], weekOfYear));
 
@@ -229,7 +229,7 @@ public class AutoRechargeService {
         Map<String, String> monthlyMap = new HashMap<>();
         weeklyMap.put("dayOfMonth", String.valueOf(dayOfMonth));
         weeklyMap.put("monthId", String.valueOf(monthOfYear));
-        weeklyMap.put("userId", K.getUserId());
+        weeklyMap.put("userId", ProviderSecurity.getUserId());
 
         log.info(String.format("Running Monthly Recharge for Day (%d) of %s of the Year", dayOfMonth, months[monthOfYear]));
 

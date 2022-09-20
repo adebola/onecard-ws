@@ -9,7 +9,8 @@ import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -53,14 +54,14 @@ public class BulkRechargeAuthController {
     public ResponseEntity<?> getUserBulkRecharges(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                   @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
-        return new ResponseEntity<>(newBulkRechargeService.getUserRecharges(K.getUserId(), pageNumber, pageSize), HttpStatus.OK);
+        return new ResponseEntity<>(newBulkRechargeService.getUserRecharges(ProviderSecurity.getUserId(), pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/list/{id}")
@@ -69,11 +70,11 @@ public class BulkRechargeAuthController {
                                                        @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                        @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.getUserRecharges(id, pageNumber, pageSize), HttpStatus.OK);
@@ -84,11 +85,11 @@ public class BulkRechargeAuthController {
                                               @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                               @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.searchByDate(dto.getScheduledDate(), pageNumber, pageSize), HttpStatus.OK);
@@ -107,11 +108,11 @@ public class BulkRechargeAuthController {
                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.adminIndividualFailedSearch(dto, pageNumber, pageSize), HttpStatus.OK);
@@ -123,11 +124,11 @@ public class BulkRechargeAuthController {
                                                @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.adminFailedSearch(dto, pageNumber, pageSize), HttpStatus.OK);
@@ -139,11 +140,11 @@ public class BulkRechargeAuthController {
                                                       @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.getBulkIndividualRequests(id, pageNumber, pageSize), HttpStatus.OK);
@@ -154,11 +155,11 @@ public class BulkRechargeAuthController {
                                               @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                               @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.searchIndividual(dto, pageNumber, pageSize), HttpStatus.OK);
@@ -268,11 +269,11 @@ public class BulkRechargeAuthController {
                                                 @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.getFailedRequests(pageNumber, pageSize), HttpStatus.OK);
@@ -284,11 +285,11 @@ public class BulkRechargeAuthController {
                                                           @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.getFailedUnresolvedRequests(pageNumber, pageSize), HttpStatus.OK);
@@ -301,11 +302,11 @@ public class BulkRechargeAuthController {
                                                   @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.getFailedIndividuals(id, pageNumber, pageSize), HttpStatus.OK);
@@ -318,11 +319,11 @@ public class BulkRechargeAuthController {
                                                             @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(newBulkRechargeService.getFailedUnresolvedIndividuals(id, pageNumber, pageSize), HttpStatus.OK);

@@ -33,7 +33,7 @@ import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleDown
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleResolveRecharge;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRetryRecharge;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +85,7 @@ public class SingleRechargeService {
             request.setStatus(paymentRequest.getStatus());
 
             request.setId(UUID.randomUUID().toString());
-            log.info(String.format("Saving Recharge Request %s for %s", request.getId(), K.getUserName()));
+            log.info(String.format("Saving Recharge Request %s for %s", request.getId(), ProviderSecurity.getUserName()));
 
             // Bulk and Scheduled Requests are always handled asynchronously
             if (request.getBulkRequestId() != null || request.getScheduledRequestId() != null) {
@@ -99,8 +99,8 @@ public class SingleRechargeService {
                     try {
                         AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
                                 .id(request.getId())
-                                .email(K.getEmail())
-                                .name(K.getUserName())
+                                .email(ProviderSecurity.getEmail())
+                                .name(ProviderSecurity.getUserName())
                                 .balance(paymentRequest.getBalance())
                                 .build();
                         jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(asyncRechargeDto));
@@ -111,7 +111,12 @@ public class SingleRechargeService {
                 } else {
                     final String message = String.format("Payment Error %s : ", request.getMessage());
                     log.error(message);
-                    throw new RuntimeException(message);
+
+                    return SingleRechargeResponseDto.builder()
+                            .status(300)
+                            .message(message)
+                            .build();
+                    // throw new RuntimeException(message);
                 }
             }
 
@@ -136,8 +141,8 @@ public class SingleRechargeService {
             } else { // Synchronous Wallet Payment
                 AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
                         .id(dto.getId())
-                        .email(K.getEmail())
-                        .name(K.getUserName())
+                        .email(ProviderSecurity.getEmail())
+                        .name(ProviderSecurity.getUserName())
                         .balance(paymentRequest.getBalance())
                         .build();
 
@@ -231,7 +236,7 @@ public class SingleRechargeService {
 
     public ResolveRechargeDto resolveRecharge(String id, ResolveRechargeDto dto) {
         dto.setRechargeId(id);
-        dto.setResolvedBy(K.getUserName());
+        dto.setResolvedBy(ProviderSecurity.getUserName());
 
         return singleResolveRecharge.resolve(dto)
                 .orElseThrow(() -> new RuntimeException(String.format("Error Resolving Recharge %s", id)));
@@ -263,7 +268,7 @@ public class SingleRechargeService {
                     dto.getName(), request.getServiceCode(), request.getRecipient(), request.getServiceCost(), result);
         } else {
             message = String.format("Dear %s\n\nYour recharge of %s to %s for %.2f %s current wallet balance %.2f",
-                    dto.getName(), request.getServiceCode(), request.getRecipient(), request.getServiceCost(), result,dto.getBalance());
+                    dto.getName(), request.getServiceCode(), request.getRecipient(), request.getServiceCost(), result, dto.getBalance());
         }
 
         if (request.getResults() != null) {
@@ -400,6 +405,7 @@ public class SingleRechargeService {
     public InputStreamResource getFailedRecharges(String type) {
         return singleDownloadRecharge.downloadFailed(type);
     }
+
     @SneakyThrows
     public static void saveTransaction(SingleRechargeRequest request) {
 
@@ -430,7 +436,7 @@ public class SingleRechargeService {
         String uri = null;
         RestTemplate restTemplate = new RestTemplate();
 
-        if (K.getUserId() == null) { // Anonymous Login
+        if (ProviderSecurity.getUserId() == null) { // Anonymous Login
             uri = "api/v1/pay";
         } else {
             uri = "api/v1/payment";
@@ -464,30 +470,35 @@ public class SingleRechargeService {
         }
 
         if (dto.getProductId() != null) {
-            DataEnquiry enquiry  = factory.getPlans(serviceAction);
+            DataEnquiry enquiry = factory.getPlans(serviceAction);
+            log.info("Product Id {}, determine price", dto.getProductId());
 
             if (enquiry == null) {
-                ExtraDataEnquiry extraDataEnquiry = factory.getExtraPlans(serviceAction);
+                log.info("Null SimpleDataEnquiry, Extra Data Enquiry for Action {}, ServiceCode {}", serviceAction, dto.getServiceCode());
+
+//                ExtraDataEnquiry extraDataEnquiry = factory.getExtraPlans(serviceAction);
+                ExtraDataEnquiry extraDataEnquiry = factory.getExtraPlans(dto.getServiceCode());
 
                 if (extraDataEnquiry != null) {
-                    ExtraDataPlanDto extraDataPlanDto = extraDataEnquiry.getExtraPlans (
+                    log.info("ExtraDataEnquiry NOT NULL");
+
+                    ExtraDataPlanDto extraDataPlanDto = extraDataEnquiry.getExtraPlans(
                             ExtraPlanRequestDto.builder()
                                     .recipient(dto.getRecipient())
                                     .serviceCode(dto.getServiceCode())
                                     .build()
                     );
 
-                   Integer price = extraDataPlanDto.getObject().stream()
+                    Integer price = extraDataPlanDto.getObject().stream()
                             .filter(r -> r.getCode().equals(dto.getProductId()))
                             .findFirst()
                             .map(ProductItem::getPrice)
                             .orElseThrow(() -> new ResourceNotFoundException("ExtraDataPlanDto", "ProductCode", dto.getProductId()));
 
-                    if  (price > 0) {
+                    if (price > 0) {
                         request.setServiceCost(new BigDecimal(price));
                     }
                 }
-
             } else {
                 DataPlanDto planDto = enquiry.getPlan(dto.getProductId(), dto.getServiceCode());
                 request.setServiceCost(new BigDecimal(planDto.getPrice()));
@@ -495,7 +506,9 @@ public class SingleRechargeService {
         }
 
         if (request.getServiceCost() == null) {
-            throw new RuntimeException(String.format("Unable to determine Price of Recharge Request (%s) by (%s)", request.getId(),request.getUserId()));
+            throw new RuntimeException(
+                    String.format("Unable to determine Price of Recharge Request (%s/%s) by (%s) User may not be eligible to subscribe to the service",
+                            request.getServiceCode(), request.getProductId(), request.getUserId()));
         }
 
         ParameterCheck parameterCheck = factory.getCheck(serviceAction);

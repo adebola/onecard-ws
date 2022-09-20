@@ -6,7 +6,8 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.ScheduledRecharge
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.recharge.ScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
@@ -40,7 +41,7 @@ public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper
     public SingleRechargeRequest rechargeDtoToRecharge(SingleRechargeRequestDto dto) {
 
         SingleRechargeRequest request = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
-        request.setUserId(K.getUserId());
+        request.setUserId(ProviderSecurity.getUserId());
 
         String serviceCode = dto.getServiceCode();
 
@@ -68,23 +69,23 @@ public class RechargeMapstructMapperDecorator implements RechargeMapstructMapper
             request.setServiceCost(action.getServiceCost());
         }
 
-        final String userId = K.getUserId();
+        final String userId = ProviderSecurity.getUserId();
         final String paymentMode = dto.getPaymentMode();
 
         if (paymentMode == null) { // No Payment Mode Specified
             if (userId == null) { // Anonymous User Not Logged On
-                request.setPaymentMode(K.PAYSTACK_PAY_MODE);
+                request.setPaymentMode(Constants.PAYSTACK_PAY_MODE);
             } else {
-                request.setPaymentMode(K.WALLET_PAY_MODE);
+                request.setPaymentMode(Constants.WALLET_PAY_MODE);
             }
         } else {
             String mode
-                    = Arrays.stream(K.ALL_PAYMENT_MODES).filter(x -> x.equals(paymentMode))
+                    = Arrays.stream(Constants.ALL_PAYMENT_MODES).filter(x -> x.equals(paymentMode))
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException(String.format("Invalid PaymentMode String (%s)", paymentMode)));
 
             // Specified Wallet but Not Logged In
-            if (paymentMode.equals(K.WALLET_PAY_MODE) && userId == null) {
+            if (paymentMode.equals(Constants.WALLET_PAY_MODE) && userId == null) {
                 throw new RuntimeException("You must be logged In to do a Wallet purchase, please login or choose and alternate payment method");
             }
 

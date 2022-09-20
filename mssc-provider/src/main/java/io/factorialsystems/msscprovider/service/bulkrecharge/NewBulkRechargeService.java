@@ -42,7 +42,8 @@ import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification;
 import io.factorialsystems.msscprovider.service.model.ServiceHelper;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +85,7 @@ public class NewBulkRechargeService {
         ExcelReader excelReader = new ExcelReader(uploadFile);
 
         NewBulkRechargeRequestDto newRequestDto = new NewBulkRechargeRequestDto();
-        newRequestDto.setPaymentMode(K.WALLET_PAY_MODE);
+        newRequestDto.setPaymentMode(Constants.WALLET_PAY_MODE);
         List<IndividualRequestDto> individualRequests = excelReader.readContents();
 
         if (individualRequests == null || individualRequests.isEmpty()) {
@@ -112,7 +113,7 @@ public class NewBulkRechargeService {
         NewBulkRechargeRequest request = mapper.rechargeDtoToRecharge(dto);
         PaymentRequestDto requestDto = helper.initializePayment(request);
 
-        if (requestDto.getPaymentMode().equals(K.WALLET_PAY_MODE) && requestDto.getStatus() != 200) {
+        if (requestDto.getPaymentMode().equals(Constants.WALLET_PAY_MODE) && requestDto.getStatus() != 200) {
             return NewBulkRechargeResponseDto.builder()
                     .status(requestDto.getStatus())
                     .message("Payment Failure: " + requestDto.getMessage())
@@ -135,13 +136,13 @@ public class NewBulkRechargeService {
         });
         newBulkRechargeMapper.saveBulkIndividualRequests(request.getRecipients());
 
-        if (request.getPaymentMode().equals(K.WALLET_PAY_MODE)) {
+        if (request.getPaymentMode().equals(Constants.WALLET_PAY_MODE)) {
             saveTransaction(request);
 
             AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
                     .id(requestId)
-                    .email(K.getEmail())
-                    .name(K.getUserName())
+                    .email(ProviderSecurity.getEmail())
+                    .name(ProviderSecurity.getUserName())
                     .balance(requestDto.getBalance())
                     .build();
 
@@ -244,7 +245,7 @@ public class NewBulkRechargeService {
                     } else {
                         final String errorMessage =
                                 String.format("Invalid Parameters in Request Action: (%s) serviceCode: (%s), Recipient: (%s) Made By: (%s)",
-                                        serviceAction, individualRequest.getServiceCode(), individualRequest.getRecipient(), K.getEmail());
+                                        serviceAction, individualRequest.getServiceCode(), individualRequest.getRecipient(), ProviderSecurity.getEmail());
                         log.error(errorMessage);
 
                         IndividualRequestFailureNotification notification = IndividualRequestFailureNotification
@@ -266,7 +267,7 @@ public class NewBulkRechargeService {
                 }
             });
 
-            if (request.getPaymentMode().equals(K.PAYSTACK_PAY_MODE) && request.getScheduledRequestId() == null) {
+            if (request.getPaymentMode().equals(Constants.PAYSTACK_PAY_MODE) && request.getScheduledRequestId() == null) {
                 saveTransaction(request);
             }
 
@@ -329,7 +330,7 @@ public class NewBulkRechargeService {
     public PagedDto<NewBulkRechargeRequestDto> getUserRechargesByAutoRequestId(String id, Integer pageNumber, Integer pageSize) {
         Map<String, String> parameterMap = new HashMap<>();
         parameterMap.put("id", id);
-        parameterMap.put("userId", K.getUserId());
+        parameterMap.put("userId", ProviderSecurity.getUserId());
 
         PageHelper.startPage(pageNumber, pageSize);
         Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findBulkRequestByAutoId(parameterMap);
@@ -397,14 +398,14 @@ public class NewBulkRechargeService {
 
     public ResolveRechargeDto resolveRecharges(String id, ResolveRechargeDto dto) {
         dto.setRechargeId(id);
-        dto.setResolvedBy(K.getUserName());
+        dto.setResolvedBy(ProviderSecurity.getUserName());
 
         return bulkResolveRecharge.resolveBulk(dto)
                 .orElseThrow(() -> new RuntimeException(String.format("Error Resolving Bulk Requests %s, it might have been resolved, refunded or successfully re-tried", id)));
     }
 
     public ResolveRechargeDto resolveRecharge(Integer id, ResolveRechargeDto dto) {
-        dto.setResolvedBy(K.getUserName());
+        dto.setResolvedBy(ProviderSecurity.getUserName());
 
         return bulkResolveRecharge.resolveIndividual(dto)
                 .orElseThrow(() -> new RuntimeException(String.format("Error Resolving Individual Bulk Requests %s, it might have been resolved, refunded or successfully re-tried", id)));

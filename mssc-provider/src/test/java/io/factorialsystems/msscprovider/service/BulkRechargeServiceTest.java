@@ -2,7 +2,7 @@ package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.NewBulkRechargeRequestDto;
@@ -14,7 +14,7 @@ import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeServ
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -133,10 +133,10 @@ class BulkRechargeServiceTest {
         final String rechargeId = "158f4d0b-19be-4d8d-8c83-398383890188";
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             service.refundFailedRecharges(rechargeId);
         }
@@ -145,7 +145,7 @@ class BulkRechargeServiceTest {
     @Test
     void retryFailedRecharges() {
         String id = "158f4d0b-19be-4d8d-8c83-398383890188";
-        service.retryFailedRecharges(id);
+        //service.retryFailedRecharges(id);
     }
 
     @Test
@@ -192,13 +192,13 @@ class BulkRechargeServiceTest {
         String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
         log.info(s);
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
-            k.when(K::getAccessToken).thenReturn(accessToken);
-            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
+            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
 
             List<IndividualRequestDto> list = new ArrayList<>(1);
 
@@ -236,10 +236,10 @@ class BulkRechargeServiceTest {
 
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             var x = service.searchByDate(d, 1, 20);
             log.info(x);
@@ -274,12 +274,12 @@ class BulkRechargeServiceTest {
         //final String id = "3ad67afe-77e7-11ec-825f-5c5181925b12";
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
-            var y = service.getUserRecharges(K.getUserId(), 1, 20);
+            var y = service.getUserRecharges(ProviderSecurity.getUserId(), 1, 20);
             log.info(y);
         }
     }
@@ -300,14 +300,14 @@ class BulkRechargeServiceTest {
         Recharge recharge = Mockito.mock(Recharge.class);
         Mockito.when(recharge.recharge(any())).thenReturn(rechargeStatus);
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
                     .id(id)
-                    .email(K.getEmail())
+                    .email(ProviderSecurity.getEmail())
                     .build();
 
             service.runBulkRecharge(asyncRechargeDto);
@@ -362,10 +362,10 @@ class BulkRechargeServiceTest {
         final String bulkId = "268c0450-172c-4cbd-aad5-9368ace533a6";
 
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             InputStreamResource resource = new InputStreamResource(service.generateExcelFile(bulkId));
             File targetFile = new File("test2.xlsx");
@@ -396,10 +396,10 @@ class BulkRechargeServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final String autoId = "02d06cda-64dd-4dbf-8dbe-ffd90dbb1f36";
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             var x = service.getUserRechargesByAutoRequestId(autoId, 1, 20);
             log.info("Size " + x.getTotalSize());
@@ -417,15 +417,15 @@ class BulkRechargeServiceTest {
 //        Recharge recharge = Mockito.mock(Recharge.class);
 //        Mockito.when(recharge.recharge(any())).thenReturn(rechargeStatus);
 //
-//        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-//            k.when(K::getUserId).thenReturn(id);
-//            assertThat(K.getUserId()).isEqualTo(id);
+//        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+//            k.when(Constants::getUserId).thenReturn(id);
+//            assertThat(Constants.getUserId()).isEqualTo(id);
 //
-//            k.when(K::getAccessToken).thenReturn(accessToken);
-//            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+//            k.when(Constants::getAccessToken).thenReturn(accessToken);
+//            assertThat(Constants.getAccessToken()).isEqualTo(accessToken);
 //
-//            log.info(K.getUserId());
-//            log.info(K.getAccessToken());
+//            log.info(Constants.getUserId());
+//            log.info(Constants.getAccessToken());
 //
 //            var x = service.retryFailedRecharge(1);
 //            log.info(x.getMessage());

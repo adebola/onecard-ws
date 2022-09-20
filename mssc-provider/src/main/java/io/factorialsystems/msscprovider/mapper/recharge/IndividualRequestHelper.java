@@ -15,7 +15,7 @@ import io.factorialsystems.msscprovider.recharge.ExtraDataEnquiry;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.recharge.ringo.response.ProductItem;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -74,7 +74,7 @@ public class IndividualRequestHelper {
         }
 
         if (autoRequest.getServiceCost() == null) {
-            throw new RuntimeException(String.format("Unable to determine Price of Recharge Request (%s) by (%s)", autoRequest.getId(), K.getUserName()));
+            throw new RuntimeException(String.format("Unable to determine Price of Recharge Request (%s) by (%s)", autoRequest.getId(), ProviderSecurity.getUserName()));
         }
 
         if (!factory.getCheck(serviceAction).check(toSingleRechargeRequest(autoRequest))) {
@@ -156,7 +156,7 @@ public class IndividualRequestHelper {
         }
 
         if (individualRequest.getServiceCost() == null) {
-            throw new RuntimeException(String.format("Unable to determine Price of Recharge Request (%s) by (%s)", individualRequest.getId(), K.getUserName()));
+            throw new RuntimeException(String.format("Unable to determine Price of Recharge Request (%s) by (%s)", individualRequest.getId(), ProviderSecurity.getUserName()));
         }
 
         if (!factory.getCheck(serviceAction).check(toSingleRechargeRequest(individualRequest))) {

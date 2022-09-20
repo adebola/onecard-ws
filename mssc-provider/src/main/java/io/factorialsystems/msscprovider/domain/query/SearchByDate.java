@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.domain.query;
 
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.Data;
 
 import java.sql.Timestamp;
@@ -13,6 +13,6 @@ public class SearchByDate {
 
     public SearchByDate(Date date) {
         this.ts = new Timestamp(date.getTime());
-        userId = K.getUserId();
+        userId = ProviderSecurity.getUserId();
     }
 }

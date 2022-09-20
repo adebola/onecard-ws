@@ -3,7 +3,7 @@ package io.factorialsystems.msscprovider.service;
 import io.factorialsystems.msscprovider.dto.recharge.AutoIndividualRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AutoRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AutoRechargeResponseDto;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -39,10 +39,10 @@ class AutoRechargeServiceTest {
 
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             AutoRechargeRequestDto dto = new AutoRechargeRequestDto();
 
@@ -162,10 +162,10 @@ class AutoRechargeServiceTest {
 
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             var x = autoRechargeService.findUserRecharges(1, 20);
             assertNotNull(x);
@@ -186,10 +186,10 @@ class AutoRechargeServiceTest {
     void runAutoRecharge() {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             autoRechargeService.runAutoRecharge();
         }
@@ -199,10 +199,10 @@ class AutoRechargeServiceTest {
     void searchByName() {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             var x = autoRechargeService.searchByName("t", 1, 20);
             log.info(x);
@@ -219,10 +219,10 @@ class AutoRechargeServiceTest {
 
         Date d = formatter.parse(dateString);
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             var x = autoRechargeService.searchByDate(d, 1, 20);
             log.info(x);

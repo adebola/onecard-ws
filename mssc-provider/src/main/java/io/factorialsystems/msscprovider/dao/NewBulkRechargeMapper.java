@@ -7,6 +7,7 @@ import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
+import io.factorialsystems.msscprovider.dto.CombinedRequestDto;
 import io.factorialsystems.msscprovider.dto.search.SearchBulkFailedRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
@@ -60,4 +61,5 @@ public interface NewBulkRechargeMapper {
     Page<NewBulkRechargeRequest> adminFailedSearch(SearchBulkFailedRechargeDto dto);
     Page<IndividualRequest> searchFailedIndividual(SearchIndividualDto dto);
     Boolean saveResults(Map<String, String> resultMap);
+    List<NewBulkRechargeRequest> findBulkByUserIdAndDateRange(CombinedRequestDto dto);
 }

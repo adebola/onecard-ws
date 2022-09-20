@@ -289,6 +289,18 @@
         <include refid="bulk_request_by_userid"/>
     </select>
 
+    <select id = "findBulkByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.CombinedRequestDto" resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_request_by_userid"/>
+        <if test="startDate != null and endDate != null">
+            and createdAt between date(#{startDate}) and date(#{endDate})
+        </if>
+
+        <if test="startDate != null and endDate == null">
+            and createdAt &gt; date(#{startDate})
+        </if>
+    </select>
+
     <select id="findListBulkRequestByUserId" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">
         select
         <include refid="bulk_request_by_userid"/>

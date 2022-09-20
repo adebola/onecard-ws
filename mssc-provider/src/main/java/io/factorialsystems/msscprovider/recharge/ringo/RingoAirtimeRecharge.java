@@ -11,7 +11,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.request.RingoReQueryReque
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoAirtimeResponse;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoReQueryResponse;
 import io.factorialsystems.msscprovider.recharge.ringo.response.info.RingoInfoResponse;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -36,8 +36,8 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, 
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(K.HEADER_EMAIL, ringoProperties.getMail());
-        headers.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
+        headers.add(Constants.HEADER_EMAIL, ringoProperties.getMail());
+        headers.add(Constants.HEADER_PASSWORD, ringoProperties.getPassword());
 
         int cost = (int)request.getServiceCost().doubleValue();
 
@@ -153,8 +153,8 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, 
     private HttpHeaders getHeader() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(K.HEADER_EMAIL, ringoProperties.getMail());
-        headers.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
+        headers.add(Constants.HEADER_EMAIL, ringoProperties.getMail());
+        headers.add(Constants.HEADER_PASSWORD, ringoProperties.getPassword());
 
         return headers;
     }

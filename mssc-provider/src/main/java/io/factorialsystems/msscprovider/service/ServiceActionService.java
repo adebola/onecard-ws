@@ -10,7 +10,7 @@ import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.ServiceActionDto;
 import io.factorialsystems.msscprovider.dto.status.StatusMessageDto;
 import io.factorialsystems.msscprovider.mapper.action.ServiceActionMapstructMapper;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -78,7 +78,7 @@ public class ServiceActionService {
         if (action != null) {
             action.setActivated(true);
             action.setActivationDate(new Timestamp(System.currentTimeMillis()));
-            action.setActivatedBy(K.getUserName());
+            action.setActivatedBy(ProviderSecurity.getUserName());
 
             serviceActionMapper.update(action);
 

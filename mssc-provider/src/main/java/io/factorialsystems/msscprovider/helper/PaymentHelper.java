@@ -2,8 +2,11 @@ package io.factorialsystems.msscprovider.helper;
 
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
-import io.factorialsystems.msscprovider.utils.K;
-import lombok.*;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -28,7 +31,7 @@ public class PaymentHelper {
         String uri;
         RestTemplate restTemplate = new RestTemplate();
 
-        if (K.getUserId() == null) { // Anonymous Login
+        if (ProviderSecurity.getUserId() == null) { // Anonymous Login
             uri = "api/v1/pay";
         } else {
             uri = "api/v1/payment";

@@ -7,7 +7,7 @@ import io.factorialsystems.msscprovider.domain.Provider;
 import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
 import io.factorialsystems.msscprovider.mapper.provider.ProviderMapstructMapper;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -81,7 +81,7 @@ public class ProviderService {
         if (provider != null) {
             provider.setActivated(true);
             provider.setActivationDate(new Timestamp(System.currentTimeMillis()));
-            provider.setActivatedBy(K.getUserName());
+            provider.setActivatedBy(ProviderSecurity.getUserName());
 
             providerMapper.update(provider);
 

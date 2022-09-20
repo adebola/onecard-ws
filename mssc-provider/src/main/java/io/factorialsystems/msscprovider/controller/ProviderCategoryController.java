@@ -1,7 +1,7 @@
 package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.service.ProviderCategoryService;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.dto.provider.ProviderCategoryDto;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +28,11 @@ public class ProviderCategoryController {
                                                      @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(providerCategoryService.findProviderCategories(pageNumber, pageSize), HttpStatus.OK);
@@ -44,11 +44,11 @@ public class ProviderCategoryController {
                                                         @RequestParam(value = "searchString") String searchString) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(providerCategoryService.searchProviderCategories(pageNumber, pageSize, searchString), HttpStatus.OK);

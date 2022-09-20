@@ -3,7 +3,8 @@ package io.factorialsystems.msscprovider.controller;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
 import io.factorialsystems.msscprovider.service.ProviderService;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -29,11 +30,11 @@ public class ProviderController {
                                              @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(providerService.findProviders(pageNumber, pageSize), HttpStatus.OK);
@@ -45,11 +46,11 @@ public class ProviderController {
                                                 @RequestParam(value = "searchString") String searchString) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(providerService.searchProviders(pageNumber, pageSize, searchString), HttpStatus.OK);
@@ -69,7 +70,7 @@ public class ProviderController {
     public ResponseEntity<?> createProvider(@Valid @RequestBody ProviderDto dto) {
 
         try {
-            Integer providerId = providerService.saveProvider(K.getUserName(), dto);
+            Integer providerId = providerService.saveProvider(ProviderSecurity.getUserName(), dto);
             return new ResponseEntity<>(providerService.findProviderById(providerId), HttpStatus.CREATED);
         } catch (DuplicateKeyException dex) {
             String message = String.format("Duplicate Key creating provider Code must be unique, System Message : %s", dex.getMessage());

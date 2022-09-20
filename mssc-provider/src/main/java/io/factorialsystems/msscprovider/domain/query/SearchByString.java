@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.domain.query;
 
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.Data;
 
 @Data
@@ -10,6 +10,6 @@ public class SearchByString {
 
     public SearchByString(String search) {
         this.search = search;
-        userId = K.getUserId();
+        userId = ProviderSecurity.getUserId();
     }
 }

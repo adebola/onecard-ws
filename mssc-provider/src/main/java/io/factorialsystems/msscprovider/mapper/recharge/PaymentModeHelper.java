@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -13,21 +14,21 @@ public class PaymentModeHelper {
     public String checkPaymentMode(String paymentMode) {
 
         String finalMode = null;
-        final String userId = K.getUserId();
+        final String userId = ProviderSecurity.getUserId();
 
         if (paymentMode == null) { // No Payment Mode Specified
             if (userId == null) { // Anonymous User Not Logged On
-                finalMode = K.PAYSTACK_PAY_MODE;
+                finalMode = Constants.PAYSTACK_PAY_MODE;
             } else {
-                finalMode = K.WALLET_PAY_MODE;
+                finalMode = Constants.WALLET_PAY_MODE;
             }
         } else {
-            finalMode = Arrays.stream(K.ALL_PAYMENT_MODES).filter(x -> x.equals(paymentMode))
+            finalMode = Arrays.stream(Constants.ALL_PAYMENT_MODES).filter(x -> x.equals(paymentMode))
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException(String.format("Invalid PaymentMode String (%s)", paymentMode)));
 
             // Specified Wallet but Not Logged In
-            if (paymentMode.equals(K.WALLET_PAY_MODE) && userId == null) {
+            if (paymentMode.equals(Constants.WALLET_PAY_MODE) && userId == null) {
                 throw new RuntimeException("You must be logged In to do a Wallet purchase, please login or choose and alternate payment method");
             }
         }

@@ -32,14 +32,14 @@ class MailServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final String accessToken = getUserToken(id);
 
-//        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-//            k.when(K::getUserId).thenReturn(id);
-//            k.when(K::getAccessToken).thenReturn(accessToken);
+//        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+//            k.when(Constants::getUserId).thenReturn(id);
+//            k.when(Constants::getAccessToken).thenReturn(accessToken);
 //
-//            assertThat(K.getUserId()).isEqualTo(id);
-//            assertThat(K.getAccessToken()).isEqualTo(accessToken);
-//            log.info(K.getUserId());
-//            log.info(K.getAccessToken());
+//            assertThat(Constants.getUserId()).isEqualTo(id);
+//            assertThat(Constants.getAccessToken()).isEqualTo(accessToken);
+//            log.info(Constants.getUserId());
+//            log.info(Constants.getAccessToken());
 //
 //            MailMessageDto dto = MailMessageDto.builder()
 //                    .body("Test Message Jesus Is Lord")
@@ -58,14 +58,14 @@ class MailServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 //        final String accessToken = getUserToken(id);
 
-//        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-//            k.when(K::getUserId).thenReturn(id);
-//            k.when(K::getAccessToken).thenReturn(accessToken);
+//        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+//            k.when(Constants::getUserId).thenReturn(id);
+//            k.when(Constants::getAccessToken).thenReturn(accessToken);
 //
-//            assertThat(K.getUserId()).isEqualTo(id);
-//            assertThat(K.getAccessToken()).isEqualTo(accessToken);
-//            log.info(K.getUserId());
-//            log.info(K.getAccessToken());
+//            assertThat(Constants.getUserId()).isEqualTo(id);
+//            assertThat(Constants.getAccessToken()).isEqualTo(accessToken);
+//            log.info(Constants.getUserId());
+//            log.info(Constants.getAccessToken());
 //
 //            MailMessageDto dto = MailMessageDto.builder()
 //                    .body("Test Message Jesus Is Lord")

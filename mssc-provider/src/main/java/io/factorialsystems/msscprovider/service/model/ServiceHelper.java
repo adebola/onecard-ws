@@ -3,7 +3,7 @@ package io.factorialsystems.msscprovider.service.model;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -27,7 +27,7 @@ public class ServiceHelper {
         String uri;
         RestTemplate restTemplate = new RestTemplate();
 
-        if (K.getUserId() == null) { // Anonymous Login
+        if (ProviderSecurity.getUserId() == null) { // Anonymous Login
             uri = "api/v1/pay";
         } else {
             uri = "api/v1/payment";

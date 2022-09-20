@@ -3,8 +3,8 @@ package io.factorialsystems.msscprovider.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.JMSConfig;
-import io.factorialsystems.msscprovider.utils.K;
 import io.factorialsystems.msscprovider.dto.AuditMessageDto;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +32,7 @@ public class AuditService {
                 .serviceAction(action)
                 .serviceName(serviceName)
                 .description(message)
-                .userName(K.getUserName())
+                .userName(ProviderSecurity.getUserName())
                 .build();
 
         try {

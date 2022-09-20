@@ -114,6 +114,24 @@
         and r.service_id = p.id
     </select>
 
+    <select id="findSingleByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.CombinedRequestDto" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.user_id = #{id}
+        and r.service_id = p.id
+
+        <if test="startDate != null and endDate != null">
+            and p.createdAt between date(#{startDate}) and date(#{endDate})
+        </if>
+
+        <if test="startDate != null and endDate == null">
+            and p.createdAt &gt; date(#{startDate})
+        </if>
+
+
+    </select>
+
     <select id="findByUserId" parameterType="java.lang.String" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>

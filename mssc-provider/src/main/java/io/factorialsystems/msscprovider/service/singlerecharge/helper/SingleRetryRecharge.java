@@ -13,7 +13,7 @@ import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -98,7 +98,7 @@ public class SingleRetryRecharge {
                 if (retryStatus.getStatus() == HttpStatus.OK) {
                     singleRechargeMapper.saveRetryRequest (
                             SingleRechargeRequestRetry.builder()
-                                    .retriedBy(K.getUserName() == null ? "auto" : K.getUserName())
+                                    .retriedBy(ProviderSecurity.getUserName() == null ? "auto" : ProviderSecurity.getUserName())
                                     .id(retryId)
                                     .requestId(id)
                                     .successful(true)
@@ -115,7 +115,7 @@ public class SingleRetryRecharge {
                 } else {
                     singleRechargeMapper.saveRetryRequest (
                             SingleRechargeRequestRetry.builder()
-                                    .retriedBy(K.getUserName())
+                                    .retriedBy(ProviderSecurity.getUserName())
                                     .id(retryId)
                                     .requestId(id)
                                     .successful(false)

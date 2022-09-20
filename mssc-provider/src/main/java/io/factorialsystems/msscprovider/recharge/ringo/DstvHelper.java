@@ -10,7 +10,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.request.RingoPayCableRequ
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoValidateCableRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoPayCableResponse;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoValidateCableResponse;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -37,8 +37,8 @@ public class DstvHelper {
         if (httpHeaders == null) {
             httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-            httpHeaders.add(K.HEADER_EMAIL, ringoProperties.getMail());
-            httpHeaders.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
+            httpHeaders.add(Constants.HEADER_EMAIL, ringoProperties.getMail());
+            httpHeaders.add(Constants.HEADER_PASSWORD, ringoProperties.getPassword());
         }
 
         return httpHeaders;

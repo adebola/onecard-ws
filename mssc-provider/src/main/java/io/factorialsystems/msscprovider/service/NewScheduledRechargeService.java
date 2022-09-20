@@ -4,11 +4,11 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
 import io.factorialsystems.msscprovider.dao.NewScheduledRechargeMapper;
+import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest;
-import io.factorialsystems.msscprovider.domain.query.SearchByDate;
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
@@ -20,11 +20,11 @@ import io.factorialsystems.msscprovider.helper.TransactionHelper;
 import io.factorialsystems.msscprovider.mapper.recharge.NewBulkRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.mapper.recharge.NewScheduledRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
-import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
+import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -175,7 +175,7 @@ public class NewScheduledRechargeService {
 
     public PagedDto<NewScheduledRechargeRequestDto> getUserRecharges(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
-        Page<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.findRequestByUserId(K.getUserId());
+        Page<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.findRequestByUserId(ProviderSecurity.getUserId());
 
         return createDto(requests);
     }

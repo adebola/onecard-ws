@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.JMSConfig;
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.RefundRequestDto;
+import io.factorialsystems.msscprovider.dto.RefundResponseDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRefundRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRefundResponseDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +69,7 @@ public class SingleRefundRecharge {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(Objects.requireNonNull(K.getAccessToken()));
+        headers.setBearerAuth(Objects.requireNonNull(ProviderSecurity.getAccessToken()));
 
         RefundRequestDto refundRequestDto = RefundRequestDto.builder()
                 .userId(request.getUserId())

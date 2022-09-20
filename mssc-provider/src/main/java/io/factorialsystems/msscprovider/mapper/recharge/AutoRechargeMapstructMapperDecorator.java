@@ -6,11 +6,14 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest
 import io.factorialsystems.msscprovider.domain.rechargerequest.ShortAutoRechargeRequest;
 import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.service.AutoRechargeService;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 public class AutoRechargeMapstructMapperDecorator implements AutoRechargeMapstructMapper {
     private IndividualRequestHelper individualRequestHelper;
@@ -29,7 +32,7 @@ public class AutoRechargeMapstructMapperDecorator implements AutoRechargeMapstru
     @Override
     public AutoRechargeRequest dtoToRequest(AutoRechargeRequestDto dto) {
         AutoRechargeRequest request = mapstructMapper.dtoToRequest(dto);
-        request.setUserId(K.getUserId());
+        request.setUserId(ProviderSecurity.getUserId());
 
         List<Integer> daysOfWeek = dto.getDaysOfWeek();
         List<Integer> daysOfMonth = dto.getDaysOfMonth();

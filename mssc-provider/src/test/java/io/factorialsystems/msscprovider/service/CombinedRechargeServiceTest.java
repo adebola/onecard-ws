@@ -1,71 +1,84 @@
-package io.factorialsystems.msscprovider.controller;
+package io.factorialsystems.msscprovider.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.factorialsystems.msscprovider.service.TokenResponseDto;
+import io.factorialsystems.msscprovider.dto.CombinedRequestDto;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
-import lombok.SneakyThrows;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 @CommonsLog
-class RechargeAuthControllerTest {
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+@SpringBootTest
+class CombinedRechargeServiceTest {
 
     final String client_id = "public-client";
     final String realmPassword = "password";
     final String realmUser = "realm-admin";
     final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
 
+    @Autowired
+    private CombinedRechargeService combinedRechargeService;
+
     @Test
-    @SneakyThrows
-    void startRecharge() {
+    public void getCombinedResource() throws ParseException, IOException {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        // final String accessToken = getUserToken(id);
+        final String accessToken = getUserToken(id);
 
         try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
             k.when(ProviderSecurity::getUserId).thenReturn(id);
             assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
             log.info(ProviderSecurity.getUserId());
 
-//            k.when(Constants::getAccessToken).thenReturn(accessToken);
-//            assertThat(Constants.getAccessToken()).isEqualTo(accessToken);
-//            log.info(accessToken);
-//
-//            SingleRechargeRequestDto dto = new SingleRechargeRequestDto();
-//            dto.setRecipient("1505001425");
-//            dto.setServiceCode("SMILE-DATA");
-//            dto.setProductId("508");
-//            dto.setPaymentMode("wallet");
-//
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//            headers.setBearerAuth(accessToken);
-//            HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(dto), headers);
-//
-//            ResponseEntity<SingleRechargeResponseDto> responseEntity =
-//                    restTemplate.exchange ("http://localhost:8081/api/v1/auth-recharge", HttpMethod.POST, request, SingleRechargeResponseDto.class);
-//
-//            log.info(responseEntity.getBody());
+            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
+            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
+            log.info(ProviderSecurity.getAccessToken());
+
+            CombinedRequestDto dto = new CombinedRequestDto();
+            dto.setId("e33b6988-e636-44d8-894d-c03c982d8fa5");
+
+            SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a", Locale.ENGLISH);
+            formatter.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+
+            String startString = "22-01-2015 10:15:55 AM";
+            String endString = "22-08-2022 10:15:55 AM";
+
+            Date startDate = formatter.parse(startString);
+            Date endDate = formatter.parse((endString));
+
+            dto.setStartDate(startDate);
+            dto.setEndDate(null);
+
+            InputStreamResource resource = new InputStreamResource(combinedRechargeService.getCombinedResource(dto));
+            File targetFile = new File("test4.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = resource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
         }
     }
 
     private String getUserToken(String userId) {
+
         String realmToken = getRealmAdminToken();
 
         if (realmToken == null) {
@@ -75,11 +88,6 @@ class RechargeAuthControllerTest {
         // Now Get the User Token
         return getUserToken(userId, realmToken);
     }
-
-    @Test
-    void getDataPlans() {
-    }
-
 
     private String getRealmAdminToken() {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();

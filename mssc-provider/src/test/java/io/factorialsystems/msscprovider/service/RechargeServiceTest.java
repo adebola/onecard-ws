@@ -6,7 +6,7 @@ import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -19,7 +19,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -78,10 +81,10 @@ class RechargeServiceTest {
         // final String rechargeId = "1b2f9ef5-b9e5-4b34-8e8e-90acd8004617";
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             SingleRechargeRequest request = singleRechargeMapper.findById(rechargeId);
 
@@ -95,10 +98,10 @@ class RechargeServiceTest {
         // final String rechargeId = "1b2f9ef5-b9e5-4b34-8e8e-90acd8004617";
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
             SingleRechargeRequest request = singleRechargeMapper.findById(rechargeId);
             // singleRefundRecharge.refundRecharge(rechargeId);
@@ -188,21 +191,19 @@ class RechargeServiceTest {
     }
 
     @Test
-    void getRecharge() {
-
-    }
+    void getRecharge() {}
 
     @Test
     void getUserRecharges() {
         //final String id = "3ad67afe-77e7-11ec-825f-5c5181925b12";
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 
-        try (MockedStatic<K> k  = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
-            var y = rechargeService.getUserRecharges(K.getUserId(), 1, 20);
+            var y = rechargeService.getUserRecharges(ProviderSecurity.getUserId(), 1, 20);
             log.info(y);
         }
     }
@@ -227,13 +228,13 @@ class RechargeServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final String accessToken = getUserToken(id);
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
-            k.when(K::getAccessToken).thenReturn(accessToken);
-            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
+            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
 
             InputStreamResource resource = rechargeService.getRechargesByUserId(id);
             File targetFile = new File("test2.xlsx");
@@ -250,13 +251,13 @@ class RechargeServiceTest {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final String accessToken = getUserToken(id);
 
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
+        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
 
-            k.when(K::getAccessToken).thenReturn(accessToken);
-            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
+            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
 
             InputStreamResource resource = rechargeService.getFailedRecharges("all");
             File targetFile = new File("test2.xlsx");

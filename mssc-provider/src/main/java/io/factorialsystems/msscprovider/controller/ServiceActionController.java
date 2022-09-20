@@ -5,7 +5,8 @@ import io.factorialsystems.msscprovider.domain.ProviderServiceRechargeProvider;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.dto.ServiceActionDto;
 import io.factorialsystems.msscprovider.service.ServiceActionService;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,11 +29,11 @@ public class ServiceActionController {
                                          @RequestParam(value = "code") String code) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(actionService.getProviderActions(code, pageNumber, pageSize), HttpStatus.OK);
@@ -43,11 +44,11 @@ public class ServiceActionController {
                                             @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(actionService.getAllServices(pageNumber, pageSize), HttpStatus.OK);
@@ -60,7 +61,7 @@ public class ServiceActionController {
 
     @PostMapping
     public ResponseEntity<ServiceActionDto> saveService(@Valid @RequestBody ServiceActionDto dto) {
-        return new ResponseEntity<>( actionService.saveAction(K.getUserName(), dto), HttpStatus.CREATED);
+        return new ResponseEntity<>( actionService.saveAction(ProviderSecurity.getUserName(), dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")

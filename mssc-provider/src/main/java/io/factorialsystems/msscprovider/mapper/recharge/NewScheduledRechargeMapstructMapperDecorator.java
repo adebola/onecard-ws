@@ -5,7 +5,8 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRe
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.recharge.NewScheduledRechargeRequestDto;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,12 +42,12 @@ public class NewScheduledRechargeMapstructMapperDecorator implements NewSchedule
     @Override
     public NewScheduledRechargeRequest rechargeDtoToRecharge(NewScheduledRechargeRequestDto dto) {
         NewScheduledRechargeRequest request = mapstructMapper.rechargeDtoToRecharge(dto);
-        request.setUserId(K.getUserId());
-        request.setUserEmail(K.getEmail());
+        request.setUserId(ProviderSecurity.getUserId());
+        request.setUserEmail(ProviderSecurity.getEmail());
         request.setPaymentMode(paymentModeHelper.checkPaymentMode(dto.getPaymentMode()));
 
         // RequestType 'single' or 'bulk'
-        if (dto.getRechargeType().equals(K.SINGLE_RECHARGE)) {
+        if (dto.getRechargeType().equals(Constants.SINGLE_RECHARGE)) {
             request.setRequestType(SINGLE_RECHARGE);
         } else {
             request.setRequestType(BULK_RECHARGE);

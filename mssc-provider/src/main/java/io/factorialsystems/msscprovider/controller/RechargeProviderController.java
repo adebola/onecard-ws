@@ -3,7 +3,7 @@ package io.factorialsystems.msscprovider.controller;
 import io.factorialsystems.msscprovider.dto.provider.RechargeProviderDto;
 import io.factorialsystems.msscprovider.dto.provider.RechargeProviderExDto;
 import io.factorialsystems.msscprovider.service.RechargeProviderService;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,11 +25,11 @@ public class RechargeProviderController {
                                                      @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(rechargeProviderService.findAll(pageNumber, pageSize), HttpStatus.OK);

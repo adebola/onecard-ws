@@ -15,7 +15,7 @@ import io.factorialsystems.msscprovider.recharge.factory.RingoRechargeFactory;
 import io.factorialsystems.msscprovider.recharge.ringo.dto.FetchDataDto;
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoDataRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoDataResponse;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -141,8 +141,8 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
     private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(K.HEADER_EMAIL, ringoProperties.getMail());
-        headers.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
+        headers.add(Constants.HEADER_EMAIL, ringoProperties.getMail());
+        headers.add(Constants.HEADER_PASSWORD, ringoProperties.getPassword());
 
         return headers;
     }

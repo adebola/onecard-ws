@@ -14,7 +14,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.request.RingoElectricRequ
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoElectricVerifyRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoElectricResponse;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoElectricVerifyResponse;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -145,11 +145,21 @@ public class RingoElectricRecharge implements Recharge, ParameterCheck, ExtraDat
                     restTemplate.postForObject(ringoProperties.getAirtimeUrl(), verifyEntity, RingoElectricVerifyResponse.class);
 
             if (verifyResponse == null || !verifyResponse.getStatus().equals("200")) {
+                String errMessage = null;
+
                 if (verifyResponse != null && verifyResponse.getMessage() != null) {
-                    throw new RuntimeException(String.format("Error Validating Meter / Account Number reason (%s)", verifyResponse.getMessage()));
+                    errMessage = String.format("Error Validating Meter / Account Number: (%s) reason (%s)", dto.getRecipient(), verifyResponse.getMessage());
+                } else {
+                    errMessage = "Error Validating Meter / Account Number";
                 }
 
-                throw new RuntimeException("Error Validating Meter / Account Number");
+                log.error(errMessage);
+
+                return ExtraDataPlanDto.builder()
+                        .customerName(errMessage)
+                        .recipient(errMessage)
+                        .status(300)
+                        .build();
             }
 
             return ExtraDataPlanDto.builder()
@@ -169,8 +179,8 @@ public class RingoElectricRecharge implements Recharge, ParameterCheck, ExtraDat
         if (headers == null) {
             headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.add(K.HEADER_EMAIL, ringoProperties.getMail());
-            headers.add(K.HEADER_PASSWORD, ringoProperties.getPassword());
+            headers.add(Constants.HEADER_EMAIL, ringoProperties.getMail());
+            headers.add(Constants.HEADER_PASSWORD, ringoProperties.getPassword());
         }
 
         return headers;

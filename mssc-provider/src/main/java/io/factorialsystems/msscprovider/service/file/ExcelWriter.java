@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.service.file;
 
+import io.factorialsystems.msscprovider.domain.CombinedRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
@@ -24,7 +25,72 @@ public class ExcelWriter {
     private static final String[] BULK_HEADERS = { "#", "Id", "Cost (₦)", "Payment Mode", "Date" };
     private static final String[] SINGLE_HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "Date", "Status", "Retry", "Refund", "Resolve", "Results" };
     private static final String[] SINGLE_HEADERS_WITH_USER = { "#", "Recipient", "Product", "Cost (₦)", "Date", "Status", "Retry", "Refund","Resolve", "User", "Results" };
+    public static final String[] COMBINED_HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "Date", "type","Status", "Retry", "Refund","Resolve"};
     private static final String SHEET = "onecard";
+
+    public ByteArrayInputStream combinedRequestToExcel(List<CombinedRechargeRequest> requests, String title)  {
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet(SHEET);
+
+            // Title
+            Row titleRow = sheet.createRow(0);
+            Cell cell = titleRow.createCell(0);
+            cell.setCellValue(title);
+
+            // Header
+            Row headerRow = sheet.createRow(1);
+
+            for (int col = 0; col < COMBINED_HEADERS.length; col++) {
+                Cell cell2 = headerRow.createCell(col);
+                cell2.setCellValue(COMBINED_HEADERS[col]);
+            }
+
+            int rowIdx = 2;
+            for (CombinedRechargeRequest request : requests) {
+                Row row = sheet.createRow(rowIdx);
+
+                row.createCell(0).setCellValue(rowIdx - 1);
+                row.createCell(1).setCellValue(request.getRecipient());
+                row.createCell(2).setCellValue(request.getServiceCode());
+                row.createCell(3).setCellValue(request.getServiceCost().doubleValue());
+//                row.createCell(3).setCellValue(String.format("%.2f", request.getServiceCost()));
+
+                String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
+                row.createCell(4).setCellValue(s);
+                row.createCell(5).setCellValue(request.getRechargeType());
+
+                if (request.getFailed() == null) {
+                    row.createCell(6).setCellValue("Unavailable");
+                } else if (request.getFailed()) {
+                    row.createCell(6).setCellValue("Failed");
+
+                    if (request.getRetryId() == null) {
+                        row.createCell(7).setCellValue("Retry Failed");
+                    } else  {
+                        row.createCell(7).setCellValue("Retry Succeeded");
+                    }
+
+                    if (request.getRefundId() != null) {
+                        row.createCell(8).setCellValue("Refunded");
+                    }
+
+                    if (request.getResolveId() != null) {
+                        row.createCell(9).setCellValue("Resolved");
+                    }
+                } else {
+                    row.createCell(6).setCellValue("Success");
+                }
+
+                rowIdx++;
+            }
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (IOException ioe) {
+            throw new RuntimeException("fail to import data to Excel file: " + ioe.getMessage());
+        }
+    }
 
     public ByteArrayInputStream bulkRequestToExcel(List<NewBulkRechargeRequest> requests, Map<String, String> entryMap, String title) {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -64,7 +130,8 @@ public class ExcelWriter {
                     cellIdx++;
                 }
 
-                row.createCell(cellIdx).setCellValue(String.format("%,.2f", request.getTotalServiceCost()));
+//                row.createCell(cellIdx).setCellValue(String.format("%,.2f", request.getTotalServiceCost()));
+                row.createCell(cellIdx).setCellValue(request.getTotalServiceCost().doubleValue());
 
                 cellIdx++;
                 row.createCell(cellIdx).setCellValue(request.getPaymentMode());
@@ -108,7 +175,8 @@ public class ExcelWriter {
                 row.createCell(0).setCellValue(rowIdx - 1);
                 row.createCell(1).setCellValue(individualRequest.getRecipient());
                 row.createCell(2).setCellValue(individualRequest.getServiceCode());
-                row.createCell(3).setCellValue(String.format("%,.2f", individualRequest.getServiceCost()));
+//                row.createCell(3).setCellValue(String.format("%,.2f", individualRequest.getServiceCost()));
+                row.createCell(3).setCellValue(individualRequest.getServiceCost().doubleValue());
 
                 if (individualRequest.getFailed() == null) {
                     row.createCell(4).setCellValue("Unavailable");
@@ -178,7 +246,8 @@ public class ExcelWriter {
                 row.createCell(0).setCellValue(rowIdx - 1);
                 row.createCell(1).setCellValue(request.getRecipient());
                 row.createCell(2).setCellValue(request.getServiceCode());
-                row.createCell(3).setCellValue(String.format("%,.2f", request.getServiceCost()));
+//                row.createCell(3).setCellValue(String.format("%,.2f", request.getServiceCost()));
+                row.createCell(3).setCellValue(request.getServiceCost().doubleValue());
 
                 String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
                 row.createCell(4).setCellValue(s);

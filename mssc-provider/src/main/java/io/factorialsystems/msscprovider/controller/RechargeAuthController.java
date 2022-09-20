@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.controller;
 
+import io.factorialsystems.msscprovider.dto.CombinedRequestDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
@@ -8,10 +9,13 @@ import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto
 import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.service.CombinedRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,6 +33,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/auth-recharge")
 public class RechargeAuthController {
     private final SingleRechargeService rechargeService;
+    private final CombinedRechargeService combinedRechargeService;
 
     @PostMapping
     public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
@@ -40,8 +45,8 @@ public class RechargeAuthController {
         RechargeStatus status = rechargeService.finishRecharge(
                 AsyncRechargeDto.builder()
                         .id(id)
-                        .email(K.getEmail())
-                        .name(K.getUserName())
+                        .email(ProviderSecurity.getEmail())
+                        .name(ProviderSecurity.getUserName())
                         .build()
         );
 
@@ -76,13 +81,13 @@ public class RechargeAuthController {
                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
-        return new ResponseEntity<>(rechargeService.getUserRecharges(K.getUserId(), pageNumber, pageSize), HttpStatus.OK);
+        return new ResponseEntity<>(rechargeService.getUserRecharges(ProviderSecurity.getUserId(), pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/singlelist/{id}")
@@ -92,11 +97,11 @@ public class RechargeAuthController {
                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
         return new ResponseEntity<>(rechargeService.getUserRecharges(id, pageNumber, pageSize), HttpStatus.OK);
     }
@@ -112,11 +117,11 @@ public class RechargeAuthController {
                                                      @RequestParam(value = "searchString") String searchString) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(rechargeService.search(searchString, pageNumber, pageSize), HttpStatus.OK);
@@ -143,11 +148,11 @@ public class RechargeAuthController {
                                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(rechargeService.getFailedTransactions(pageNumber, pageSize), HttpStatus.OK);
@@ -159,11 +164,11 @@ public class RechargeAuthController {
                                                              @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
-            pageNumber = K.DEFAULT_PAGE_NUMBER;
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
         }
 
         if (pageSize == null || pageSize < 1) {
-            pageSize = K.DEFAULT_PAGE_SIZE;
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
         return new ResponseEntity<>(rechargeService.getFailedUnresolvedTransactions(pageNumber, pageSize), HttpStatus.OK);
@@ -179,6 +184,18 @@ public class RechargeAuthController {
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(rechargeService.getRechargesByUserId(id));
     }
+
+    @PostMapping("/combined/download")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<Resource> generateCombinedExcelFileByUserId(@Valid @RequestBody CombinedRequestDto dto) {
+        InputStreamResource file = new InputStreamResource(combinedRechargeService.getCombinedResource(dto));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + dto.getId())
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(file);
+    }
+
 
     @GetMapping("/single/downloadfailed")
     @PreAuthorize("hasRole('Onecard_Admin')")

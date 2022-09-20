@@ -11,7 +11,7 @@ import io.factorialsystems.msscprovider.mapper.recharge.RechargeProviderMapstruc
 import io.factorialsystems.msscprovider.recharge.Balance;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -56,7 +56,7 @@ public class RechargeProviderService {
 
     public RechargeProviderDto save(RechargeProviderDto dto) {
         RechargeProvider rechargeProvider = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
-        rechargeProvider.setCreatedBy(K.getUserName());
+        rechargeProvider.setCreatedBy(ProviderSecurity.getUserName());
         rechargeMapper.save(rechargeProvider);
 
         return rechargeMapstructMapper.rechargeToRechargeDto(rechargeMapper.findById(rechargeProvider.getId()));

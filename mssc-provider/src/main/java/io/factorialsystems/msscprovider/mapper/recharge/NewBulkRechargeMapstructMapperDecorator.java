@@ -4,7 +4,7 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.NewBulkRechargeRequestDto;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
@@ -33,7 +33,7 @@ public class NewBulkRechargeMapstructMapperDecorator implements NewBulkRechargeM
     @Override
     public NewBulkRechargeRequest rechargeDtoToRecharge(NewBulkRechargeRequestDto dto) {
         NewBulkRechargeRequest request = newBulkRechargeMapstructMapper.rechargeDtoToRecharge(dto);
-        request.setUserId(K.getUserId());
+        request.setUserId(ProviderSecurity.getUserId());
 
         request.setPaymentMode(paymentModeHelper.checkPaymentMode(dto.getPaymentMode()));
         BigDecimal totalCost = individualRequestHelper.checkRequests(request.getRecipients());

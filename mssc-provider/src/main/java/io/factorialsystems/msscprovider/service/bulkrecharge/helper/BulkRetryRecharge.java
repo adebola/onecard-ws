@@ -6,7 +6,8 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.status.StatusMessageDto;
 import io.factorialsystems.msscprovider.recharge.*;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -74,7 +75,7 @@ public class BulkRetryRecharge {
                     .recipient(individualRequest.getRecipient())
                     .productId(individualRequest.getProductId())
                     .bulkRequestId(individualRequest.getBulkRequestId())
-                    .paymentMode(K.WALLET_PAY_MODE)
+                    .paymentMode(Constants.WALLET_PAY_MODE)
                     .build();
 
             RechargeStatus rechargeStatus = recharge.recharge(singleRechargeRequest);
@@ -118,7 +119,7 @@ public class BulkRetryRecharge {
     }
 
     private void saveUnsuccessfulIndividualRetry(IndividualRequest request, String id) {
-        String tokenUser = K.getUserId();
+        String tokenUser = ProviderSecurity.getUserId();
 
         IndividualRequestRetry requestRetry = IndividualRequestRetry.builder()
                 .recipient(request.getRecipient())
@@ -136,7 +137,7 @@ public class BulkRetryRecharge {
     // Once a Retry Recharge Succeeds Update the Database accordingly
     private void saveSuccessfulIndividualRetry(IndividualRequest request, String id) {
 
-        String tokenUser = K.getUserId();
+        String tokenUser = ProviderSecurity.getUserId();
 
         IndividualRequestRetry requestRetry = IndividualRequestRetry.builder()
                 .recipient(request.getRecipient())

@@ -15,7 +15,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.dto.FetchSpectranetDataDt
 import io.factorialsystems.msscprovider.recharge.ringo.request.SpectranetRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.SpectranetPIN;
 import io.factorialsystems.msscprovider.recharge.ringo.response.SpectranetResponse;
-import io.factorialsystems.msscprovider.utils.K;
+import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -51,8 +51,8 @@ public class RingoSpectranetRecharge implements Recharge, DataEnquiry, Parameter
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(K.HEADER_EMAIL, properties.getMail());
-        headers.add(K.HEADER_PASSWORD, properties.getPassword());
+        headers.add(Constants.HEADER_EMAIL, properties.getMail());
+        headers.add(Constants.HEADER_PASSWORD, properties.getPassword());
 
         try {
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(spectranetRequest), headers);
@@ -145,8 +145,8 @@ public class RingoSpectranetRecharge implements Recharge, DataEnquiry, Parameter
     private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(K.HEADER_EMAIL, properties.getMail());
-        headers.add(K.HEADER_PASSWORD, properties.getPassword());
+        headers.add(Constants.HEADER_EMAIL, properties.getMail());
+        headers.add(Constants.HEADER_PASSWORD, properties.getPassword());
 
         return headers;
     }
