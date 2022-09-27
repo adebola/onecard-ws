@@ -4,9 +4,38 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 
 import java.util.Calendar;
+import java.util.Date;
 
 @CommonsLog
 public class UtilsTest {
+
+    @Test
+    public void testDate() {
+        Date d = new Date();
+        Date e = new Date();
+
+
+        log.info(d);
+        d.setHours(0);
+        d.setMinutes(0);
+        d.setSeconds(0);
+        log.info(d);
+        log.info(e);
+
+        e.setHours(23);
+        e.setMinutes(59);
+        e.setSeconds(59);
+        log.info(e);
+//
+//        String file1 = String.format("%d-%d-%d-to-date.xls", d.getDate(), d.getMonth(), d.getYear() + 1900);
+//
+//        String file2 = String.format("%d-%d-%d-to-%d-%d-%d.xls", d.getDate(), d.getMonth(), d.getYear() + 1900,
+//                e.getDate(), e.getMonth(), e.getYear() + 1900);
+//
+//        log.info(file1);
+//        log.info(file2);
+    }
+
 
     @Test
     public void lastDayOfMonth() {

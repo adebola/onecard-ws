@@ -8,16 +8,12 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -67,13 +63,13 @@ class CombinedRechargeServiceTest {
             dto.setStartDate(startDate);
             dto.setEndDate(null);
 
-            InputStreamResource resource = new InputStreamResource(combinedRechargeService.getCombinedResource(dto));
-            File targetFile = new File("test4.xlsx");
-            OutputStream outputStream = new FileOutputStream(targetFile);
-            byte[] buffer = resource.getInputStream().readAllBytes();
-            outputStream.write(buffer);
-
-            log.info(targetFile.getAbsolutePath());
+//            InputStreamResource resource = new InputStreamResource(combinedRechargeService.getCombinedResource(dto));
+//            File targetFile = new File("test4.xlsx");
+//            OutputStream outputStream = new FileOutputStream(targetFile);
+//            byte[] buffer = resource.getInputStream().readAllBytes();
+//            outputStream.write(buffer);
+//
+//            log.info(targetFile.getAbsolutePath());
         }
     }
 

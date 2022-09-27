@@ -31,6 +31,14 @@ public class CombinedRechargeService {
     private final CombinedRequestMapstructMapper combinedRequestMapstructMapper;
 
     public ByteArrayInputStream getCombinedResource(CombinedRequestDto dto) {
+        dto.getStartDate().setHours(0);
+        dto.getStartDate().setMinutes(0);
+        dto.getStartDate().setSeconds(0);
+
+        dto.getEndDate().setHours(23);
+        dto.getEndDate().setMinutes(59);
+        dto.getEndDate().setSeconds(59);
+
         List<NewBulkRechargeRequest>bulkRequests = bulkRechargeMapper.findBulkByUserIdAndDateRange(dto);
         List <SingleRechargeRequest> singleRequests = singleRechargeMapper.findSingleByUserIdAndDateRange(dto);
 
@@ -64,8 +72,6 @@ public class CombinedRechargeService {
 //                .peek(a -> a.setCreatedAt())
 //                .collect(Collectors.toList());
 
-        combinedRequests.addAll(finalCombinedRequests);
-
         SimpleUserDto userDto = userService.getUserById(dto.getId()).orElse(null);
 
         String title;
@@ -84,6 +90,6 @@ public class CombinedRechargeService {
                     userDto.getFirstName(), userDto.getLastName());
         }
 
-        return excelWriter.combinedRequestToExcel(combinedRequests, title);
+        return excelWriter.combinedRequestToExcel(finalCombinedRequests, title);
     }
 }

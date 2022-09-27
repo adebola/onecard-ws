@@ -293,11 +293,11 @@
         select
         <include refid="bulk_request_by_userid"/>
         <if test="startDate != null and endDate != null">
-            and createdAt between date(#{startDate}) and date(#{endDate})
+            and createdAt between #{startDate} and #{endDate}
         </if>
 
         <if test="startDate != null and endDate == null">
-            and createdAt &gt; date(#{startDate})
+            and createdAt &gt; #{startDate}
         </if>
     </select>
 

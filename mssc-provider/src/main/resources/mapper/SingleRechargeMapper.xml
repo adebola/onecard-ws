@@ -122,11 +122,11 @@
         and r.service_id = p.id
 
         <if test="startDate != null and endDate != null">
-            and p.createdAt between date(#{startDate}) and date(#{endDate})
+            and p.createdAt between #{startDate} and #{endDate}
         </if>
 
         <if test="startDate != null and endDate == null">
-            and p.createdAt &gt; date(#{startDate})
+            and p.createdAt &gt; #{startDate}
         </if>
 
 

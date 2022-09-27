@@ -13,14 +13,12 @@ import io.factorialsystems.msscprovider.service.CombinedRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.utils.Constants;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
+import io.factorialsystems.msscprovider.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -190,12 +188,19 @@ public class RechargeAuthController {
     public ResponseEntity<Resource> generateCombinedExcelFileByUserId(@Valid @RequestBody CombinedRequestDto dto) {
         InputStreamResource file = new InputStreamResource(combinedRechargeService.getCombinedResource(dto));
 
+        final String fileName = Utility.getExcelFileNameFromDates(dto.getStartDate(), dto.getEndDate());
+        log.info("Downloading Combined Recharge File {} from Date {} to {}", fileName, dto.getStartDate(),
+                dto.getEndDate() == null ? "Date" : dto.getEndDate());
+
+        ContentDisposition contentDisposition = ContentDisposition.builder("inline")
+                .filename(fileName)
+                .build();
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + dto.getId())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileName)
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(file);
     }
-
 
     @GetMapping("/single/downloadfailed")
     @PreAuthorize("hasRole('Onecard_Admin')")
@@ -203,7 +208,7 @@ public class RechargeAuthController {
         final String filename = String.format("%s.%s", UUID.randomUUID(), "xls");
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(rechargeService.getFailedRecharges(type));
     }
