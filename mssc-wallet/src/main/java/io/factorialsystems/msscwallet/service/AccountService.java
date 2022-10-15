@@ -117,10 +117,18 @@ public class AccountService {
                 .build();
 
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+
+        String url = null;
+
+        if (Security.getUserId() == null) {
+            url = baseLocalUrl + "api/v1/pay";
+        } else {
+            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+            url = baseLocalUrl + "api/v1/payment";
+        }
 
         PaymentRequestDto newDto =
-                Optional.ofNullable(restTemplate.postForObject(baseLocalUrl + "api/v1/pay", paymentRequest, PaymentRequestDto.class))
+                Optional.ofNullable(restTemplate.postForObject(url, paymentRequest, PaymentRequestDto.class))
                         .orElseThrow(() -> new RuntimeException("Error Initializing Payment Engine in Wallet Topup"));
 
         request.setPaymentId(newDto.getId());
@@ -175,9 +183,10 @@ public class AccountService {
             fundWalletMapper.update(request);
 
             saveTransaction(request.getAmount(), account.getId(), Constants.ACCOUNT_WALLET_SELF_FUNDED);
+            saveFundWalletRequest(request.getAmount(), Constants.WALLET_SELF_FUNDED, request.getUserId(), account.getName(), "User Self Funded Wallet");
 
             final String auditMessage =
-                        String.format("Account (%s / %s) Successfully Funded By %.2f", account.getId(), account.getName(), request.getAmount().doubleValue());
+                        String.format("Account (%s / %s) Successfully Self-Funded By %.2f", account.getId(), account.getName(), request.getAmount().doubleValue());
             log.info(auditMessage);
             auditService.auditEvent(auditMessage, Constants.ACCOUNT_BALANCE_FUNDED);
 

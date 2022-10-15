@@ -127,22 +127,4 @@ public class AccountController {
     public ResponseEntity<?> adjustAccount(@Valid @RequestBody AdjustmentRequestDto adjustmentRequestDto) {
         return  new ResponseEntity<>(adjustmentService.adjustBalance(adjustmentRequestDto), HttpStatus.OK);
     }
-
-//
-//    @GetMapping("/provider/{id}")
-//    public ResponseEntity<AccountDto> findAccountByProviderId(@PathVariable("id") String id) {
-//        return new ResponseEntity<>(accountService.findAccountByProviderId(id), HttpStatus.OK);
-//    }
-//
-//    @PutMapping("/{id}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void update(@PathVariable("id") String id, @Valid @RequestBody AccountDto dto) {
-//        accountService.updateAccount(id, dto);
-//    }
-//
-//    @PutMapping("/balance/{id}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void updateBalance(@PathVariable("id") String id, @Valid @RequestBody AccountDto dto) {
-//        accountService.updateAccountBalance(id, dto);
-//    }
 }
