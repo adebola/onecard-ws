@@ -3,7 +3,7 @@
 
 <mapper namespace="io.factorialsystems.msscpayments.dao.PaymentMapper">
     <resultMap id="paymentResultMap" type="io.factorialsystems.msscpayments.domain.PaymentRequest">
-        <id column="id" property="id" jdbcType="VARCHAR" />
+        <id column="id" property="id" jdbcType="VARCHAR"/>
         <result column="amount" property="amount" jdbcType="DECIMAL"/>
         <result column="authorization_url" property="authorizationUrl" jdbcType="VARCHAR"/>
         <result column="status" property="status" jdbcType="VARCHAR"/>
@@ -12,17 +12,17 @@
         <result column="access_code" property="accessCode" jdbcType="VARCHAR"/>
         <result column="reference" property="reference" jdbcType="VARCHAR"/>
         <result column="verified" property="verified" jdbcType="BOOLEAN"/>
-        <result column="payment_created" property="paymentCreated" jdbcType="TIMESTAMP" />
-        <result column="payment_verified" property="paymentVerified" jdbcType="TIMESTAMP" />
+        <result column="payment_created" property="paymentCreated" jdbcType="TIMESTAMP"/>
+        <result column="payment_verified" property="paymentVerified" jdbcType="TIMESTAMP"/>
         <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
         <result column="balance" property="balance" jdbcType="DECIMAL"/>
     </resultMap>
 
     <resultMap id="refundResultMap" type="io.factorialsystems.msscpayments.domain.RefundRequest">
-        <id column="id" property="id" jdbcType="VARCHAR" />
+        <id column="id" property="id" jdbcType="VARCHAR"/>
         <result column="payment_id" property="paymentId" jdbcType="VARCHAR"/>
         <result column="amount" property="amount" jdbcType="DECIMAL"/>
-        <result column="refunded_on" property="refundedOn" jdbcType="TIMESTAMP" />
+        <result column="refunded_on" property="refundedOn" jdbcType="TIMESTAMP"/>
         <result column="refunded_by" property="refundedBy" jdbcType="VARCHAR"/>
         <result column="fund_wallet_request_id" property="fundRequestId" jdbcType="VARCHAR"/>
     </resultMap>
@@ -65,14 +65,16 @@
     </select>
 
     <select id="findRefundTotalByPaymentId" resultType="double">
-        select sum(amount) from refund where payment_id = #{id}
+        select sum(amount)
+        from refund
+        where payment_id = #{id}
     </select>
 
-<!--    <select id="search" parameterType="java.lang.String" resultMap="paymentResultMap">-->
-<!--        select-->
-<!--        <include refid="Column_List"/>-->
-<!--        from cluster where name like CONCAT(#{search}, '%')-->
-<!--    </select>-->
+    <!--    <select id="search" parameterType="java.lang.String" resultMap="paymentResultMap">-->
+    <!--        select-->
+    <!--        <include refid="Column_List"/>-->
+    <!--        from cluster where name like CONCAT(#{search}, '%')-->
+    <!--    </select>-->
 
     <select id="findById" parameterType="java.lang.String" resultMap="paymentResultMap">
         select
@@ -82,33 +84,49 @@
     </select>
 
     <insert id="save" parameterType="io.factorialsystems.msscpayments.domain.PaymentRequest">
-        insert into payment(id, amount, authorization_url, redirect_url, status, message, access_code, reference, payment_mode)
-        values(#{id}, #{amount}, #{authorizationUrl}, #{redirectUrl}, #{status}, #{message}, #{accessCode}, #{reference}, #{paymentMode})
+        insert into payment(id, amount, authorization_url, redirect_url, status, message, access_code, reference,
+                            payment_mode)
+        values (#{id}, #{amount}, #{authorizationUrl}, #{redirectUrl}, #{status}, #{message}, #{accessCode},
+                #{reference}, #{paymentMode})
     </insert>
 
     <insert id="saveRefundRequest" parameterType="io.factorialsystems.msscpayments.domain.RefundRequest">
         insert into refund(id, payment_id, amount, refunded_by, fund_wallet_request_id)
-        value (#{id}, #{paymentId}, #{amount}, #{refundedBy}, #{fundRequestId})
+            value (#{id}, #{paymentId}, #{amount}, #{refundedBy}, #{fundRequestId})
     </insert>
 
     <update id="verifyByReference" parameterType="java.lang.String">
-        update payment set verified = true, payment_verified = NOW()
+        update payment
+        set verified         = true,
+            payment_verified = NOW()
         where reference = #{reference}
     </update>
 
     <update id="verifyById" parameterType="java.lang.String">
-        update payment set verified = true, payment_verified = NOW()
+        update payment
+        set verified         = true,
+            payment_verified = NOW()
         where id = #{id}
     </update>
 
     <update id="update" parameterType="io.factorialsystems.msscpayments.domain.PaymentRequest">
         update payment
         <set>
-            <if test="status != null">status=#{status},</if>
-            <if test="message != null">message=#{message},</if>
-            <if test="verified != null">verified=#{verified},</if>
-            <if test="verified != null">payment_verified=NOW(),</if>
-            <if test="balance != null">balance=#{balance},</if>
+            <if test="status != null">
+                status=#{status},
+            </if>
+            <if test="message != null">
+                message=#{message},
+            </if>
+            <if test="verified != null">
+                verified=#{verified},
+            </if>
+            <if test="verified != null">
+                payment_verified=NOW(),
+            </if>
+            <if test="balance != null">
+                balance=#{balance},
+            </if>
         </set>
         where id = #{id}
     </update>

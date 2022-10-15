@@ -8,7 +8,7 @@ import io.factorialsystems.msscpayments.dto.PaymentRequestDto;
 import io.factorialsystems.msscpayments.payment.paystack.InitializeTransactionRequest;
 import io.factorialsystems.msscpayments.payment.paystack.InitializeTransactionResponse;
 import io.factorialsystems.msscpayments.payment.paystack.VerifyTransactionResponse;
-import io.factorialsystems.msscpayments.utils.K;
+import io.factorialsystems.msscpayments.utils.Security;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,25 +24,22 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaystackHelper implements Payment {
 
-    @Value("${api.paystack.url}")
-    private String paystackURL;
-
-    @Value("${api.paystack.callback.url}")
-    private String paystackCallbackURL;
-
-    @Value("${paystack.secret}")
-    private String paystackSecret;
-
     private final ObjectMapper objectMapper;
     private final PaymentMapper paymentMapper;
+    @Value("${api.paystack.url}")
+    private String paystackURL;
+    @Value("${api.paystack.callback.url}")
+    private String paystackCallbackURL;
+    @Value("${paystack.secret}")
+    private String paystackSecret;
 
     @Override
     public PaymentRequestDto initializePayment(PaymentRequestDto dto) {
         InitializeTransactionRequest txRequest = new InitializeTransactionRequest();
-        int amount = (int)(dto.getAmount().doubleValue() * 100);
+        int amount = (int) (dto.getAmount().doubleValue() * 100);
 
         txRequest.setAmount(amount);
-        txRequest.setEmail(K.getEmail());
+        txRequest.setEmail(Security.getEmail());
 
         if (dto.getRedirectUrl() != null) {
             txRequest.setCallback_url(dto.getRedirectUrl());
@@ -100,7 +97,6 @@ public class PaystackHelper implements Payment {
         return null;
     }
 
-
     @Override
     public PaymentRequestDto checkPaymentValidity(PaymentRequest paymentRequest) {
         if (paymentRequest != null) {
@@ -112,7 +108,7 @@ public class PaystackHelper implements Payment {
             HttpEntity<String> request = new HttpEntity<>(headers);
 
             ResponseEntity<VerifyTransactionResponse> response =
-                    restTemplate.exchange (
+                    restTemplate.exchange(
                             paystackURL + "/verify/" + paymentRequest.getReference(),
                             HttpMethod.GET,
                             request,

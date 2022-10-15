@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class RefundResponseDto {
     private String id;
     private Integer status;
-    private String  paymentId;
+    private String paymentId;
     private String message;
 }

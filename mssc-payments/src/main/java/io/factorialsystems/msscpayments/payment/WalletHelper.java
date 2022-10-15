@@ -1,6 +1,5 @@
 package io.factorialsystems.msscpayments.payment;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscpayments.dao.PaymentMapper;
 import io.factorialsystems.msscpayments.domain.PaymentRequest;
@@ -10,6 +9,7 @@ import io.factorialsystems.msscpayments.payment.wallet.InitializeWalletTransacti
 import io.factorialsystems.msscpayments.payment.wallet.InitializeWalletTransactionResponse;
 import io.factorialsystems.msscpayments.security.RestTemplateInterceptor;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,17 +26,16 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class WalletHelper implements Payment {
+    private static final Integer SUCCESS = 200;
+    private static final Integer INSUFFICIENT_BALANCE = 300;
     private final ObjectMapper objectMapper;
     private final PaymentMapper paymentMapper;
     private final PaymentRequestMapper paymentRequestMapper;
-
     @Value("${api.host.baseurl}")
     private String baseUrl;
 
-    private static final Integer SUCCESS = 200;
-    private static final Integer INSUFFICIENT_BALANCE = 300;
-
     @Override
+    @SneakyThrows
     public PaymentRequestDto initializePayment(PaymentRequestDto dto) {
         String id = UUID.randomUUID().toString();
 
@@ -56,36 +55,32 @@ public class WalletHelper implements Payment {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        try {
-            HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(txRequest), headers);
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-            InitializeWalletTransactionResponse response =
-                    Optional.ofNullable(restTemplate.postForObject(baseUrl + "/api/v1/account", request, InitializeWalletTransactionResponse.class))
-                            .orElseThrow(() -> new RuntimeException(String.format("RuntimeException charging Wallet Payment ID %s", id)));
+        HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(txRequest), headers);
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
 
-            Integer status = response.getStatus();
+        InitializeWalletTransactionResponse response =
+                Optional.ofNullable(restTemplate.postForObject(baseUrl + "/api/v1/account", request, InitializeWalletTransactionResponse.class))
+                        .orElseThrow(() -> new RuntimeException(String.format("RuntimeException charging Wallet Payment ID %s", id)));
 
-            if (Objects.equals(status, SUCCESS)) {
-                paymentRequest.setMessage("SUCCESS");
-                paymentRequest.setVerified(true);
-                log.info(String.format("Successful Wallet Payment for (%s) Amount (%.2f)", paymentRequest.getId(), paymentRequest.getAmount().doubleValue()));
-            } else if (Objects.equals(status, INSUFFICIENT_BALANCE)) {
-                paymentRequest.setMessage("INSUFFICIENT FUNDS");
-                paymentMapper.update(paymentRequest);
-                log.error(String.format("UnSuccessful Wallet Payment for (%s) Amount (%.2f) Insufficient Funds", paymentRequest.getId(), paymentRequest.getAmount().doubleValue()));
-            } else {
-                log.error("Error Status in Payment");
-                throw new RuntimeException("Invalid Wallet Payment Status");
-            }
+        Integer status = response.getStatus();
 
-            paymentRequest.setStatus(status);
-            paymentRequest.setBalance(response.getBalance());
+        if (Objects.equals(status, SUCCESS)) {
+            paymentRequest.setMessage("SUCCESS");
+            paymentRequest.setVerified(true);
+            log.info(String.format("Successful Wallet Payment for (%s) Amount (%.2f)", paymentRequest.getId(), paymentRequest.getAmount().doubleValue()));
+        } else if (Objects.equals(status, INSUFFICIENT_BALANCE)) {
+            paymentRequest.setMessage("INSUFFICIENT FUNDS");
             paymentMapper.update(paymentRequest);
-        } catch (JsonProcessingException jex) {
-            log.error(jex.getMessage());
-            throw new RuntimeException(jex.getMessage());
+            log.error(String.format("UnSuccessful Wallet Payment for (%s) Amount (%.2f) Insufficient Funds", paymentRequest.getId(), paymentRequest.getAmount().doubleValue()));
+        } else {
+            log.error("Error Status in Payment");
+            throw new RuntimeException("Invalid Wallet Payment Status");
         }
+
+        paymentRequest.setStatus(status);
+        paymentRequest.setBalance(response.getBalance());
+        paymentMapper.update(paymentRequest);
 
         return paymentRequestMapper.requestToDto(paymentRequest);
     }

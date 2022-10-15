@@ -28,7 +28,7 @@ public class PaymentController {
     @PutMapping("/refund/{id}")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public ResponseEntity<?> refundPayment(@PathVariable("id") String id, @Valid @RequestBody RefundRequestDto dto) {
-        return  new ResponseEntity<>(paymentService.refundPayment(id, dto), HttpStatus.OK);
+        return new ResponseEntity<>(paymentService.refundPayment(id, dto), HttpStatus.OK);
     }
 
     @PostMapping

@@ -1,7 +1,7 @@
 package io.factorialsystems.msscpayments.security;
 
 
-import io.factorialsystems.msscpayments.utils.K;
+import io.factorialsystems.msscpayments.utils.Security;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -19,7 +19,7 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
                                         ClientHttpRequestExecution clientHttpRequestExecution) throws IOException {
 
         HttpHeaders headers = httpRequest.getHeaders();
-        List<String> authorization = List.of("Bearer " + K.getAccessToken());
+        List<String> authorization = List.of("Bearer " + Security.getAccessToken());
         headers.addAll("Authorization", authorization);
         return clientHttpRequestExecution.execute(httpRequest, body);
     }

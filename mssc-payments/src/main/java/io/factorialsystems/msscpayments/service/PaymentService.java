@@ -9,7 +9,7 @@ import io.factorialsystems.msscpayments.dto.*;
 import io.factorialsystems.msscpayments.exception.ResourceNotFoundException;
 import io.factorialsystems.msscpayments.mapper.PaymentRequestMapper;
 import io.factorialsystems.msscpayments.payment.PaymentFactory;
-import io.factorialsystems.msscpayments.utils.K;
+import io.factorialsystems.msscpayments.utils.Security;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -133,7 +133,7 @@ public class PaymentService {
 
             log.info(String.format("Refunding %s Payment Id %s for %.2f", request.getPaymentMode(), request.getId(), request.getAmount()));
 
-            final String accessToken = Optional.ofNullable(K.getAccessToken())
+            final String accessToken = Optional.ofNullable(Security.getAccessToken())
                     .orElseThrow(() -> new RuntimeException("No Access Token User Must be logged On"));
 
             RestTemplate restTemplate = new RestTemplate();
@@ -145,8 +145,8 @@ public class PaymentService {
             HttpEntity<String> httpRequest = new HttpEntity<>(objectMapper.writeValueAsString(refundRequestDto), headers);
 
             ResponseEntity<RefundResponseDto> response
-                    = restTemplate.exchange (baseUrl + "/api/v1/account/refund/" + refundRequestDto.getUserId(),
-                                                HttpMethod.PUT, httpRequest, RefundResponseDto.class);
+                    = restTemplate.exchange(baseUrl + "/api/v1/account/refund/" + refundRequestDto.getUserId(),
+                    HttpMethod.PUT, httpRequest, RefundResponseDto.class);
 
             RefundResponseDto dto = Optional.ofNullable(response.getBody())
                     .orElseThrow(() -> new RuntimeException(String.format("Error Refund Wallet for Payment %s, Amount %.2f", id, refundRequestDto.getAmount())));
@@ -154,7 +154,7 @@ public class PaymentService {
             RefundRequest refundRequest = RefundRequest.builder()
                     .id(UUID.randomUUID().toString())
                     .paymentId(request.getId())
-                    .refundedBy(K.getUserName())
+                    .refundedBy(Security.getUserName())
                     .amount(refundRequestDto.getAmount())
                     .fundRequestId(dto.getId())
                     .build();
