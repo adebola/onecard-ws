@@ -22,12 +22,13 @@ import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto
 import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
+import io.factorialsystems.msscprovider.helper.PaymentHelper;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
+import io.factorialsystems.msscprovider.properties.GeneralProperties;
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
 import io.factorialsystems.msscprovider.recharge.ringo.response.ProductItem;
-import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.service.MailService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleDownloadRecharge;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
@@ -37,7 +38,6 @@ import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.jms.core.JmsTemplate;
@@ -56,6 +56,7 @@ public class SingleRechargeService {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final ParameterCache parameterCache;
+    private final GeneralProperties generalProperties;
     private final ServiceActionMapper serviceActionMapper;
     private final SingleRetryRecharge singleRetryRecharge;
     private final SingleRechargeMapper singleRechargeMapper;
@@ -63,13 +64,6 @@ public class SingleRechargeService {
     private final SingleResolveRecharge singleResolveRecharge;
     private final SingleDownloadRecharge singleDownloadRecharge;
     private final RechargeMapstructMapper rechargeMapstructMapper;
-
-    private static String BASE_LOCAL_STATIC;
-
-    @Value("${api.local.host.baseurl}")
-    public void setNameStatic(String baseLocal) {
-        SingleRechargeService.BASE_LOCAL_STATIC = baseLocal;
-    }
 
     public SingleRechargeResponseDto startRecharge(SingleRechargeRequestDto dto) {
         SingleRechargeRequest request = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
@@ -331,7 +325,7 @@ public class SingleRechargeService {
 
     private Boolean checkPayment(String id) {
         PaymentRequestDto dto
-                = restTemplate.getForObject(BASE_LOCAL_STATIC + "api/v1/pay/" + id, PaymentRequestDto.class);
+                = restTemplate.getForObject(generalProperties.getBaseUrl() + "api/v1/pay/" + id, PaymentRequestDto.class);
 
         return dto != null ? dto.getVerified() : false;
     }
@@ -426,24 +420,14 @@ public class SingleRechargeService {
         template.convertAndSend(JMSConfig.NEW_TRANSACTION_QUEUE, mapper.writeValueAsString(requestTransactionDto));
     }
 
-    public static PaymentRequestDto initializePayment(SingleRechargeRequest request) {
-        PaymentRequestDto dto = PaymentRequestDto.builder()
-                .amount(request.getServiceCost())
-                .redirectUrl(request.getRedirectUrl())
+    private PaymentRequestDto initializePayment(SingleRechargeRequest request) {
+        PaymentHelper helper = PaymentHelper.builder()
+                .cost(request.getServiceCost())
                 .paymentMode(request.getPaymentMode())
+                .redirectUrl(request.getRedirectUrl())
                 .build();
 
-        String uri = null;
-        RestTemplate restTemplate = new RestTemplate();
-
-        if (ProviderSecurity.getUserId() == null) { // Anonymous Login
-            uri = "api/v1/pay";
-        } else {
-            uri = "api/v1/payment";
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-        }
-
-        return restTemplate.postForObject(BASE_LOCAL_STATIC + uri, dto, PaymentRequestDto.class);
+        return helper.initializePayment();
     }
 
     public static Boolean checkParameters(SingleRechargeRequest request, SingleRechargeRequestDto dto) {

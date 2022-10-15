@@ -159,19 +159,6 @@
         values(#{id}, #{userId}, #{serviceId}, #{serviceCost}, #{recipient}, #{paymentId}, #{telephone}, #{productId}, #{authorizationUrl}, #{redirectUrl}, #{paymentMode}, #{status}, #{name}, #{asyncRequest}, #{message}, #{accountType}, #{autoRequestId}, #{scheduledRequestId}, #{bulkRequestId})
     </insert>
 
-    <insert id="saveRechargeRequests" parameterType="java.util.List">
-        insert into recharge_requests(id, user_id, email_id, service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url,
-                                      redirect_url, payment_mode, status, name, async_request, message, account_type, auto_request_id, scheduled_request_id)
-        values
-        <foreach item="item" index="index" collection="list"  separator=",">
-            (#{item.id, jdbcType=VARCHAR}, #{item.user_id, jdbcType=VARCHAR}, #{item.email_id, jdbcType=VARCHAR},#{item.serviceId, jdbcType=INTEGER}, #{item.serviceCost, jdbcType=VARCHAR},
-             #{item.recipient, jdbcType=VARCHAR}, #{item.paymentId, jdbcType=VARCHAR}, #{item.telephone, jdbcType=VARCHAR},
-             #{item.productId, jdbcType=VARCHAR}, #{item.authorizationUrl, jdbcType=VARCHAR}, #{item.redirectUrl, jdbcType=VARCHAR},
-             #{item.paymentMode, jdbcType=VARCHAR}, #{item.status, jdbcType=INTEGER},  #{item.name, jdbcType=VARCHAR}, #{item.asyncRequest, jdbcType=BOOLEAN},
-             #{item.message, jdbcType=VARCHAR}, #{item.accountType, jdbcType=VARCHAR}, #{item.autoRequestId, jdbcType=VARCHAR}, #{item.scheduledRequestId, jdbcType=VARCHAR} )
-        </foreach>
-    </insert>
-
     <insert id="saveResolution" parameterType="io.factorialsystems.msscprovider.domain.SingleResolve">
         insert into single_recharge_request_resolve(id, recharge_request_id, resolved_by, resolution_message)
         values (#{id}, #{rechargeId}, #{resolvedBy}, #{resolutionMessage})

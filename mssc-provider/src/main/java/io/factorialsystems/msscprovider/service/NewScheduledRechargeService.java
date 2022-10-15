@@ -27,7 +27,6 @@ import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,9 +38,6 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class NewScheduledRechargeService {
-
-    @Value("${api.local.host.baseurl}")
-    private String baseLocalUrl;
     private final FileUploader fileUploader;
     private final ExcelWriter excelWriter;
     private final NewBulkRechargeMapper newBulkRechargeMapper;
@@ -81,7 +77,6 @@ public class NewScheduledRechargeService {
         }
 
         PaymentHelper helper = PaymentHelper.builder()
-                .url(baseLocalUrl)
                 .cost(request.getTotalServiceCost())
                 .paymentMode(request.getPaymentMode())
                 .redirectUrl(request.getRedirectUrl())
@@ -154,7 +149,6 @@ public class NewScheduledRechargeService {
         NewScheduledRechargeRequest request = newScheduledRechargeMapper.findById(id);
 
         PaymentHelper helper = PaymentHelper.builder()
-                .url(baseLocalUrl)
                 .build();
 
         if (request != null && request.getPaymentId() != null && helper.checkPayment(request.getPaymentId())) {
@@ -195,7 +189,6 @@ public class NewScheduledRechargeService {
             newScheduledRechargeMapper.closeRequest(request.getId());
 
             PaymentHelper helper = PaymentHelper.builder()
-                    .url(baseLocalUrl)
                     .build();
 
             if (request.getPaymentId() != null && helper.checkPayment(request.getPaymentId())) {
@@ -215,6 +208,7 @@ public class NewScheduledRechargeService {
 
                 AsyncRechargeDto rechargeDto = AsyncRechargeDto.builder()
                         .id(id)
+                        .name("Customer")
                         .email(request.getUserEmail())
                         .build();
 

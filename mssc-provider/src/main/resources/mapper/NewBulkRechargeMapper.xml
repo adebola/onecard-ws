@@ -57,7 +57,9 @@
         payment_mode,
         auto_request_id,
         scheduled_request_id,
-        createdAt
+        createdAt,
+        running,
+        email_id
     </sql>
 
     <sql id="individual_column_list">
@@ -271,15 +273,6 @@
         </foreach>
     </insert>
 
-    <insert id="saveRequestRetry" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry">
-        insert into bulk_individual_request_retries(bulk_individual_request_id, successful, status_message)
-        values (#{bulkIndividualRequestId}, #{successful}, #{statusMessage})
-
-        <selectKey resultType="int" keyProperty="id" order="AFTER">
-            select LAST_INSERT_ID()
-        </selectKey>
-    </insert>
-
     <update id="failIndividualRequest" parameterType="io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification">
         update bulk_individual_requests set failed = true, failed_message = #{errorMsg} where id = #{id}
     </update>
@@ -299,6 +292,15 @@
         <if test="startDate != null and endDate == null">
             and createdAt &gt; #{startDate}
         </if>
+    </select>
+
+    <select id="findByUserIdToday" parameterType="java.util.Map" resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_column_list"/>
+        from providerdb.new_bulk_recharge_requests
+        where user_id = #{userId}
+        and id != #{id}
+        and date(createdAt) = date(NOW())
     </select>
 
     <select id="findListBulkRequestByUserId" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">
@@ -457,5 +459,19 @@
         select
         <include refid="failed_unresolved_individuals"/>
     </select>
+
+    <select id="individualCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(*) from bulk_individual_requests where bulk_request_id = #{id}
+    </select>
+
+    <update id="duplicateRequest" parameterType="java.lang.String">
+        update providerdb.new_bulk_recharge_requests
+        set providerdb.new_bulk_recharge_requests.closed = true where id = #{id};
+
+        update providerdb.bulk_individual_requests
+        set providerdb.bulk_individual_requests.failed = true,
+        providerdb.bulk_individual_requests.failed_message = 'Duplicate Request'
+        where providerdb.bulk_individual_requests.bulk_request_id = #{id};
+    </update>
 </mapper>
 

@@ -35,9 +35,11 @@ public class CombinedRechargeService {
         dto.getStartDate().setMinutes(0);
         dto.getStartDate().setSeconds(0);
 
-        dto.getEndDate().setHours(23);
-        dto.getEndDate().setMinutes(59);
-        dto.getEndDate().setSeconds(59);
+        if (dto.getEndDate() != null) {
+            dto.getEndDate().setHours(23);
+            dto.getEndDate().setMinutes(59);
+            dto.getEndDate().setSeconds(59);
+        }
 
         List<NewBulkRechargeRequest>bulkRequests = bulkRechargeMapper.findBulkByUserIdAndDateRange(dto);
         List <SingleRechargeRequest> singleRequests = singleRechargeMapper.findSingleByUserIdAndDateRange(dto);

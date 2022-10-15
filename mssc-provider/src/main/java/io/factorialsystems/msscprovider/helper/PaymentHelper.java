@@ -1,6 +1,8 @@
 package io.factorialsystems.msscprovider.helper;
 
+import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
+import io.factorialsystems.msscprovider.properties.GeneralProperties;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.AllArgsConstructor;
@@ -16,7 +18,6 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentHelper {
-    private  String url;
     private  BigDecimal cost;
     private  String redirectUrl;
     private  String paymentMode;
@@ -38,11 +39,15 @@ public class PaymentHelper {
             restTemplate.getInterceptors().add(new RestTemplateInterceptor());
         }
 
-        return restTemplate.postForObject(url + uri, dto, PaymentRequestDto.class);
+        final String url = ApplicationContextProvider.getBean(GeneralProperties.class).getBaseUrl();
+
+        return restTemplate.postForObject( url + uri, dto, PaymentRequestDto.class);
     }
 
     public Boolean checkPayment(String id) {
         RestTemplate restTemplate = new RestTemplate();
+
+        final String url = ApplicationContextProvider.getBean(GeneralProperties.class).getBaseUrl();
 
         PaymentRequestDto dto
                 = restTemplate.getForObject(url + "api/v1/pay/" + id, PaymentRequestDto.class);

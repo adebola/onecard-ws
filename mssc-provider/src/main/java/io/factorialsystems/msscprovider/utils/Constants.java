@@ -13,5 +13,6 @@ public class Constants {
     public static final String[] ALL_PAYMENT_MODES = {PAYSTACK_PAY_MODE, WALLET_PAY_MODE };
     public static final String HEADER_EMAIL = "email";
     public static final String HEADER_PASSWORD = "password";
+    public static final int FIVE_MINUTES = 300;
 
 }

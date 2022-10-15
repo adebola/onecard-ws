@@ -18,11 +18,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.net.URLConnection;
 import java.util.UUID;
 
 @Slf4j
@@ -192,13 +196,12 @@ public class RechargeAuthController {
         log.info("Downloading Combined Recharge File {} from Date {} to {}", fileName, dto.getStartDate(),
                 dto.getEndDate() == null ? "Date" : dto.getEndDate());
 
-        ContentDisposition contentDisposition = ContentDisposition.builder("inline")
-                .filename(fileName)
-                .build();
+        String mimeType = URLConnection.guessContentTypeFromName(fileName);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileName)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.valueOf(mimeType))
+                //.contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(file);
     }
 

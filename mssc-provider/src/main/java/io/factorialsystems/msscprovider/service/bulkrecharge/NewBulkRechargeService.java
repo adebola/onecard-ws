@@ -36,8 +36,8 @@ import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkDownload
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRefundRecharge;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkResolveRecharge;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRetryRecharge;
-import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
+import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification;
@@ -55,8 +55,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Slf4j
@@ -165,12 +171,17 @@ public class NewBulkRechargeService {
         final String id = dto.getId();
 
         log.info(String.format("received message for processing of New Bulk Recharge Request (%s)", id));
-
         NewBulkRechargeRequest request = newBulkRechargeMapper.findBulkRechargeById(id);
 
         if (request == null || request.getClosed()) {
             final String errMessage = String.format("BulkRechargeRequest request (%s) is either closed or non-existent", id);
             log.error(errMessage);
+            return;
+        }
+
+        if (checkDuplicates(request)) {
+            log.error("BulkRecharge Request {} looks like a duplicate request and has been reversed", request.getId());
+            sendDuplicateReport(dto, request);
             return;
         }
 
@@ -463,16 +474,37 @@ public class NewBulkRechargeService {
 
     public InputStreamResource downloadUserIndividual(String id) { return  bulkDownloadRecharge.userIndividuals(id); }
 
+    private void sendDuplicateReport(AsyncRechargeDto dto, NewBulkRechargeRequest request) {
+        if (dto.getEmail() == null || dto.getName() == null) {
+            log.info("Unable to Send E-mail for Bulk Transaction, No E-mail Address or Customer Name found");
+            return;
+        }
+
+        String dateString = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
+
+        final String messageBody =
+                String.format("Dear %s\n\nThe Bulk Recharge Request submitted on %s\nwas identified as a duplicate submission and was not run, all charges have been reversed.\nIf you still want to run the Bulk Recharge please re-submit it",
+                dto.getName(), dateString);
+
+        MailMessageDto mailMessageDto = MailMessageDto.builder()
+                .body(messageBody)
+                .to(dto.getEmail())
+                .subject("Duplicate Submission Detected")
+                .build();
+
+        mailService.pushMailWithOutAttachment(mailMessageDto);
+    }
+
     private void sendReport(AsyncRechargeDto dto, NewBulkRechargeRequest request) {
 
         if (dto.getEmail() == null || dto.getName() == null) {
-            log.info("Unable to Send E-mail for Bulk Transaction, No E-mail Address found");
+            log.info("Unable to Send E-mail for Bulk Transaction, No E-mail Address or Customer Name found");
             return;
         }
 
        String dateString = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
 
-        final String messageBody = String.format("Dear %s\n\n Please find attached report for your Bulk Recharge\nCarried out on %s\nCurrent Balance %.2f",
+        final String messageBody = String.format("Dear %s\n\nPlease find attached report for your Bulk Recharge\nCarried out on %s\nCurrent Balance %.2f",
                 dto.getName(), dateString, dto.getBalance());
 
         MailMessageDto mailMessageDto = MailMessageDto.builder()
@@ -519,6 +551,42 @@ public class NewBulkRechargeService {
         pagedDto.setPages(requests.getPages());
         pagedDto.setList(mapper.listRechargeToRechargDto(requests.getResult()));
         return pagedDto;
+    }
+
+    private boolean checkDuplicates(NewBulkRechargeRequest request) {
+        Map<String, String> parameterMap = new HashMap<>();
+        parameterMap.put("id", request.getId());
+        parameterMap.put("userId", request.getUserId());
+
+        List<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findByUserIdToday(parameterMap);
+
+        if (requests.stream().anyMatch(r -> filterDateAndCost(request, r))) {
+            log.info("Bulk Recharge Request {} looks like a duplicate request it will not be run", request.getId());
+            newBulkRechargeMapper.duplicateRequest(request.getId());
+            refundFailedRecharges(request.getId());
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean filterDateAndCost(NewBulkRechargeRequest originalRequest, NewBulkRechargeRequest existingRequest) {
+        if (originalRequest.getTotalServiceCost().equals(existingRequest.getTotalServiceCost())) {
+            LocalDateTime l1 = LocalDateTime.ofInstant(originalRequest.getCreatedAt().toInstant(), ZoneId.systemDefault());
+            LocalDateTime l2 = LocalDateTime.ofInstant(existingRequest.getCreatedAt().toInstant(), ZoneId.systemDefault());
+
+            long diff = ChronoUnit.SECONDS.between(l2, l1);
+
+            if (diff < Constants.FIVE_MINUTES) {
+                Integer i = newBulkRechargeMapper.individualCount(originalRequest.getId());
+                Integer j = newBulkRechargeMapper.individualCount(existingRequest.getId());
+
+                return Objects.equals(i, j);
+            }
+        }
+
+        return false;
     }
 
     @SneakyThrows

@@ -6,12 +6,15 @@ import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.ws.client.WebServiceIOException;
 
 import java.net.SocketTimeoutException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ControllerAdvice
@@ -29,15 +32,6 @@ public class ProviderControllerAdvice {
         return new ResponseEntity<>(new MessageDto("Unable to reach downstream servers, connection timed out please try again later"), HttpStatus.BAD_GATEWAY);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleBindingException(MethodArgumentNotValidException exception) {
-        log.error(exception.getMessage(), exception);
-        exception.getBindingResult().getFieldErrors().forEach(error -> {
-            log.error(String.format("Error in Field %s, message: %s", error.getField(), error.getDefaultMessage()));
-        });
-
-        return new ResponseEntity<>(new MessageDto("Invalid JSON Arguments in the REST Submission please contact Onecard Support"), HttpStatus.BAD_REQUEST);
-    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<MessageDto> handleResourceNotFoundException(ResourceNotFoundException exception) {
@@ -49,5 +43,18 @@ public class ProviderControllerAdvice {
     public ResponseEntity<MessageDto> handleFileFormatException(FileFormatException exception) {
         log.error(exception.getMessage(), exception);
         return new ResponseEntity<>(new MessageDto(exception.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<MessageDto> handleMethodArgumentNotValid(MethodArgumentNotValidException mex) {
+        List<FieldError> error = mex.getBindingResult().getFieldErrors();
+
+        final String errorMessage = error.stream()
+                .map(fieldError -> fieldError.getField() + " - " + fieldError.getDefaultMessage())
+                .sorted()
+                .collect(Collectors.joining(", "));
+
+        log.error(errorMessage);
+        return new ResponseEntity<>(new MessageDto(errorMessage), HttpStatus.BAD_REQUEST);
     }
 }

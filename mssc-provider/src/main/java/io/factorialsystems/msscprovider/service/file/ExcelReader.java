@@ -6,6 +6,7 @@ import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
 import io.factorialsystems.msscprovider.exception.FileFormatException;
 import io.factorialsystems.msscprovider.service.MailService;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -100,6 +101,7 @@ public class ExcelReader {
         return individualRequestDtos;
     }
 
+    @SneakyThrows
     public List<IndividualRequestDto> readContents() {
 
         String extension = FilenameUtils.getExtension(uploadFile.getFileName());
@@ -119,8 +121,7 @@ public class ExcelReader {
         } catch (Exception ex) {
             errorMessage = String.format("File %s format error: %s Uploaded By (%s)", uploadFile.getFileName(), ex.getMessage(), ProviderSecurity.getUserName());
             log.error(errorMessage);
-            throw new FileFormatException(errorMessage);
-        } finally {
+
             FileSystemResource fileSystemResource = new FileSystemResource(uploadFile.getFile());
             MailService mailService = ApplicationContextProvider.getBean(MailService.class);
 
@@ -131,7 +132,9 @@ public class ExcelReader {
                     .build();
 
             mailService.sendMailWithAttachment(fileSystemResource, mailMessageDto);
-            // uploadFile.getFile().delete();
+            throw new FileFormatException(errorMessage);
+        } finally {
+             uploadFile.getFile().delete();
         }
     }
 
