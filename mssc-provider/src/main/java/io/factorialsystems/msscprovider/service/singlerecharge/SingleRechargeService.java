@@ -199,18 +199,19 @@ public class SingleRechargeService {
             Recharge recharge = factory.getRecharge(parameter.getServiceAction());
             status = recharge.recharge(request);
 
-            Map<String, String> resultsMap = new HashMap<>();
-            resultsMap.put("id", request.getId());
-            resultsMap.put("results", status.getResults());
-
-            singleRechargeMapper.closeRequest(resultsMap);
-
             // If it is a scheduled Recharge, it will have been paid for and transaction logged at the time it was Scheduled
             if (request.getScheduledRequestId() == null) {
                 saveTransaction(request);
             }
 
+            Map<String, String> resultsMap = new HashMap<>();
+            resultsMap.put("id", request.getId());
+
             if (status.getStatus() == HttpStatus.OK) {
+
+                resultsMap.put("results", status.getResults());
+                resultsMap.put("provider", String.valueOf(parameter.getRechargeProviderId()));
+
                 if (request.getUserId() != null) {
                     request.setResults(status.getResults());
                     sendMail(request, dto, status);
@@ -219,6 +220,8 @@ public class SingleRechargeService {
                 singleRechargeMapper.failRequest(request.getId());
                 singleRefundRecharge.asyncRefundRecharge(request);
             }
+
+            singleRechargeMapper.closeRequest(resultsMap);
         }
 
         return status;
@@ -460,12 +463,9 @@ public class SingleRechargeService {
             if (enquiry == null) {
                 log.info("Null SimpleDataEnquiry, Extra Data Enquiry for Action {}, ServiceCode {}", serviceAction, dto.getServiceCode());
 
-//                ExtraDataEnquiry extraDataEnquiry = factory.getExtraPlans(serviceAction);
                 ExtraDataEnquiry extraDataEnquiry = factory.getExtraPlans(dto.getServiceCode());
 
                 if (extraDataEnquiry != null) {
-                    log.info("ExtraDataEnquiry NOT NULL");
-
                     ExtraDataPlanDto extraDataPlanDto = extraDataEnquiry.getExtraPlans(
                             ExtraPlanRequestDto.builder()
                                     .recipient(dto.getRecipient())

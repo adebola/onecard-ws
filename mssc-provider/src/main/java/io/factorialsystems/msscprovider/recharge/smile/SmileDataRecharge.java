@@ -179,15 +179,14 @@ public class SmileDataRecharge implements Recharge, ParameterCheck, Balance, Dat
             if (result != null && result.getValue() != null) {
                 BundleCatalogueResult bundleCatalogueResult = result.getValue();
                 return bundleCatalogueResult.getBundleList().getBundle().stream()
-                        .map(bundle -> {
-                            return DataPlanDto.builder()
-                                    .price(String.valueOf(bundle.getBundlePrice() / 100))
-                                    .network("SMILE")
-                                    .product_id(String.valueOf(bundle.getBundleTypeCode()))
-                                    .validity(String.valueOf(bundle.getValidityDays()))
-                                    .allowance(bundle.getBundleDescription())
-                                    .build();
-                        }).collect(Collectors.toList());
+                        .map(bundle -> DataPlanDto.builder()
+                                .price(String.valueOf(bundle.getBundlePrice() / 100))
+                                .network("SMILE")
+                                .product_id(String.valueOf(bundle.getBundleTypeCode()))
+                                .validity(String.valueOf(bundle.getValidityDays()))
+                                .allowance(bundle.getBundleDescription())
+                                .build())
+                        .collect(Collectors.toList());
             }
         }
 

@@ -55,6 +55,8 @@ class RechargeServiceTest {
         Map<String, String> resultsMap = new HashMap<>();
         resultsMap.put("id", "04c462eb-720c-4c0b-b908-bdbefaf63ec8");
         resultsMap.put("results", null);
+        resultsMap.put("provider", null);
+        //resultsMap.put("provider", "1");
         //resultsMap.put("results", "Results");
 
         singleRechargeMapper.closeRequest(resultsMap);

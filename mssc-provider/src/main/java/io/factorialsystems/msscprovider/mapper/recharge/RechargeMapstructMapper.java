@@ -49,7 +49,8 @@ public interface RechargeMapstructMapper {
             @Mapping(target = "createdDate", ignore = true),
             @Mapping(target = "closed", ignore = true),
             @Mapping(target = "paymentId", ignore = true),
-            @Mapping(target = "results", ignore = true)
+            @Mapping(target = "results", ignore = true),
+            @Mapping(target = "rechargeProviderId", ignore = true)
     })
     SingleRechargeRequest rechargeDtoToRecharge(SingleRechargeRequestDto dto);
 

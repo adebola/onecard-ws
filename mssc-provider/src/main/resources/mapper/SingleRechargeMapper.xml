@@ -29,11 +29,13 @@
         <result column="resolve_id" property="resolveId" jdbcType="VARCHAR"/>
         <result column="failed" property="failed" jdbcType="BOOLEAN"/>
         <result column="results" property="results" jdbcType="VARCHAR"/>
+        <result column="recharge_provider_id" property="rechargeProviderId" jdbcType="INTEGER"/>
     </resultMap>
 
     <resultMap id="factoryResultMap" type="io.factorialsystems.msscprovider.domain.RechargeFactoryParameters">
         <result column="provider_code" property="providerCode" jdbcType="VARCHAR"/>
         <result column="recharge_provider_code" property="rechargeProviderCode" jdbcType="VARCHAR"/>
+        <result column="recharge_provider_id" property="rechargeProviderId" jdbcType="INTEGER"/>
         <result column="service_action" property="serviceAction" jdbcType="VARCHAR"/>
         <result column="async" property="async" jdbcType="BOOLEAN"/>
         <result column="has_results" property="hasResults" jdbcType="BOOLEAN"/>
@@ -74,7 +76,8 @@
         r.successful_retry_id,
         r.refund_id,
         r.resolve_id,
-        r.results
+        r.results,
+        r.recharge_provider_id
     </sql>
 
     <sql id="retry_column_list">
@@ -149,7 +152,8 @@
         update recharge_requests
         <set>
             closed = true,
-            <if test="results != null">results=#{results}</if>
+            <if test="provider != null">recharge_provider_id=#{provider},</if>
+            <if test="results != null">results=#{results},</if>
         </set>
         where id = #{id}
     </update>

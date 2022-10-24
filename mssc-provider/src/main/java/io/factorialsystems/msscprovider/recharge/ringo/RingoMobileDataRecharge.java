@@ -3,10 +3,8 @@ package io.factorialsystems.msscprovider.recharge.ringo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.CacheProxy;
-import io.factorialsystems.msscprovider.dao.RingoDataPlanMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.dto.recharge.DataPlanDto;
-import io.factorialsystems.msscprovider.mapper.recharge.DataPlanMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.DataEnquiry;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
@@ -37,8 +35,6 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
     private final RestTemplate restTemplate;
     private final RingoProperties ringoProperties;
     private final RingoSpectranetRecharge spectranetRecharge;
-    private final DataPlanMapstructMapper dataPlanMapper;
-    private final RingoDataPlanMapper ringoDataPlanMapper;
 
     @Override
     public RechargeStatus recharge(SingleRechargeRequest request) {
@@ -129,13 +125,6 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
                 .filter(p -> p.getProduct_id().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException(String.format("Unable to load Ringo Data Plan %s", id)));
-
-//        RingoDataPlan plan = ringoDataPlanMapper.findById(id);
-//        if (plan == null) {
-//            throw new RuntimeException(String.format("Unable to load Data Plan from Database %s", id));
-//        }
-//
-//        return dataPlanMapper.ringoPlanToDto(plan);
     }
 
     private HttpHeaders getHeaders() {

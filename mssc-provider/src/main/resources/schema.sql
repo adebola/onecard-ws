@@ -90,6 +90,7 @@ create table recharge_requests (
     user_id varchar(64),
     service_id int NOT NULL,
     service_cost decimal(10,2) NOT NULL,
+    recharge_provider_id INT,
     recipient varchar(64) NOT NULL,
     telephone varchar(64),
     product_id varchar(64),
@@ -117,6 +118,7 @@ create table recharge_requests (
     FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
     FOREIGN KEY (bulk_request_id) REFERENCES bulk_recharge_requests(id),
     FOREIGN KEY (service_id) REFERENCES provider_services(id),
+    FOREIGN KEY (recharge_provider_id) REFERENCES recharge_providers(id),
     PRIMARY KEY (id)
 );
 
@@ -361,6 +363,7 @@ BEGIN
     DECLARE provider_code VARCHAR(64);
     DECLARE service_action VARCHAR(64);
     DECLARE recharge_provider_code VARCHAR(64);
+    DECLARE recharge_provider_id INT;
     DECLARE async BOOLEAN;
     DECLARE has_results BOOLEAN;
 
@@ -370,13 +373,13 @@ BEGIN
     and  ps.action = sa.id
     and ps.provider_id = p.id;
 
-    select rp.code into recharge_provider_code from recharge_providers rp, provider_services_recharge_providers psrp
+    select rp.id, rp.code into recharge_provider_id, recharge_provider_code from recharge_providers rp, provider_services_recharge_providers psrp
     where psrp.provider_service_id = provider_service_id
     and psrp.recharge_provider_id = rp.id
     order by psrp.weight desc
     limit 1;
 
-    select provider_code, recharge_provider_code, service_action, async, has_results;
+    select provider_code, recharge_provider_id, recharge_provider_code, service_action, async, has_results;
 END;
 
 create procedure sp_addRechargeProvider(IN provider_id INT, IN service_id INT, IN weight_value INT)

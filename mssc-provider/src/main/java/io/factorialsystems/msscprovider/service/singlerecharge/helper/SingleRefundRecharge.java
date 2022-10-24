@@ -108,10 +108,10 @@ public class SingleRefundRecharge {
                     .userId(request.getUserId())
                     .build();
 
-            log.info(String.format("MQ Request sent for Refund on Single Recharge for User %s, Amount %.2f", request.getUserId(), request.getServiceCost()));
+            log.info("MQ Request sent for Refund on Single Recharge for User {}, Amount {}", request.getUserId(), request.getServiceCost());
             jmsTemplate.convertAndSend(JMSConfig.PAYMENT_REFUND_QUEUE, objectMapper.writeValueAsString(refundRequest));
         } else {
-            log.error(String.format("Asynchronous Single Recharge Refund Failed for %s, User Not Present", request.getId()));
+            log.error("Asynchronous Single Recharge Refund Failed for {}, User Not Present", request.getId());
         }
     }
 }

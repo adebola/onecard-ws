@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RechargeFactoryParameters {
     private String providerCode;
+    private Integer rechargeProviderId;
     private String rechargeProviderCode;
     private String serviceAction;
     private Boolean async;

@@ -71,7 +71,7 @@ public class DstvHelper {
                 .serviceCode(ringoProperties.getCableVerification())
                 .build();
 
-        log.info("Validate Cable Request " + ringoValidateCableRequest);
+        log.info("Validate Cable Request {}", ringoValidateCableRequest);
 
         RingoValidateCableResponse response = null;
 
@@ -80,7 +80,6 @@ public class DstvHelper {
 
             response =
                     restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoValidateCableResponse.class);
-
             if (response != null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())) {
 
                 log.info("Validate Cable Success");
