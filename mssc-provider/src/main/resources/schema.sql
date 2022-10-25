@@ -266,6 +266,7 @@ create table bulk_individual_requests (
     scheduled_request_id varchar(64),
     auto_request_id varchar(64),
     external_request_id varchar(64) NOT NULL,
+    recharge_provider_id INT,
     service_id int NOT NULL,
     service_cost decimal(10,2) NOT NULL,
     product_id varchar(64),
@@ -280,6 +281,7 @@ create table bulk_individual_requests (
     FOREIGN KEY (scheduled_request_id) REFERENCES new_scheduled_recharge_requests(id),
     FOREIGN KEY (bulk_request_id) REFERENCES new_bulk_recharge_requests(id),
     FOREIGN KEY (auto_request_id) REFERENCES new_auto_recharge_requests(id),
+    FOREIGN KEY (recharge_provider_id) REFERENCES recharge_providers(id),
     PRIMARY KEY (id)
 );
 

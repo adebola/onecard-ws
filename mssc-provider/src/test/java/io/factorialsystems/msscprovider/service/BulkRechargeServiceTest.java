@@ -58,7 +58,8 @@ class BulkRechargeServiceTest {
         Map<String, String> resultsMap = new HashMap<>();
         resultsMap.put("id", "1");
         //resultsMap.put("results", null);
-        resultsMap.put("results", "Results");
+        //resultsMap.put("results", "Results");
+        resultsMap.put("provider", "1");
 
         newBulkRechargeMapper.saveResults(resultsMap);
     }
@@ -178,6 +179,8 @@ class BulkRechargeServiceTest {
 
         map.put("id", String.valueOf(1));
         map.put("retryId", id);
+        map.put("provider", "1");
+        map.put("results", "it is well");
 
         Boolean b = newBulkRechargeMapper.saveSuccessfulRetry(map);
         assertEquals(b, true);

@@ -229,16 +229,19 @@ public class NewBulkRechargeService {
                     if (parameterCheck.check(singleRechargeRequest)) {
                         Recharge recharge = factory.getRecharge(parameter.getServiceAction());
 
-                        // Work Around for Ringo, which has scaling issues
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            log.error(String.format("Thread Sleep error : %s", e.getMessage()));
-                        }
-
                         RechargeStatus rechargeStatus = recharge.recharge(singleRechargeRequest);
 
-                        if (rechargeStatus.getStatus() != HttpStatus.OK) {
+                        if (rechargeStatus.getStatus() == HttpStatus.OK) {
+                            Map<String, String> resultMap = new HashMap<>();
+                            resultMap.put("id", String.valueOf(individualRequest.getId()));
+                            resultMap.put("provider", String.valueOf(parameter.getRechargeProviderId()));
+
+                            if (parameter.getHasResults()) {
+                                resultMap.put("results", rechargeStatus.getResults());
+                            }
+
+                            newBulkRechargeMapper.saveResults(resultMap);
+                        } else {
                             IndividualRequestFailureNotification notification = IndividualRequestFailureNotification
                                     .builder()
                                     .errorMsg(rechargeStatus.getMessage().length() > 255 ? rechargeStatus.getMessage().substring(0, 255) : rechargeStatus.getMessage())
@@ -246,12 +249,6 @@ public class NewBulkRechargeService {
                                     .build();
 
                             newBulkRechargeMapper.failIndividualRequest(notification);
-                        } else if (parameter.getHasResults()) { // if successful recharge and request has results
-                            Map<String, String> resultMap = new HashMap<>();
-                            resultMap.put(id, String.valueOf(individualRequest.getId()));
-                            resultMap.put("results", rechargeStatus.getResults());
-
-                            newBulkRechargeMapper.saveResults(resultMap);
                         }
                     } else {
                         final String errorMessage =

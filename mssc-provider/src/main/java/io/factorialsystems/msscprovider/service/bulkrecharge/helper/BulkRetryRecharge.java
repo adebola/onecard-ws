@@ -56,7 +56,8 @@ public class BulkRetryRecharge {
                     .build();
         }
 
-        Recharge recharge = optionalParameters.get().getRecharge();
+        RechargeParameters parameter = optionalParameters.get();
+        Recharge recharge = parameter.getRecharge();
 
         ReQueryRequest reQueryRequest = new ReQueryRequest();
         reQueryRequest.setId(individualRequest.getExternalRequestId());
@@ -85,7 +86,7 @@ public class BulkRetryRecharge {
                 statusMessage = "Recharge Retry Success";
 
                 log.info(String.format("Successful Retry Recharge %s/%s", individualRequest.getServiceCode(), individualRequest.getRecipient()));
-                saveSuccessfulIndividualRetry(individualRequest, requestRetryId);
+                saveSuccessfulIndividualRetry(individualRequest, requestRetryId, parameter.getRechargeProviderId(), rechargeStatus.getResults());
             } else {
                 log.error(String.format("Failed Retry Recharge %s/%s Reason %s", individualRequest.getServiceCode(), individualRequest.getRecipient(), rechargeStatus.getMessage()));
                 statusMessage = statusMessage + " Reason: " + rechargeStatus.getMessage();
@@ -135,8 +136,7 @@ public class BulkRetryRecharge {
 
 
     // Once a Retry Recharge Succeeds Update the Database accordingly
-    private void saveSuccessfulIndividualRetry(IndividualRequest request, String id) {
-
+    private void saveSuccessfulIndividualRetry(IndividualRequest request, String id, Integer rechargeProviderId, String results) {
         String tokenUser = ProviderSecurity.getUserId();
 
         IndividualRequestRetry requestRetry = IndividualRequestRetry.builder()
@@ -154,6 +154,8 @@ public class BulkRetryRecharge {
 
         map.put("id", String.valueOf(request.getId()));
         map.put("retryId", id);
+        map.put("provider", String.valueOf(rechargeProviderId));
+        map.put("results", results);
 
         Boolean b = newBulkRechargeMapper.saveSuccessfulRetry(map);
     }

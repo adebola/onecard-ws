@@ -145,7 +145,15 @@
     </insert>
 
     <update id="saveSuccessfulRetry" parameterType="java.util.Map">
-        update providerdb.bulk_individual_requests set successful_retry_id = #{retryId} where id = #{id}
+        update providerdb.bulk_individual_requests
+            <set>
+                successful_retry_id = #{retryId},
+                recharge_provider_id = #{provider},
+                <if test="results != null">
+                    results = #{results},
+                </if>
+            </set>
+        where id = #{id}
     </update>
 
     <select id="findRequestRetryById" parameterType="java.lang.String" resultMap="requestRetryMap">
@@ -174,7 +182,14 @@
     </select>
 
     <update id="saveResults" parameterType="java.util.Map">
-        update providerdb.bulk_individual_requests set results = #{results} where id = #{id}
+        update providerdb.bulk_individual_requests
+            <set>
+                recharge_provider_id = #{provider},
+                <if test="results != null">
+                    results = #{results},
+                </if>
+            </set>
+        where id = #{id}
     </update>
 
     <select id="findRefundTotalByRequestId" parameterType="java.lang.String" resultType="double">

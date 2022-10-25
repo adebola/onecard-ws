@@ -41,6 +41,7 @@ public class RechargeInterfaceRequester {
                     .recharge(factory.getRecharge(serviceAction))
                     .serviceAction(serviceAction)
                     .rechargeProviderCode(rechargeProviderCode)
+                    .rechargeProviderId(parameter.getRechargeProviderId())
                     .build();
 
             return Optional.of(rechargeParameters);
