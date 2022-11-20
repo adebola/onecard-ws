@@ -30,6 +30,10 @@ public class CombinedRechargeService {
     private final SingleRechargeMapper singleRechargeMapper;
     private final CombinedRequestMapstructMapper combinedRequestMapstructMapper;
 
+    public ByteArrayInputStream getProviderUsage() {
+        return null;
+    }
+
     public ByteArrayInputStream getCombinedResource(CombinedRequestDto dto) {
         dto.getStartDate().setHours(0);
         dto.getStartDate().setMinutes(0);

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.factorialsystems.msscprovider.dao.RechargeReportMapper">
+
+    <resultMap id="expenditureMap" type="io.factorialsystems.msscprovider.domain.report.ProviderExpenditure">
+        <result column="provider" property="provider" jdbcType="VARCHAR"/>
+        <result column="expenditure" property="expenditure" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <select id="findRechargeProviderExpenditure" parameterType="io.factorialsystems.msscprovider.dto.report.RechargeProviderRequestDto" resultMap="expenditureMap">
+        select name as provider, sum(totals) as expenditure
+        from (
+                select p.name, sum(r.service_cost) as totals
+                from recharge_requests r, recharge_providers p
+                where r.recharge_provider_id = p.id
+
+                <if test="startDate != null and endDate != null">
+                    and r.createdAt between #{startDate} and #{endDate}
+                </if>
+
+                <if test="startDate != null and endDate == null">
+                    and r.createdAt &gt; #{startDate}
+                </if>
+
+                group by recharge_provider_id
+                    union
+                select p.name, sum(b.service_cost) as totals
+                from bulk_individual_requests b, recharge_providers p, new_bulk_recharge_requests n
+                where b.recharge_provider_id = p.id
+                and b.bulk_request_id = n.id
+
+                <if test="startDate != null and endDate != null">
+                    and n.createdAt between #{startDate} and #{endDate}
+                </if>
+
+                <if test="startDate != null and endDate == null">
+                    and n.createdAt &gt; #{startDate}
+                </if>
+                group by recharge_provider_id
+             ) as ntnt
+        group by name;
+    </select>
+</mapper>

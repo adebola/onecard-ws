@@ -167,6 +167,9 @@ public class NewBulkRechargeService {
                 .build();
     }
 
+
+    // Performs the actual Bulk Recharges called from NewScheduledRechargeService and
+    // Called from the JMS Framework (RechargeListener) to run Bulk Recharges asynchronously
     public void runBulkRecharge(AsyncRechargeDto dto) {
         final String id = dto.getId();
 
@@ -315,6 +318,7 @@ public class NewBulkRechargeService {
         bulkRefundRecharge.refundRecharge(id, bulkRequestId);
     }
 
+    // Called in the second stage for users who are making card payments
     @SneakyThrows
     public void asyncRecharge(String id) {
         NewBulkRechargeRequest request = newBulkRechargeMapper.findBulkRechargeById(id);
@@ -369,7 +373,7 @@ public class NewBulkRechargeService {
         return createIndividualDto(requests);
     }
 
-    // Search Bulk Recharges by Id or Date or Both
+    // Search Bulk Recharges by id or Date or Both
     public PagedDto<NewBulkRechargeRequestDto> search(SearchBulkRechargeDto dto) {
         PageHelper.startPage(dto.getPageNumber(), dto.getPageSize());
         Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.search(dto);

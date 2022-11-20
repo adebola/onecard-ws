@@ -10,6 +10,7 @@ import io.factorialsystems.msscprovider.recharge.ringo.request.RingoPayCableRequ
 import io.factorialsystems.msscprovider.recharge.ringo.request.RingoValidateCableRequest;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoPayCableResponse;
 import io.factorialsystems.msscprovider.recharge.ringo.response.RingoValidateCableResponse;
+import io.factorialsystems.msscprovider.recharge.ringo.response.StartimesValidateCableResponse;
 import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Collections;
 import java.util.Objects;
 
 @Slf4j
@@ -29,6 +31,11 @@ public class DstvHelper {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final RingoProperties ringoProperties;
+
+    public static final String ONE_STRING = "1";
+    public static final String DSTV_STRING = "DSTV";
+    public static final String GOTV_STRING = "GOTV";
+    public static final String  STARTIMES_STRING = "STARTIMES";
 
     private static HttpHeaders httpHeaders = null;
 
@@ -49,15 +56,15 @@ public class DstvHelper {
         String code = null;
 
         switch (dto.getServiceCode()) {
-            case "DSTV":
+            case DSTV_STRING:
                 code = ringoProperties.getDstv();
                 break;
 
-            case "GOTV":
+            case GOTV_STRING:
                 code = ringoProperties.getGotv();
                 break;
 
-            case "STARTIMES":
+            case STARTIMES_STRING:
                 code = ringoProperties.getStartimes();
                 break;
 
@@ -73,42 +80,72 @@ public class DstvHelper {
 
         log.info("Validate Cable Request {}", ringoValidateCableRequest);
 
-        RingoValidateCableResponse response = null;
+
+        // For DSTV and GOTV, Ringo Returns a RingoValidateCableResponse, whereas STARTIMES enquiry returns
+        // StartimesValidateCableResponse, particularly the response does not have an array of plans which
+        // DSTV and GOTV provide.
+
+        String errorMessage = null;
 
         try {
-            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(ringoValidateCableRequest), getHeader());
+            HttpEntity<String> entity =
+                    new HttpEntity<>(objectMapper.writeValueAsString(ringoValidateCableRequest), getHeader());
 
-            response =
-                    restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoValidateCableResponse.class);
-            if (response != null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())) {
+            if (dto.getServiceCode().equals(STARTIMES_STRING)) {
+                StartimesValidateCableResponse response = restTemplate.postForObject(
+                        ringoProperties.getAirtimeUrl(), entity, StartimesValidateCableResponse.class);
 
-                log.info("Validate Cable Success");
+                if (response != null && response.getStatus().equals("200")) {
+                    log.info("Validate Startimes Cable Success");
 
-                return ExtraDataPlanDto.builder()
-                        .customerName(response.getCustomerName())
-                        .recipient(response.getSmartCardNo())
-                        .message(response.getMessage())
-                        .status(200)
-                        .object(response.getProduct())
-                        .build();
+                    return ExtraDataPlanDto.builder()
+                            .customerName(response.getCustomerName())
+                            .message(response.getMessage())
+                            .status(200)
+                            .recipient(response.getSmartCardNo())
+                            .object(Collections.emptyList())
+                            .build();
+                } else {
+                    errorMessage =
+                            String.format("Ringo Validate for %s Cable Failed Reason : %s",
+                                    ringoValidateCableRequest.getServiceCode(),
+                                    response != null && response.getMessage() != null ? response.getMessage() : "Unknown");
+                }
+            } else {
+                RingoValidateCableResponse response = restTemplate.postForObject(
+                        ringoProperties.getAirtimeUrl(), entity, RingoValidateCableResponse.class);
+
+                if (response != null && Objects.equals(response.getStatus(), RingoResponseStatus.SUCCESS.getValue())) {
+                    log.info("Validate GOTV / DSTV Cable Success");
+
+                    return ExtraDataPlanDto.builder()
+                            .customerName(response.getCustomerName())
+                            .recipient(response.getSmartCardNo())
+                            .message(response.getMessage())
+                            .status(200)
+                            .object(response.getProduct())
+                            .build();
+                } else {
+                    errorMessage =
+                            String.format("Ringo Validate for %s Cable Failed Reason : %s",
+                                    ringoValidateCableRequest.getServiceCode(),
+                                    response != null && response.getMessage() != null ? response.getMessage() : "Unknown");
+
+                    if (response == null) {
+                        log.error(errorMessage);
+                    } else {
+                        log.error("Ringo Validate Error {}", response);
+                    }
+                }
             }
-
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error performing Validation Reason: " + e.getMessage());
-        }
-
-        String message;
-
-        if (response != null && response.getMessage() != null) {
-            message = String.format("Ringo Validate for %s Cable Failed Reason : %s", ringoValidateCableRequest.getServiceCode(), response.getMessage());
-        } else {
-            message = String.format("Ringo Validate for %s Cable Failed Reason", ringoValidateCableRequest.getServiceCode());
+            errorMessage = "Error Validating Cable Request: " + e.getMessage();
+            log.error(errorMessage);
         }
 
         return ExtraDataPlanDto.builder()
                 .status(400)
-                .message(message)
+                .message(errorMessage)
                 .build();
     }
 
@@ -120,7 +157,7 @@ public class DstvHelper {
                 .request_id(singleRechargeRequest.getId())
                 .code(singleRechargeRequest.getProductId())
                 .type(singleRechargeRequest.getServiceCode())
-                .period("1")
+                .period(ONE_STRING)
                 .smartCardNo(singleRechargeRequest.getRecipient())
                 .name(singleRechargeRequest.getName())
                 .hasAddon("False")

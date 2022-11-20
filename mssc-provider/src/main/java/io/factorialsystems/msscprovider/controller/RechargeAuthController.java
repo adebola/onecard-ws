@@ -1,10 +1,12 @@
 package io.factorialsystems.msscprovider.controller;
 
+import io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge;
 import io.factorialsystems.msscprovider.dto.CombinedRequestDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeResponseDto;
+import io.factorialsystems.msscprovider.dto.search.AdminSearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
@@ -113,6 +115,7 @@ public class RechargeAuthController {
         return new ResponseEntity<>(rechargeService.getRecharge(id), HttpStatus.OK);
     }
 
+    @Deprecated
     @GetMapping("/single/searchrecipient")
     public ResponseEntity<?> searchSingleByRecipient(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                      @RequestParam(value = "pageSize", required = false) Integer pageSize,
@@ -126,13 +129,47 @@ public class RechargeAuthController {
             pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
-        return new ResponseEntity<>(rechargeService.search(searchString, pageNumber, pageSize), HttpStatus.OK);
+        SearchSingleRecharge search = SearchSingleRecharge.builder()
+                .recipient(searchString)
+                .build();
+
+        return ResponseEntity.ok()
+                .body(rechargeService.search(search, pageNumber, pageSize));
+    }
+
+    @PostMapping("/single/search")
+    public ResponseEntity<?> searchSingle(@Valid @RequestBody SearchSingleRechargeDto dto,
+                                          @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                          @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
+        }
+
+
+        return ResponseEntity.ok()
+                .body(rechargeService.search(dto.toSearchSingle(), pageNumber , pageSize));
     }
 
     @PostMapping("/single/adminsearch")
     @PreAuthorize("hasRole('Onecard_Admin')")
-    public ResponseEntity<?> adminSearch(@Valid @RequestBody SearchSingleRechargeDto dto) {
-        return new ResponseEntity<>(rechargeService.adminSearch(dto), HttpStatus.OK);
+    public ResponseEntity<?> adminSearchSingle(@Valid @RequestBody AdminSearchSingleRechargeDto dto,
+                                               @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                               @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
+        }
+
+        if (pageSize == null || pageSize < 1) {
+            pageSize = Constants.DEFAULT_PAGE_SIZE;
+        }
+
+        return new ResponseEntity<>(rechargeService.search(dto.toSearchSingle(), pageNumber, pageSize), HttpStatus.OK);
     }
 
     @PostMapping("/single/adminfailedsearch")

@@ -2,8 +2,8 @@ package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
-import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
@@ -112,28 +112,45 @@ class RechargeServiceTest {
 
     @Test
     void adminSearch() throws ParseException {
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        AdminSearchSingleRechargeDto dto = new AdminSearchSingleRechargeDto();
+//        dto.setUserId(id);
+//
+//        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss", Locale.ENGLISH);
+//        final String dateString = "26-04-2022 10:15:55 AM";
+//        dto.setPageNumber(1);
+//        dto.setPageSize(40);
+//
+//        Date d = formatter.parse(dateString);
+//        dto.setSearchDate(d);
+//
+////        dto.setSearchProduct("GLO");
+////        dto.setSearchRecipient("080");
+//        var x = rechargeService.adminSearch(dto);
+//        log.info(x);
+//        log.info(x.getTotalSize());
+    }
+    @Test
+    void search() throws ParseException {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        SearchSingleRechargeDto dto = new SearchSingleRechargeDto();
-        dto.setUserId(id);
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss", Locale.ENGLISH);
         final String dateString = "26-04-2022 10:15:55 AM";
-        dto.setPageNumber(1);
-        dto.setPageSize(40);
 
         Date d = formatter.parse(dateString);
-        dto.setSearchDate(d);
 
-//        dto.setSearchProduct("GLO");
-//        dto.setSearchRecipient("080");
-        var x = rechargeService.adminSearch(dto);
+
+        SearchSingleRecharge search = SearchSingleRecharge.builder()
+                .userId(id)
+                .rechargeId("b")
+//                .startDate(d)
+//                .product("GLO-DATA")
+//                .recipient("070")
+                .build();
+
+        var x = rechargeService.search(search, 1, 20);
         log.info(x);
         log.info(x.getTotalSize());
-    }
-    @Test
-    void search() {
-        var x = rechargeService.search("0803", 1, 20);
-        log.info(x.getPageSize());
     }
 
     @Test

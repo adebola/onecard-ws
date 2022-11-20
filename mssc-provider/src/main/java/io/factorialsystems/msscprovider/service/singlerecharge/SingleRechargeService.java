@@ -12,6 +12,7 @@ import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge;
 import io.factorialsystems.msscprovider.dto.MailMessageDto;
 import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.RequestTransactionDto;
@@ -19,7 +20,6 @@ import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
-import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.helper.PaymentHelper;
@@ -352,19 +352,13 @@ public class SingleRechargeService {
         return createDto(requests);
     }
 
-    public PagedDto<SingleRechargeRequestDto> search(String search, Integer pageNumber, Integer pageSize) {
+    public PagedDto<SingleRechargeRequestDto> search(SearchSingleRecharge search, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<SingleRechargeRequest> requests = singleRechargeMapper.search(search);
 
         return createDto(requests);
     }
 
-    public PagedDto<SingleRechargeRequestDto> adminSearch(SearchSingleRechargeDto dto) {
-        PageHelper.startPage(dto.getPageNumber(), dto.getPageSize());
-        Page<SingleRechargeRequest> requests = singleRechargeMapper.adminSearch(dto);
-
-        return createDto(requests);
-    }
 
     public PagedDto<SingleRechargeRequestDto> adminFailedSearch(SearchSingleFailedRechargeDto dto, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);

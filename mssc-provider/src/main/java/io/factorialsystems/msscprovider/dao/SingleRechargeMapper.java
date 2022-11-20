@@ -5,9 +5,9 @@ import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.SingleResolve;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequestRetry;
+import io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge;
 import io.factorialsystems.msscprovider.dto.CombinedRequestDto;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
-import io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -21,8 +21,7 @@ public interface SingleRechargeMapper {
     List<RechargeFactoryParameters> factory(Integer id);
     void closeRequest(Map<String, String> requestMap);
     Page<SingleRechargeRequest> findRequestsByUserId(String id);
-    Page<SingleRechargeRequest> search(String search);
-    Page<SingleRechargeRequest> adminSearch(SearchSingleRechargeDto dto);
+    Page<SingleRechargeRequest> search(SearchSingleRecharge search);
     Page<SingleRechargeRequest> adminFailedSearch(SearchSingleFailedRechargeDto dto);
     Boolean setEmailId(Map<String, String> parameters);
     SingleRechargeRequestRetry findRequestRetryById(String id);

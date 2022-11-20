@@ -188,31 +188,39 @@
         update providerdb.recharge_requests set refund_id = #{refundId} where id = #{id}
     </update>
 
-    <select id="search" parameterType="java.lang.String" resultMap="rechargeResultMap">
-        select
-        <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where r.recipient like CONCAT(#{search}, '%')
-        and r.service_id = p.id
-    </select>
-
-    <select id="adminSearch" parameterType="io.factorialsystems.msscprovider.dto.search.SearchSingleRechargeDto" resultMap="rechargeResultMap">
+    <select id="search" parameterType="io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
         from recharge_requests r, provider_services p
         where user_id = #{userId}
         and r.service_id = p.id
 
-        <if test="searchRecipient != null">
-            and r.recipient like CONCAT(#{searchRecipient}, '%')
+        <if test="recipient != null">
+            and r.recipient like CONCAT(#{recipient}, '%')
         </if>
 
-        <if test="searchProduct != null">
-            and p.service_code like CONCAT(#{searchProduct}, '%')
+        <if test="product != null">
+            and p.service_code like CONCAT(#{product}, '%')
         </if>
 
-        <if test="searchDate != null">
-            and date(r.createdAt) = date(#{searchDate})
+        <if test="startDate != null and endDate != null">
+            and createdAt between #{startDate} and #{endDate}
+        </if>
+
+        <if test="startDate != null and endDate == null">
+            and date(r.createdAt) = date(#{startDate})
+        </if>
+
+        <if test="rechargeId != null">
+            and r.id like CONCAT(#{rechargeId}, '%')
+        </if>
+
+        <if test="failed != null">
+            and r.failed = #{failed,jdbcType=BOOLEAN}
+        </if>
+
+        <if test="unresolved != null and unresolved == true">
+            and r.failed = true and r.successful_retry_id is NULL and r.refund_id is NULL and r.resolve_id is NULL
         </if>
     </select>
 
