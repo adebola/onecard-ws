@@ -1,9 +1,6 @@
 package io.factorialsystems.msscprovider.mapper.recharge;
 
-import io.factorialsystems.msscprovider.domain.rechargerequest.AutoIndividualRequest;
-import io.factorialsystems.msscprovider.domain.rechargerequest.AutoRechargeRequest;
-import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
-import io.factorialsystems.msscprovider.domain.rechargerequest.ShortAutoRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.*;
 import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.mapper.DateMapper;
 import org.mapstruct.DecoratedWith;

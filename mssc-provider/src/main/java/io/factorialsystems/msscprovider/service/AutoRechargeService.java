@@ -6,21 +6,25 @@ import io.factorialsystems.msscprovider.dao.AutoRechargeMapper;
 import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.query.SearchByString;
 import io.factorialsystems.msscprovider.domain.rechargerequest.*;
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.AutoRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
+import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,6 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AutoRechargeService {
+    private final ExcelWriter excelWriter;
     private final FileUploader fileUploader;
     private final AutoRechargeMapper autoRechargeMapper;
     private final NewBulkRechargeService newBulkRechargeService;
@@ -304,5 +309,26 @@ public class AutoRechargeService {
                 }
             });
         }
+    }
+
+    public InputStreamResource getRechargeByDateRange(DateRangeDto dto) {
+        dto.setId(ProviderSecurity.getUserId());
+
+        String title = null;
+
+        final String pattern = "EEEEE dd MMMMM yyyy";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+
+        if (dto.getStartDate() != null && dto.getEndDate() != null) {
+            title = String.format("Auto Recharge Download for User %s Date Range %s to %s", dto.getId(),
+                    simpleDateFormat.format(dto.getStartDate()), simpleDateFormat.format(dto.getEndDate()));
+        } else if (dto.getStartDate() != null) {
+            title = String.format("Auto Recharge Download for User %s Date %s", dto.getId(), simpleDateFormat.format(dto.getStartDate()));
+        } else {
+            title = String.format("Auto Recharge Download for User %s", dto.getId());
+        }
+        List<ShortAutoRechargeRequest> requests = autoRechargeMapper.findByUserIdAndDateRange(dto);
+
+        return new InputStreamResource(excelWriter.autoRequestToExcel(requests, title));
     }
 }

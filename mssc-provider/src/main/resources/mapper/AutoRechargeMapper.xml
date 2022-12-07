@@ -8,6 +8,7 @@
         <result column="title" property="title" jdbcType="VARCHAR"/>
         <result column="start_date" property="startDate" jdbcType="TIMESTAMP"/>
         <result column="end_date" property="endDate" jdbcType="TIMESTAMP"/>
+        <result column="created_on" property="createdOn" jdbcType="TIMESTAMP"/>
         <result column="recurring_type" property="recurringType" jdbcType="INTEGER"/>
         <result column="separation_count" property="separationCount" jdbcType="INTEGER"/>
         <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
@@ -18,6 +19,7 @@
         <result column="title" property="title" jdbcType="VARCHAR"/>
         <result column="start_date" property="startDate" jdbcType="TIMESTAMP"/>
         <result column="end_date" property="endDate" jdbcType="TIMESTAMP"/>
+        <result column="created_on" property="createdOn" jdbcType="TIMESTAMP"/>
         <result column="recurring_type" property="recurringType" jdbcType="INTEGER"/>
     </resultMap>
 
@@ -39,19 +41,6 @@
         <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
     </resultMap>
 
-<!--    <resultMap id="individualRequestResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest">-->
-<!--        <id column="id" property="id" jdbcType="INTEGER" />-->
-<!--        <result column="bulk_request_id" property="bulkRequestId" jdbcType="VARCHAR"/>-->
-<!--        <result column="scheduled_request_id" property="scheduledRequestId" jdbcType="VARCHAR"/>-->
-<!--        <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>-->
-<!--        <result column="service_id" property="serviceId" jdbcType="INTEGER"/>-->
-<!--        <result column="service_code" property="serviceCode" jdbcType="VARCHAR"/>-->
-<!--        <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>-->
-<!--        <result column="product_id" property="productId" jdbcType="VARCHAR"/>-->
-<!--        <result column="telephone" property="telephone" jdbcType="VARCHAR"/>-->
-<!--        <result column="recipient" property="recipient" jdbcType="VARCHAR"/>-->
-<!--    </resultMap>-->
-
     <resultMap id="autoRunResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.AutoRunEvent">
         <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>
         <result column="title" property="title" jdbcType="VARCHAR"/>
@@ -59,20 +48,16 @@
     </resultMap>
 
     <sql id="short_auto_column_list">
-        id, title, start_date, end_date, recurring_type
+        id, title, start_date, end_date, created_on, recurring_type
     </sql>
 
     <sql id="auto_column_list">
-      id, user_id, title, start_date, end_date, recurring_type, separation_count, payment_mode
+      id, user_id, title, start_date, end_date, created_on, recurring_type, separation_count, payment_mode
     </sql>
 
     <sql id="auto_recurring_list">
         id, auto_request_id, day_of_period, disabled
     </sql>
-
-<!--    <sql id="individual_column_list">-->
-<!--        b.id, b.bulk_request_id, b.scheduled_request_id, b.auto_request_id, b.recipient, b.service_id, p.service_code, b.service_cost, b.product_id, b.telephone-->
-<!--    </sql>-->
 
     <sql id="individual_column_list">
         b.id, b.auto_request_id, b.recipient, b.service_id, p.service_code, b.service_cost, b.product_id, b.telephone
@@ -220,5 +205,22 @@
         from new_auto_recharge_requests
         where title like CONCAT(#{search}, '%')
         and user_id = #{userId}
+    </select>
+
+
+    <select id="findByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.DateRangeDto" resultMap="autoShortRechargeResultMap">
+        select
+        <include refid="short_auto_column_list"/>
+        from new_auto_recharge_requests
+        where user_id = #{id}
+        and deleted = false
+
+        <if test="startDate != null and endDate != null">
+            and created_on between #{startDate} and #{endDate}
+        </if>
+
+        <if test="startDate != null and endDate == null">
+            and new_auto_recharge_requests.created_on &gt; #{startDate}
+        </if>
     </select>
 </mapper>

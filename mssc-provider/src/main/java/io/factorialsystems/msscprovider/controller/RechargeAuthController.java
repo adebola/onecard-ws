@@ -1,7 +1,7 @@
 package io.factorialsystems.msscprovider.controller;
 
-import io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge;
 import io.factorialsystems.msscprovider.dto.CombinedRequestDto;
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
@@ -100,41 +100,18 @@ public class RechargeAuthController {
                                                     @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
-        if (pageNumber == null || pageNumber < 0) {
-            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
-        }
 
-        if (pageSize == null || pageSize < 1) {
-            pageSize = Constants.DEFAULT_PAGE_SIZE;
-        }
-        return new ResponseEntity<>(rechargeService.getUserRecharges(id, pageNumber, pageSize), HttpStatus.OK);
+        return ResponseEntity.ok()
+                .body(
+                        rechargeService.getUserRecharges(id,
+                        pageNumber == null ? Constants.DEFAULT_PAGE_NUMBER : pageNumber,
+                        pageSize == null ?  Constants.DEFAULT_PAGE_SIZE : pageSize)
+                );
     }
 
     @GetMapping("/single/{id}")
     public ResponseEntity<?> getSingleRequest(@PathVariable("id") String id) {
         return new ResponseEntity<>(rechargeService.getRecharge(id), HttpStatus.OK);
-    }
-
-    @Deprecated
-    @GetMapping("/single/searchrecipient")
-    public ResponseEntity<?> searchSingleByRecipient(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
-                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize,
-                                                     @RequestParam(value = "searchString") String searchString) {
-
-        if (pageNumber == null || pageNumber < 0) {
-            pageNumber = Constants.DEFAULT_PAGE_NUMBER;
-        }
-
-        if (pageSize == null || pageSize < 1) {
-            pageSize = Constants.DEFAULT_PAGE_SIZE;
-        }
-
-        SearchSingleRecharge search = SearchSingleRecharge.builder()
-                .recipient(searchString)
-                .build();
-
-        return ResponseEntity.ok()
-                .body(rechargeService.search(search, pageNumber, pageSize));
     }
 
     @PostMapping("/single/search")
@@ -251,5 +228,15 @@ public class RechargeAuthController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(rechargeService.getFailedRecharges(type));
+    }
+
+    @PostMapping("/single/download")
+    public ResponseEntity<Resource> generateDateRangeRecharge(@Valid @RequestBody DateRangeDto dto) {
+        final String filename = String.format("%s.%s", UUID.randomUUID(), "xls");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(rechargeService.getRechargeByDateRange(dto));
     }
 }

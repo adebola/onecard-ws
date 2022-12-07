@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.service;
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge;
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
@@ -19,10 +20,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -151,6 +149,32 @@ class RechargeServiceTest {
         var x = rechargeService.search(search, 1, 20);
         log.info(x);
         log.info(x.getTotalSize());
+    }
+
+    @Test
+    void getRechargeByDateRange() throws IOException, ParseException {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
+
+            DateRangeDto dto = new DateRangeDto();
+
+            SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss", Locale.ENGLISH);
+            final String dateString = "27-04-2022 09:15:55";
+            dto.setStartDate(formatter.parse(dateString));
+            //dto.setEndDate(formatter.parse("12-12-2022 01:00:00"));
+
+            InputStreamResource resource = rechargeService.getRechargeByDateRange(dto);
+            File targetFile = new File("date-range.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = resource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
+        }
     }
 
     @Test

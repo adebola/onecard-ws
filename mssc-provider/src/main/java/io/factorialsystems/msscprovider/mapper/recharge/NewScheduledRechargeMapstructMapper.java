@@ -35,6 +35,7 @@ public interface NewScheduledRechargeMapstructMapper {
             @Mapping(source = "recipients", target = "recipients"),
             @Mapping(source = "redirectUrl", target = "redirectUrl"),
             @Mapping(source = "paymentMode", target = "paymentMode"),
+            @Mapping(source = "createdOn", target = "createdAt")
     })
     NewBulkRechargeRequest ToBulkRechargeRequest(NewScheduledRechargeRequest request);
 }

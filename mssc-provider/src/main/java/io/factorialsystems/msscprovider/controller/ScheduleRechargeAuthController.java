@@ -2,6 +2,7 @@ package io.factorialsystems.msscprovider.controller;
 
 
 import io.factorialsystems.msscprovider.dto.DateDto;
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.dto.recharge.NewScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.service.NewScheduledRechargeService;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -101,5 +103,15 @@ public class ScheduleRechargeAuthController {
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(file);
 
+    }
+
+    @PostMapping("/download")
+    public ResponseEntity<Resource> generateDateRangeRecharge(@Valid @RequestBody DateRangeDto dto) {
+        final String filename = String.format("%s.%s", UUID.randomUUID().toString(), "xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(newScheduledRechargeService.getRechargeByDateRange(dto));
     }
 }

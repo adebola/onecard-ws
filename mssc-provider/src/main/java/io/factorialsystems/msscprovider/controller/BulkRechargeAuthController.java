@@ -328,4 +328,14 @@ public class BulkRechargeAuthController {
 
         return new ResponseEntity<>(newBulkRechargeService.getFailedUnresolvedIndividuals(id, pageNumber, pageSize), HttpStatus.OK);
     }
+
+    @PostMapping("/download")
+    public ResponseEntity<Resource> generateDateRangeRecharge(@Valid @RequestBody DateRangeDto dto) {
+        final String filename = String.format("%s.%s", UUID.randomUUID(), "xls");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(newBulkRechargeService.getRechargeByDateRange(dto));
+    }
 }

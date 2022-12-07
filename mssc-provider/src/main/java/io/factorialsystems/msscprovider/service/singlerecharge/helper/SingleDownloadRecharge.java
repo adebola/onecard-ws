@@ -2,6 +2,7 @@ package io.factorialsystems.msscprovider.service.singlerecharge.helper;
 
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.UserEntryDto;
 import io.factorialsystems.msscprovider.dto.UserEntryListDto;
 import io.factorialsystems.msscprovider.dto.UserIdListDto;
@@ -15,6 +16,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -43,6 +45,26 @@ public class SingleDownloadRecharge {
         }
 
         List<SingleRechargeRequest> requests = singleRechargeMapper.findByUserId(id);
+        return new InputStreamResource(excelWriter.singleRequestToExcel(requests, null, title));
+    }
+
+    public InputStreamResource downloadRechargeByDateRange(DateRangeDto dto) {
+
+        String title = null;
+
+        final String pattern = "EEEEE dd MMMMM yyyy";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+
+        if (dto.getStartDate() != null && dto.getEndDate() != null) {
+            title = String.format("Single Recharge Download for User %s Date Range %s to %s", dto.getId(),
+                    simpleDateFormat.format(dto.getStartDate()), simpleDateFormat.format(dto.getEndDate()));
+        } else if (dto.getStartDate() != null) {
+            title = String.format("Single Recharge Download for User %s Date %s", dto.getId(), simpleDateFormat.format(dto.getStartDate()));
+        } else {
+            title = String.format("Single Recharge Download for User %s", dto.getId());
+        }
+
+        List<SingleRechargeRequest> requests = singleRechargeMapper.findByUserIdAndDateRange(dto);
         return new InputStreamResource(excelWriter.singleRequestToExcel(requests, null, title));
     }
 

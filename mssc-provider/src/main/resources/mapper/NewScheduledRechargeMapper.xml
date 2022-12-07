@@ -91,4 +91,19 @@
         where date(request_created_on) = date(#{ts})
         and user_id = #{userId}
     </select>
+
+    <select id="findByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.DateRangeDto" resultMap="newScheduledRechargeResultMap">
+        select
+        <include refid="column_list"/>
+        from new_scheduled_recharge_requests
+        where user_id = #{id}
+
+        <if test="startDate != null and endDate != null">
+            and request_created_on between #{startDate} and #{endDate}
+        </if>
+
+        <if test="startDate != null and endDate == null">
+            and request_created_on &gt; #{startDate}
+        </if>
+    </select>
 </mapper>

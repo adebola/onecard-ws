@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.service;
 
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AutoIndividualRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AutoRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AutoRechargeResponseDto;
@@ -10,7 +11,12 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.InputStreamResource;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -32,6 +38,32 @@ class AutoRechargeServiceTest {
 
     @Test
     void uploadRecharge() {
+    }
+
+    @Test
+    void getRechargeByDateRange() throws IOException, ParseException {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
+
+            DateRangeDto dto = new DateRangeDto();
+
+            SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss", Locale.ENGLISH);
+            final String dateString = "27-04-2022 09:15:55";
+            dto.setStartDate(formatter.parse(dateString));
+            //dto.setEndDate(formatter.parse("12-12-2022 01:00:00"));
+
+            InputStreamResource resource = autoRechargeService.getRechargeByDateRange(dto);
+            File targetFile = new File("auto-date-range.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = resource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
+        }
     }
 
     @Test
@@ -57,7 +89,7 @@ class AutoRechargeServiceTest {
             AutoIndividualRequestDto individualRequest = new AutoIndividualRequestDto();
             individualRequest.setServiceCost(new BigDecimal(100));
             individualRequest.setRecipient("08188111333");
-            individualRequest.setServiceCode("9-AIRTIME");
+            individualRequest.setServiceCode("9MOBILE-AIRTIME");
             requests.add(individualRequest);
 
             AutoIndividualRequestDto individualRequest2 = new AutoIndividualRequestDto();
@@ -101,7 +133,7 @@ class AutoRechargeServiceTest {
             AutoIndividualRequestDto individualRequest = new AutoIndividualRequestDto();
             individualRequest.setServiceCost(new BigDecimal(100));
             individualRequest.setRecipient("08188111333");
-            individualRequest.setServiceCode("9-AIRTIME");
+            individualRequest.setServiceCode("9MOBILE-AIRTIME");
             requests.add(individualRequest);
 
             dto.setStartDate(new Date());
@@ -138,7 +170,7 @@ class AutoRechargeServiceTest {
         AutoIndividualRequestDto individualRequest = new AutoIndividualRequestDto();
         individualRequest.setServiceCost(new BigDecimal(100));
         individualRequest.setRecipient("08188111333");
-        individualRequest.setServiceCode("9-AIRTIME");
+        individualRequest.setServiceCode("9MOBILE-AIRTIME");
         requests.add(individualRequest);
 
         AutoIndividualRequestDto individualRequest2 = new AutoIndividualRequestDto();

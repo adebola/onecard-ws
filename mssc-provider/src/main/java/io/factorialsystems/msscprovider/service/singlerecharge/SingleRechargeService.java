@@ -13,10 +13,7 @@ import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge;
-import io.factorialsystems.msscprovider.dto.MailMessageDto;
-import io.factorialsystems.msscprovider.dto.PagedDto;
-import io.factorialsystems.msscprovider.dto.RequestTransactionDto;
-import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
@@ -391,6 +388,11 @@ public class SingleRechargeService {
 
     public InputStreamResource getRechargesByUserId(String id) {
         return singleDownloadRecharge.downloadFailedByUserId(id);
+    }
+
+    public InputStreamResource getRechargeByDateRange(DateRangeDto dto) {
+        dto.setId(ProviderSecurity.getUserId());
+        return singleDownloadRecharge.downloadRechargeByDateRange(dto);
     }
 
     public InputStreamResource getFailedRecharges(String type) {

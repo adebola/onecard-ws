@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.service.file;
 import io.factorialsystems.msscprovider.domain.CombinedRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
+import io.factorialsystems.msscprovider.domain.rechargerequest.ShortAutoRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -26,7 +27,59 @@ public class ExcelWriter {
     private static final String[] SINGLE_HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "Date", "Status", "Retry", "Refund", "Resolve", "Results" };
     private static final String[] SINGLE_HEADERS_WITH_USER = { "#", "Recipient", "Product", "Cost (₦)", "Date", "Status", "Retry", "Refund","Resolve", "User", "Results" };
     public static final String[] COMBINED_HEADERS = { "#", "Recipient", "Product", "Cost (₦)", "Date", "type","Status", "Retry", "Refund","Resolve"};
+    public static final String[] AUTO_HEADERS = {"#", "Title", "Start", "End", "Created","type"};
     private static final String SHEET = "onecard";
+
+    public ByteArrayInputStream autoRequestToExcel(List<ShortAutoRechargeRequest> requests, String title)  {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet(SHEET);
+
+            // Title
+            Row titleRow = sheet.createRow(0);
+            Cell cell = titleRow.createCell(0);
+            cell.setCellValue(title);
+
+            // Header
+            Row headerRow = sheet.createRow(1);
+
+            for (int col = 0; col < AUTO_HEADERS.length; col++) {
+                Cell cell2 = headerRow.createCell(col);
+                cell2.setCellValue(AUTO_HEADERS[col]);
+            }
+
+            int rowIdx = 2;
+
+            for (ShortAutoRechargeRequest request : requests) {
+                Row row = sheet.createRow(rowIdx);
+
+                row.createCell(0).setCellValue(rowIdx - 1);
+                row.createCell(1).setCellValue(request.getTitle());
+
+                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm");
+
+                row.createCell(2).setCellValue(simpleDateFormat.format(request.getStartDate()));
+
+               if (request.getEndDate() != null) {
+                   row.createCell(3).setCellValue(simpleDateFormat.format(request.getEndDate()));
+               }
+
+               row.createCell(4).setCellValue(simpleDateFormat.format(request.getCreatedOn()));
+
+               if (request.getRecurringType() == 1) {
+                   row.createCell(5).setCellValue("Weekly");
+               } else {
+                   row.createCell(5).setCellValue("Monthly");
+               }
+
+               rowIdx++;
+            }
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (IOException ioe) {
+            throw new RuntimeException("fail to import data to Excel file: " + ioe.getMessage());
+        }
+    }
 
     public ByteArrayInputStream combinedRequestToExcel(List<CombinedRechargeRequest> requests, String title)  {
 

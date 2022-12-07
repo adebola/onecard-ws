@@ -14,5 +14,6 @@ public class ShortAutoRechargeRequest {
     private String title;
     private Timestamp startDate;
     private Timestamp endDate;
+    private Timestamp createdOn;
     private Integer recurringType;
 }

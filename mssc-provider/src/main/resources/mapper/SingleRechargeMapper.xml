@@ -204,7 +204,7 @@
         </if>
 
         <if test="startDate != null and endDate != null">
-            and createdAt between #{startDate} and #{endDate}
+            and r.createdAt between #{startDate} and #{endDate}
         </if>
 
         <if test="startDate != null and endDate == null">
@@ -284,5 +284,21 @@
         and refund_id is NULL
         and resolve_id is NULL
         and successful_retry_id is NULL
+    </select>
+
+    <select id="findByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.DateRangeDto" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where user_id = #{id}
+        and r.service_id = p.id
+
+        <if test="startDate != null and endDate != null">
+            and r.createdAt between #{startDate} and #{endDate}
+        </if>
+
+        <if test="startDate != null and endDate == null">
+            and r.createdAt &gt; #{startDate}
+        </if>
     </select>
 </mapper>

@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.controller;
 
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AutoRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AutoUploadFileRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.DateDto;
@@ -7,12 +8,16 @@ import io.factorialsystems.msscprovider.service.AutoRechargeService;
 import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -107,5 +112,15 @@ public class AutoRechargeAuthController {
         }
 
         return new ResponseEntity<>(autoRechargeService.searchByName(name, pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @PostMapping("/download")
+    public ResponseEntity<Resource> generateDateRangeRecharge(@Valid @RequestBody DateRangeDto dto) {
+        final String filename = String.format("%s.%s", UUID.randomUUID().toString(), "xlsx");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(autoRechargeService.getRechargeByDateRange(dto));
     }
 }

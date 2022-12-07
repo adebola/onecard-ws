@@ -3,9 +3,7 @@ package io.factorialsystems.msscprovider.service.bulkrecharge.helper;
 import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
-import io.factorialsystems.msscprovider.dto.UserEntryDto;
-import io.factorialsystems.msscprovider.dto.UserEntryListDto;
-import io.factorialsystems.msscprovider.dto.UserIdListDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.dto.user.SimpleUserDto;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.service.file.ExcelWriter;
@@ -17,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.ByteArrayInputStream;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -142,5 +141,29 @@ public class BulkDownloadRecharge {
         restTemplate.getInterceptors().add(new RestTemplateInterceptor());
 
         return restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + id, SimpleUserDto.class);
+    }
+
+    public InputStreamResource downloadRechargeByDateRange(DateRangeDto dto) {
+        String title = null;
+
+        final String pattern = "EEEEE dd MMMMM yyyy";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+
+        if (dto.getStartDate() != null && dto.getEndDate() != null) {
+            title = String.format("Bulk Recharge Download for User %s Date Range %s to %s", dto.getId(),
+                    simpleDateFormat.format(dto.getStartDate()), simpleDateFormat.format(dto.getEndDate()));
+        } else if (dto.getStartDate() != null) {
+            title = String.format("Bulk Recharge Download for User %s Date %s", dto.getId(), simpleDateFormat.format(dto.getStartDate()));
+        } else {
+            title = String.format("Bulk Recharge Download for User %s", dto.getId());
+        }
+
+        CombinedRequestDto combinedRequestDto = new CombinedRequestDto();
+        combinedRequestDto.setId(dto.getId());
+        combinedRequestDto.setStartDate(dto.getStartDate());
+        combinedRequestDto.setEndDate(dto.getEndDate());
+
+        List<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findBulkByUserIdAndDateRange(combinedRequestDto);
+        return new InputStreamResource(excelWriter.bulkRequestToExcel(requests, null, title));
     }
 }

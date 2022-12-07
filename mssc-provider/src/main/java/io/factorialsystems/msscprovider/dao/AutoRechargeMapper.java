@@ -4,6 +4,7 @@ import com.github.pagehelper.Page;
 import io.factorialsystems.msscprovider.domain.rechargerequest.*;
 import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.query.SearchByString;
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -28,4 +29,5 @@ public interface AutoRechargeMapper {
     List<AutoRecurringEvent>  disableAndLoadRecurringEventsByAutoId(String id);
     Page<ShortAutoRechargeRequest> searchByDate(SearchByDate s);
     Page<ShortAutoRechargeRequest> searchByName(SearchByString s);
+    List<ShortAutoRechargeRequest> findByUserIdAndDateRange(DateRangeDto dto);
 }

@@ -11,10 +11,7 @@ import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.MailMessageDto;
-import io.factorialsystems.msscprovider.dto.PagedDto;
-import io.factorialsystems.msscprovider.dto.RequestTransactionDto;
-import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
@@ -120,11 +117,14 @@ public class NewBulkRechargeService {
         PaymentRequestDto requestDto = helper.initializePayment(request);
 
         if (requestDto.getPaymentMode().equals(Constants.WALLET_PAY_MODE) && requestDto.getStatus() != 200) {
-            return NewBulkRechargeResponseDto.builder()
-                    .status(requestDto.getStatus())
-                    .message("Payment Failure: " + requestDto.getMessage())
-                    .totalCost(request.getTotalServiceCost())
-                    .build();
+            log.error("Bulk Recharge Payment Failure  status {}", requestDto);
+            throw new RuntimeException(String.format("Payment Failure reason %s", requestDto.getMessage()));
+
+//            return NewBulkRechargeResponseDto.builder()
+//                    .status(requestDto.getStatus())
+//                    .message("Payment Failure: " + requestDto.getMessage())
+//                    .totalCost(request.getTotalServiceCost())
+//                    .build();
         }
 
         request.setPaymentId(requestDto.getId());
@@ -167,7 +167,6 @@ public class NewBulkRechargeService {
                 .build();
     }
 
-
     // Performs the actual Bulk Recharges called from NewScheduledRechargeService and
     // Called from the JMS Framework (RechargeListener) to run Bulk Recharges asynchronously
     public void runBulkRecharge(AsyncRechargeDto dto) {
@@ -182,7 +181,7 @@ public class NewBulkRechargeService {
             return;
         }
 
-        if (checkDuplicates(request)) {
+        if (checkForDuplicates(request)) {
             log.error("BulkRecharge Request {} looks like a duplicate request and has been reversed", request.getId());
             sendDuplicateReport(dto, request);
             return;
@@ -475,6 +474,11 @@ public class NewBulkRechargeService {
 
     public InputStreamResource downloadUserIndividual(String id) { return  bulkDownloadRecharge.userIndividuals(id); }
 
+    public InputStreamResource getRechargeByDateRange(DateRangeDto dto) {
+        dto.setId(ProviderSecurity.getUserId());
+        return bulkDownloadRecharge.downloadRechargeByDateRange(dto);
+    }
+
     private void sendDuplicateReport(AsyncRechargeDto dto, NewBulkRechargeRequest request) {
         if (dto.getEmail() == null || dto.getName() == null) {
             log.info("Unable to Send E-mail for Bulk Transaction, No E-mail Address or Customer Name found");
@@ -554,7 +558,7 @@ public class NewBulkRechargeService {
         return pagedDto;
     }
 
-    private boolean checkDuplicates(NewBulkRechargeRequest request) {
+    private boolean checkForDuplicates(NewBulkRechargeRequest request) {
         Map<String, String> parameterMap = new HashMap<>();
         parameterMap.put("id", request.getId());
         parameterMap.put("userId", request.getUserId());

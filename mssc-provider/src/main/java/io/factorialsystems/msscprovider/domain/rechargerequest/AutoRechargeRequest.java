@@ -16,6 +16,7 @@ public class AutoRechargeRequest {
     private String title;
     private Timestamp startDate;
     private Timestamp endDate;
+    private Timestamp createdOn;
     private Integer recurringType;
     private Integer separationCount;
     private String paymentMode;

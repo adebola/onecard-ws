@@ -8,6 +8,7 @@ import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest;
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
@@ -27,12 +28,14 @@ import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -172,6 +175,32 @@ public class NewScheduledRechargeService {
         Page<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.findRequestByUserId(ProviderSecurity.getUserId());
 
         return createDto(requests);
+    }
+
+    public InputStreamResource getRechargeByDateRange(DateRangeDto dto) {
+        dto.setId(ProviderSecurity.getUserId());
+
+        String title = null;
+
+        final String pattern = "EEEEE dd MMMMM yyyy";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+
+        if (dto.getStartDate() != null && dto.getEndDate() != null) {
+            title = String.format("Scheduled Recharge Download for User %s Date Range %s to %s", dto.getId(),
+                    simpleDateFormat.format(dto.getStartDate()), simpleDateFormat.format(dto.getEndDate()));
+        } else if (dto.getStartDate() != null) {
+            title = String.format("Scheduled Recharge Download for User %s Date %s", dto.getId(), simpleDateFormat.format(dto.getStartDate()));
+        } else {
+            title = String.format("Scheduled Recharge Download for User %s", dto.getId());
+        }
+
+        List<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.findByUserIdAndDateRange(dto);
+
+        List<NewBulkRechargeRequest> rechargeRequests = requests.stream()
+                .map(newScheduledRechargeMapstructMapper::ToBulkRechargeRequest)
+                .collect(Collectors.toList());
+
+        return new InputStreamResource(excelWriter.bulkRequestToExcel(rechargeRequests, null, title));
     }
 
     public PagedDto<IndividualRequestDto> getBulkIndividualRequests(String id, Integer pageNumber, Integer pageSize) {
