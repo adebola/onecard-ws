@@ -11,9 +11,8 @@ import org.springframework.context.annotation.Configuration;
 public class CachingConfig {
     @Bean
     public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager(
-                 "parameters", "ringodataplans",
-                "smiledataplans", "ringosmiledataplans", "spectranetdataplans"
+        return new ConcurrentMapCacheManager ("dstv-gotv-plans","parameters",
+                "ringodataplans", "smiledataplans", "ringosmiledataplans", "spectranetdataplans"
         );
     }
 }

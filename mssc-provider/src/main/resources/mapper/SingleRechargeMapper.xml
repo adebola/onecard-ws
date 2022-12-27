@@ -159,8 +159,14 @@
     </update>
 
     <insert id="save" parameterType="io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest" >
-        insert into recharge_requests(id, user_id, service_id, service_cost, recipient, payment_id, telephone, product_id, authorization_url, redirect_url, payment_mode, status, name, async_request, message, account_type, auto_request_id, scheduled_request_id, bulk_request_id)
-        values(#{id}, #{userId}, #{serviceId}, #{serviceCost}, #{recipient}, #{paymentId}, #{telephone}, #{productId}, #{authorizationUrl}, #{redirectUrl}, #{paymentMode}, #{status}, #{name}, #{asyncRequest}, #{message}, #{accountType}, #{autoRequestId}, #{scheduledRequestId}, #{bulkRequestId})
+        insert into recharge_requests(id, user_id, service_id, service_cost, recipient, payment_id, telephone,
+                                      product_id, authorization_url, redirect_url, payment_mode, status, name,
+                                      async_request, message, account_type, auto_request_id, scheduled_request_id,
+                                      bulk_request_id, results)
+        values(#{id}, #{userId}, #{serviceId}, #{serviceCost}, #{recipient}, #{paymentId}, #{telephone},
+               #{productId}, #{authorizationUrl}, #{redirectUrl}, #{paymentMode}, #{status}, #{name},
+               #{asyncRequest}, #{message}, #{accountType}, #{autoRequestId}, #{scheduledRequestId},
+               #{bulkRequestId}, #{results})
     </insert>
 
     <insert id="saveResolution" parameterType="io.factorialsystems.msscprovider.domain.SingleResolve">

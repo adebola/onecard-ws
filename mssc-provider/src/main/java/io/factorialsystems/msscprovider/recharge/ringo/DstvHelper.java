@@ -131,9 +131,9 @@ public class DstvHelper {
                                     ringoValidateCableRequest.getServiceCode(),
                                     response != null && response.getMessage() != null ? response.getMessage() : "Unknown");
 
-                    if (response == null) {
-                        log.error(errorMessage);
-                    } else {
+                    log.error(errorMessage);
+
+                    if (response != null) {
                         log.error("Ringo Validate Error {}", response);
                     }
                 }

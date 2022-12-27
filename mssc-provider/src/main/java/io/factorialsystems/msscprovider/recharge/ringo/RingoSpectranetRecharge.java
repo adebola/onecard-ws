@@ -110,7 +110,7 @@ public class RingoSpectranetRecharge implements Recharge, DataEnquiry, Parameter
                     restTemplate.postForObject(properties.getAirtimeUrl(), entity, SpectranetRingoDataPlan.class);
 
             if (response == null || response.getProduct() == null) {
-                log.error("Error retrieving Spectranet Data Plans from provider, response of response product is NULL");
+                log.error("Error retrieving Spectranet Data Plans from provider, response or response_product is NULL");
                 return Collections.emptyList();
             }
 

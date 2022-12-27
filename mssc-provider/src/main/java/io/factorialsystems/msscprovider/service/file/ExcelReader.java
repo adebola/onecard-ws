@@ -30,10 +30,15 @@ public class ExcelReader {
     private final UploadFile uploadFile;
 
     public static final int SERVICE_CODE_COLUMN = 1;
+    public static final String SERVICE_CODE_TITLE = "ServiceCode";
     public static final int PRODUCT_ID_COLUMN = 2;
+    public static final String PRODUCT_ID_TITLE = "ProductId";
     public static final int SERVICE_COST_COLUMN = 3;
+    public static final String SERVICE_COST_TITLE = "ServiceCost";
     public static final int TELEPHONE_COLUMN = 4;
+    public static final String TELEPHONE_TITLE = "Telephone";
     public static final int RECIPIENT_COLUMN = 5;
+    public static final String RECIPIENT_TITLE = "Recipient";
 
     public ExcelReader(UploadFile uploadFile) {
         this.uploadFile = uploadFile;
@@ -68,23 +73,23 @@ public class ExcelReader {
                 for (Cell cell : row) {
                     switch (cell.getColumnIndex()) {
                         case SERVICE_CODE_COLUMN:
-                            dto.setServiceCode(readStringValue(cell, true));
+                            dto.setServiceCode(readStringValue(cell, SERVICE_CODE_TITLE, true));
                             break;
 
                         case PRODUCT_ID_COLUMN:
-                            dto.setProductId(readStringValue(cell, false));
+                            dto.setProductId(readStringValue(cell, PRODUCT_ID_TITLE, false));
                             break;
 
                         case SERVICE_COST_COLUMN:
-                            dto.setServiceCost(readDoubleValue(cell, false));
+                            dto.setServiceCost(readDoubleValue(cell, SERVICE_COST_TITLE, false));
                             break;
 
                         case TELEPHONE_COLUMN:
-                            dto.setTelephone(readStringValue(cell, false));
+                            dto.setTelephone(readStringValue(cell, TELEPHONE_TITLE, false));
                             break;
 
                         case RECIPIENT_COLUMN:
-                            dto.setRecipient(readStringValue(cell, true));
+                            dto.setRecipient(readStringValue(cell, RECIPIENT_TITLE, true));
                             break;
 
                         default:
@@ -138,7 +143,7 @@ public class ExcelReader {
         }
     }
 
-    private String readStringValue(Cell cell, boolean mandatory) {
+    private String readStringValue(Cell cell, String cellTitle, boolean mandatory) {
         final String value = cell.getStringCellValue();
 
         if (value != null && value.trim().length() > 0) {
@@ -146,17 +151,17 @@ public class ExcelReader {
         } else if (!mandatory) {
             return null;
         } else {
-            throw new RuntimeException("String value read is either NULL or Empty");
+            throw new RuntimeException(String.format("String value read FOR %s is either NULL or Empty", cellTitle));
         }
     }
 
-    private BigDecimal readDoubleValue(Cell cell, boolean mandatory) {
+    private BigDecimal readDoubleValue(Cell cell, String cellTitle, boolean mandatory) {
         double cost = 0;
 
         try {
             cost = cell.getNumericCellValue();
         } catch (Exception ex) {
-            log.error("Non-Numeric Value Found in Cost, Numeric Value expected");
+            log.error(String.format("Non-Numeric Value Found for %s, Numeric Value expected", cellTitle));
             log.error(ex.getMessage());
 
             cost = Double.parseDouble(cell.getStringCellValue());

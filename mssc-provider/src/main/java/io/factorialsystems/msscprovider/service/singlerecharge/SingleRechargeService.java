@@ -75,6 +75,10 @@ public class SingleRechargeService {
             request.setMessage(paymentRequest.getMessage());
             request.setStatus(paymentRequest.getStatus());
 
+            if (paymentRequest.getStatus() != 200) {
+                request.setResults(String.format("Payment-Failed %s", paymentRequest.getMessage()));
+            }
+
             request.setId(UUID.randomUUID().toString());
             log.info(String.format("Saving Recharge Request %s for %s", request.getId(), ProviderSecurity.getUserName()));
 
@@ -457,12 +461,12 @@ public class SingleRechargeService {
             log.info("Product Id {}, determine price", dto.getProductId());
 
             if (enquiry == null) {
-                log.info("Null SimpleDataEnquiry, Extra Data Enquiry for Action {}, ServiceCode {}", serviceAction, dto.getServiceCode());
+                log.info("Null DataEnquiry, querying Extra Data Enquiry for Action {}, ServiceCode {}", serviceAction, dto.getServiceCode());
 
                 ExtraDataEnquiry extraDataEnquiry = factory.getExtraPlans(dto.getServiceCode());
 
                 if (extraDataEnquiry != null) {
-                    ExtraDataPlanDto extraDataPlanDto = extraDataEnquiry.getExtraPlans(
+                    ExtraDataPlanDto extraDataPlanDto = extraDataEnquiry.getExtraPlans (
                             ExtraPlanRequestDto.builder()
                                     .recipient(dto.getRecipient())
                                     .serviceCode(dto.getServiceCode())
@@ -473,7 +477,7 @@ public class SingleRechargeService {
                             .filter(r -> r.getCode().equals(dto.getProductId()))
                             .findFirst()
                             .map(ProductItem::getPrice)
-                            .orElseThrow(() -> new ResourceNotFoundException("ExtraDataPlanDto", "ProductCode", dto.getProductId()));
+                            .orElseThrow(() -> new ResourceNotFoundException("ExtraDataPlanDto", "ProductId", dto.getProductId()));
 
                     if (price > 0) {
                         request.setServiceCost(new BigDecimal(price));
