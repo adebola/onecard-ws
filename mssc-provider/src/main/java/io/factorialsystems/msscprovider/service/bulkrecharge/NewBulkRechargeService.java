@@ -108,7 +108,7 @@ public class NewBulkRechargeService {
             log.error(errorMessage);
 
             return NewBulkRechargeResponseDto.builder()
-                    .status(300)
+                    .status(400)
                     .message(errorMessage)
                     .build();
         }
@@ -118,13 +118,13 @@ public class NewBulkRechargeService {
 
         if (requestDto.getPaymentMode().equals(Constants.WALLET_PAY_MODE) && requestDto.getStatus() != 200) {
             log.error("Bulk Recharge Payment Failure  status {}", requestDto);
-            throw new RuntimeException(String.format("Payment Failure reason %s", requestDto.getMessage()));
+            //throw new RuntimeException(String.format("Payment Failure reason %s", requestDto.getMessage()));
 
-//            return NewBulkRechargeResponseDto.builder()
-//                    .status(requestDto.getStatus())
-//                    .message("Payment Failure: " + requestDto.getMessage())
-//                    .totalCost(request.getTotalServiceCost())
-//                    .build();
+            return NewBulkRechargeResponseDto.builder()
+                    .status(400)
+                    .message("Payment Failure: " + requestDto.getMessage())
+                    .totalCost(request.getTotalServiceCost())
+                    .build();
         }
 
         request.setPaymentId(requestDto.getId());

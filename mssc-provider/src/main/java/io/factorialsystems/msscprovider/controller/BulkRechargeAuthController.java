@@ -1,7 +1,9 @@
 package io.factorialsystems.msscprovider.controller;
 
 
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.DateDto;
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
+import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.NewBulkRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.NewBulkRechargeResponseDto;
 import io.factorialsystems.msscprovider.dto.search.SearchBulkFailedRechargeDto;
@@ -35,7 +37,8 @@ public class BulkRechargeAuthController {
 
     @PostMapping
     public ResponseEntity<NewBulkRechargeResponseDto> startNewBulkRecharge(@Valid @RequestBody NewBulkRechargeRequestDto dto) {
-        return new ResponseEntity<>(newBulkRechargeService.saveService(dto), HttpStatus.OK);
+        NewBulkRechargeResponseDto response = newBulkRechargeService.saveService(dto);
+        return new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatus()));
     }
 
     @GetMapping("/{id}")

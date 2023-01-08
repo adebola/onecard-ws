@@ -75,12 +75,28 @@ public class SingleRechargeService {
             request.setMessage(paymentRequest.getMessage());
             request.setStatus(paymentRequest.getStatus());
 
-            if (paymentRequest.getStatus() != 200) {
-                request.setResults(String.format("Payment-Failed %s", paymentRequest.getMessage()));
-            }
-
             request.setId(UUID.randomUUID().toString());
             log.info(String.format("Saving Recharge Request %s for %s", request.getId(), ProviderSecurity.getUserName()));
+
+            if (request.getStatus() != 200) {
+                final String msg = String.format("PaymentFailed-%s/%s", paymentRequest.getMessage(), request.getId());
+                singleRechargeMapper.save(request);
+
+                Map<String, String> resultsMap = new HashMap<>();
+
+                resultsMap.put("id", request.getId());
+                resultsMap.put("results", "FAILED PAYMENT");
+                resultsMap.put("failedMessage", msg);
+
+                log.error(msg);
+
+                singleRechargeMapper.closeAndFailRequest(resultsMap);
+
+                return SingleRechargeResponseDto.builder()
+                        .status(400)
+                        .message(msg)
+                        .build();
+            }
 
             // Bulk and Scheduled Requests are always handled asynchronously
             if (request.getBulkRequestId() != null || request.getScheduledRequestId() != null) {
@@ -90,28 +106,21 @@ public class SingleRechargeService {
             singleRechargeMapper.save(request);
 
             if (request.getPaymentMode().equals("wallet") && request.getAsyncRequest()) {
-                if (request.getStatus() == 200) {
-                    try {
-                        AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
-                                .id(request.getId())
-                                .email(ProviderSecurity.getEmail())
-                                .name(ProviderSecurity.getUserName())
-                                .balance(paymentRequest.getBalance())
-                                .build();
-                        jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(asyncRechargeDto));
-                    } catch (JsonProcessingException e) {
-                        log.error("Error sending Single Recharge Service to Self {}", e.getMessage());
-                        throw new RuntimeException(e.getMessage());
-                    }
-                } else {
-                    final String message = String.format("Payment Error %s : ", request.getMessage());
-                    log.error(message);
+                try {
+                    AsyncRechargeDto asyncRechargeDto = AsyncRechargeDto.builder()
+                            .id(request.getId())
+                            .email(ProviderSecurity.getEmail())
+                            .name(ProviderSecurity.getUserName())
+                            .balance(paymentRequest.getBalance())
+                            .build();
+                    jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(asyncRechargeDto));
+                } catch (JsonProcessingException e) {
+                    log.error("Error sending Single Recharge Service to Self {}", e.getMessage());
 
                     return SingleRechargeResponseDto.builder()
-                            .status(300)
-                            .message(message)
+                            .status(400)
+                            .message("JMS Error sending message, please contact Onecard Support")
                             .build();
-                    // throw new RuntimeException(message);
                 }
             }
 
@@ -145,6 +154,7 @@ public class SingleRechargeService {
 
                 if (status.getStatus() == HttpStatus.OK) {
                     return SingleRechargeResponseDto.builder()
+                            .status(200)
                             .message(status.getMessage())
                             .build();
                 } else {
@@ -466,7 +476,7 @@ public class SingleRechargeService {
                 ExtraDataEnquiry extraDataEnquiry = factory.getExtraPlans(dto.getServiceCode());
 
                 if (extraDataEnquiry != null) {
-                    ExtraDataPlanDto extraDataPlanDto = extraDataEnquiry.getExtraPlans (
+                    ExtraDataPlanDto extraDataPlanDto = extraDataEnquiry.getExtraPlans(
                             ExtraPlanRequestDto.builder()
                                     .recipient(dto.getRecipient())
                                     .serviceCode(dto.getServiceCode())

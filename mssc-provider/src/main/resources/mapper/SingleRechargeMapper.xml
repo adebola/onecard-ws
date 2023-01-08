@@ -131,8 +131,6 @@
         <if test="startDate != null and endDate == null">
             and p.createdAt &gt; #{startDate}
         </if>
-
-
     </select>
 
     <select id="findByUserId" parameterType="java.lang.String" resultMap="rechargeResultMap">
@@ -155,6 +153,11 @@
             <if test="provider != null">recharge_provider_id=#{provider},</if>
             <if test="results != null">results=#{results},</if>
         </set>
+        where id = #{id}
+    </update>
+
+    <update id="closeAndFailRequest" parameterType="java.util.Map">
+        update recharge_requests set results = #{results}, failed_message=#{failedMessage}, closed = true, failed = true
         where id = #{id}
     </update>
 

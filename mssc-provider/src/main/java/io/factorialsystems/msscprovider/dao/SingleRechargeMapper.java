@@ -21,6 +21,7 @@ public interface SingleRechargeMapper {
     void save(SingleRechargeRequest request);
     List<RechargeFactoryParameters> factory(Integer id);
     void closeRequest(Map<String, String> requestMap);
+    void closeAndFailRequest(Map<String, String> requestMap);
     Page<SingleRechargeRequest> findRequestsByUserId(String id);
     List<SingleRechargeRequest> findByUserIdAndDateRange(DateRangeDto dto);
     Page<SingleRechargeRequest> search(SearchSingleRecharge search);

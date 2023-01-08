@@ -41,7 +41,8 @@ public class RechargeAuthController {
 
     @PostMapping
     public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
-        return new ResponseEntity<>(rechargeService.startRecharge(dto), HttpStatus.OK);
+        SingleRechargeResponseDto response = rechargeService.startRecharge(dto);
+        return new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatus()));
     }
 
     @GetMapping("/{id}")
