@@ -15,7 +15,8 @@ public class LoadBalancedRoutesConfig {
                                 "/api/v1/batch", "/api/v1/batch/**", "/api/v1/cluster", "/api/v1/cluster/**")
                         .uri("lb://voucher-server"))
                 .route("provider-service", r -> r.path("/api/v1/provider", "/api/v1/provider/**", "/api/v1/recharge",
-                                "/api/v1/recharge/**", "/api/v1/serviceprovider", "/api/v1/serviceprovider/**", "/api/v1/auth-recharge", "/api/v1/auth-recharge/**")
+                                "/api/v1/recharge/**", "/api/v1/serviceprovider", "/api/v1/serviceprovider/**",
+                                "/api/v1/auth-recharge", "/api/v1/auth-recharge/**", "/api/v1/recharge-report", "/api/v1/recharge-report/**")
                         .uri("lb://provider-server"))
                 .route("user-service", r -> r.path("/api/v1/user", "/api/v1/user/**", "/api/v1/role", "/api/v1/role/**",
                                 "/api/v1/beneficiary", "/api/v1/beneficiary/**", "/api/v1/organization", "/api/v1/organization/**")
