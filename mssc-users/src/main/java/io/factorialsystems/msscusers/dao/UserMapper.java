@@ -14,19 +14,36 @@ import java.util.Map;
 @Mapper
 public interface UserMapper {
     Page<User> findAll();
+
     Page<User> findAdminUser();
+
     Page<User> findOrdinaryUser();
+
     Page<User> search(SearchUserDto dto);
+
     User findUserById(String id);
+
     User findUserByIdOrNameOrEmail(String id);
+
     User findByName(String name);
+
     void save(User user);
+
     void update(User user);
+
     Page<User> findUserByOrganizationId(String id);
+
     Page<User> findUserForOrganization();
+
     void removeOrganization(String id);
+
     void updateProfilePicture(Map<String, String> params);
+
     void addRoles(List<RoleParameter> roleParameters);
+
     void removeRole(RoleParameter roleParameter);
+
     List<UserEntryDto> getUserNamesFromIds(@Param("ids") List<String> ids);
+
+    List<User> findAllList();
 }

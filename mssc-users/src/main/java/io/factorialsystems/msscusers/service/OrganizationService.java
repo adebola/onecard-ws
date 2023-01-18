@@ -65,7 +65,7 @@ public class OrganizationService {
 
         CreateAccountDto accountDto = CreateAccountDto.builder()
                 .userName(dto.getOrganizationName())
-                .userId(id)
+                .userId(id) // Dummy User Id, Organizations are not users
                 .accountType(K.ACCOUNT_TYPE_CORPORATE)
                 .build();
 
@@ -101,7 +101,8 @@ public class OrganizationService {
         Organization organization = organizationMapper.findById(id);
 
         if (organization == null) {
-            throw new RuntimeException("Organization not Available for deletion");
+            log.error("Organization {} not Available for deletion", id);
+            return;
         }
 
         Integer count = organizationMapper.findUserCount(id);

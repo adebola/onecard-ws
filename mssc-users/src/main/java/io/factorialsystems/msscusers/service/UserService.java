@@ -101,6 +101,13 @@ public class UserService {
         return keycloakUserMapper.userToSimpleDto(user);
     }
 
+    public List<SimpleUserDto> findAllSimpleUsers() {
+        List<User> users = userMapper.findAllList();
+
+        return users.stream().map(keycloakUserMapper::userToSimpleDto)
+                .collect(Collectors.toList());
+    }
+
     public SimpleUserDto verifyUser(String id) {
         return findSimpleUserById(id);
     }
@@ -173,6 +180,25 @@ public class UserService {
 
             mailService.sendMailWithOutAttachment(mailMessageDto);
         }
+    }
+
+    public boolean toggleUser(String id) {
+        UserResource userResource = usersResource.get(id);
+
+        if (userResource != null) {
+            UserRepresentation representation = userResource.toRepresentation();
+            boolean status = representation.isEnabled();
+            representation.setEnabled(!status);
+            userResource.update(representation);
+
+            User user = userMapper.findUserById(id);
+            user.setEnabled(!status);
+            userMapper.update(user);
+
+            return !status;
+        }
+
+        return false;
     }
 
     public List<String> getStringUserRoles(String id) {

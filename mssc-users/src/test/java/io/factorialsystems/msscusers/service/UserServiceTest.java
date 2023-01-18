@@ -165,4 +165,10 @@ class UserServiceTest {
         log.info(x);
     }
 
+    @Test
+    void toggleUser() {
+        final String id = "552eb89c-94f3-4223-8dad-706b1dece34b";
+        var x = userService.toggleUser(id);
+        log.info(x);
+    }
 }

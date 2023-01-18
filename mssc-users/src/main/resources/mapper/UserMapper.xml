@@ -35,6 +35,12 @@
         from users
     </select>
 
+    <select id="findAllList" resultMap="userResultMap">
+        select
+        <include refid="Column_List_Short"/>
+        from users
+    </select>
+
     <select id="findAdminUser" resultMap="userResultMap">
         select
         <include refid="Column_List_Short"/>
@@ -123,6 +129,7 @@
             <if test="secret != null">secret=#{secret},</if>
             <if test="organizationId != null">organization_id=#{organizationId},</if>
             <if test="profilePicture != null">profile_picture=#{profilePicture},</if>
+            <if test="enabled != null">enabled=#{enabled}</if>
         </set>
         where id = #{id}
     </update>

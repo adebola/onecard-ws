@@ -27,6 +27,13 @@ import java.util.stream.Collectors;
 public class UserController {
     private final UserService userService;
 
+    @GetMapping("/nopage")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public List<SimpleUserDto> getUsersNonPaged() {
+        return userService.findAllSimpleUsers();
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public ResponseEntity<?> getUsers(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
@@ -62,6 +69,13 @@ public class UserController {
         }
 
         return new ResponseEntity<>(userService.findAdminUsers(pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @PutMapping("/activate/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public void toggleUserActivation(@PathVariable("id") String id) {
+        userService.toggleUser(id);
     }
 
     @GetMapping("/ordinary")

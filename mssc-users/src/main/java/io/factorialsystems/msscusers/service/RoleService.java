@@ -6,12 +6,10 @@ import io.factorialsystems.msscusers.utils.K;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RolesResource;
-import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,7 +33,6 @@ public class RoleService {
     }
 
     public KeycloakRoleDto getRoleById(String id) {
-
         return rolesResource.list()
                 .stream()
                 .filter(r -> r.getId().equals(id))
@@ -44,20 +41,17 @@ public class RoleService {
     }
 
     public KeycloakRoleDto getRoleByName(String name) {
-        Optional<RoleRepresentation> foundRole = rolesResource.list()
+        return rolesResource.list()
                 .stream()
                 .filter(r -> r.getName().equals(name))
-                .findFirst();
-
-        return foundRole.map(keycloakRoleMapper::roleRepresentationToDto).orElse(null);
+                .findFirst()
+                .map(keycloakRoleMapper::roleRepresentationToDto).orElse(null);
     }
 
     private List<KeycloakRoleDto> getFilteredRoles(String filter) {
-        List<RoleRepresentation> roles  = rolesResource.list()
-                .stream()
+        return rolesResource.list().stream()
                 .filter(r -> r.getName().startsWith(filter))
+                .map(keycloakRoleMapper::roleRepresentationToDto)
                 .collect(Collectors.toList());
-
-        return keycloakRoleMapper.listRoleRepresentationToDto(roles);
     }
 }
