@@ -37,4 +37,19 @@ public class K {
 
         return null;
     }
+
+    private static Map<String, Object> getClaims () {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (authentication != null) ? ((Jwt)authentication.getPrincipal()).getClaims() : null;
+    }
+
+    public static String getAccessToken() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (authentication != null) ? ((Jwt)authentication.getPrincipal()).getTokenValue() : null;
+    }
+
+    public static String getUserId() {
+        Map<String, Object> claims = getClaims();
+        return claims != null ? (String) claims.get("sub") : null;
+    }
 }

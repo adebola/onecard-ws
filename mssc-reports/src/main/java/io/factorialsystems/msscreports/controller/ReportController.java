@@ -1,20 +1,24 @@
 package io.factorialsystems.msscreports.controller;
 
 import io.factorialsystems.msscreports.dto.MessageDto;
+import io.factorialsystems.msscreports.dto.RechargeReportRequestDto;
 import io.factorialsystems.msscreports.dto.ReportDto;
 import io.factorialsystems.msscreports.service.ReportService;
 import io.factorialsystems.msscreports.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.io.ByteArrayInputStream;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -85,5 +89,17 @@ public class ReportController {
                 .headers(headers)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(new InputStreamResource(byteArrayInputStream));
+    }
+
+    @PostMapping("/recharge")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<Resource> runRechargeReport(@Valid @RequestBody RechargeReportRequestDto dto) {
+        final String filename = String.format("recharge-%s.xlsx", UUID.randomUUID());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .body(reportService.runRechargeReport(dto));
+
     }
 }

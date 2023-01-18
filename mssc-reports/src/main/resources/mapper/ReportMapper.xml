@@ -5,14 +5,13 @@
     <resultMap id="reportResultMap" type="io.factorialsystems.msscreports.domain.Report">
         <id column="id" property="id" jdbcType="INTEGER" />
         <result column="report_name" property="reportName" jdbcType="VARCHAR" />
-        <result column="report_file" property="reportFile" jdbcType="VARCHAR"/>
         <result column="report_description" property="reportDescription" jdbcType="VARCHAR"/>
         <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
         <result column="createdAt" property="createdDate" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Column_List">
-        id, report_name, report_file, report_description, createdBy, createdAt
+        id, report_name, report_description, createdBy, createdAt
     </sql>
 
     <select id="findAll" resultMap="reportResultMap">
@@ -39,15 +38,14 @@
         update reports
         <set>
             <if test="reportName != null">report_name=#{reportName},</if>
-            <if test="reportFile != null">report_file=#{reportFile},</if>
             <if test="reportDescription != null">report_description=#{reportDescription},</if>
         </set>
         where id = #{id}
     </update>
 
     <insert id="save" parameterType="io.factorialsystems.msscreports.domain.Report">
-        insert into reports(report_name, report_file, report_description, createdBy)
-        values (#{reportName}, #{reportFile}, #{reportDescription}, #{createdBy})
+        insert into reports(report_name, report_description, createdBy)
+        values (#{reportName}, #{reportDescription}, #{createdBy})
 
         <selectKey resultType="int" keyProperty="id" order="AFTER">
             select LAST_INSERT_ID()
