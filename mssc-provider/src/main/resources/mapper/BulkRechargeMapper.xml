@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 
-<mapper namespace="io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper">
+<mapper namespace="io.factorialsystems.msscprovider.dao.BulkRechargeMapper">
     <resultMap id="newBulkRechargeResultMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest">
         <id column="id" property="id" jdbcType="VARCHAR" />
         <result column="user_id" property="userId" jdbcType="VARCHAR"/>
@@ -34,6 +34,27 @@
         <result column="successful_retry_id" property="retryId" jdbcType="VARCHAR"/>
         <result column="resolve_id" property="resolveId" jdbcType="VARCHAR"/>
         <result column="results" property="results" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="bulkIndividualRequestResultMap" type="io.factorialsystems.msscprovider.domain.report.ReportIndividualRequest">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="bulk_request_id" property="bulkRequestId" jdbcType="VARCHAR"/>
+        <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>
+        <result column="external_request_id" property="externalRequestId" jdbcType="VARCHAR"/>
+        <result column="service_id" property="serviceId" jdbcType="INTEGER"/>
+        <result column="service_code" property="serviceCode" jdbcType="VARCHAR"/>
+        <result column="service_cost" property="serviceCost" jdbcType="DECIMAL"/>
+        <result column="product_id" property="productId" jdbcType="VARCHAR"/>
+        <result column="telephone" property="telephone" jdbcType="VARCHAR"/>
+        <result column="failed" property="failed" jdbcType="BOOLEAN"/>
+        <result column="failed_message" property="failedMessage" jdbcType="VARCHAR"/>
+        <result column="refund_id" property="refundId" jdbcType="VARCHAR"/>
+        <result column="successful_retry_id" property="retryId" jdbcType="VARCHAR"/>
+        <result column="resolve_id" property="resolveId" jdbcType="VARCHAR"/>
+        <result column="results" property="results" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="createdAt" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="parent_id" property="parentId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <resultMap id="requestRetryMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry">
@@ -80,6 +101,29 @@
         b.resolve_id,
         b.results
     </sql>
+
+    <sql id="report_individual_column_list">
+        b.id,
+        b.bulk_request_id,
+        b.auto_request_id,
+        b.external_request_id,
+        b.recipient,
+        b.service_id,
+        p.service_code,
+        b.service_cost,
+        b.product_id,
+        b.telephone,
+        b.failed,
+        b.failed_message,
+        b.refund_id,
+        b.successful_retry_id,
+        b.resolve_id,
+        b.results,
+        nb.createdAt,
+        nb.user_id,
+        nb.id as parent_id
+    </sql>
+
 
     <sql id="retry_column_list">
         id,
@@ -224,6 +268,34 @@
         and   b.service_id = p.id
     </select>
 
+    <select id="findBulkIndividualRequestsByCriteria"  parameterType="java.util.Map" resultMap="bulkIndividualRequestResultMap">
+        select
+        <include refid="report_individual_column_list"/>
+        from bulk_individual_requests b, provider_services p, new_bulk_recharge_requests nb
+        where b.bulk_request_id = #{id}
+        and   b.service_id = p.id
+        and   nb.id = b.bulk_request_id
+
+        <if test="serviceId != null">
+            and  service_id = #{serviceId}
+        </if>
+
+        <if test="status != null">
+            and failed = #{status}
+        </if>
+    </select>
+
+
+
+    <select id="findBulkReportIndividualRequests"  parameterType="java.lang.String" resultMap="bulkIndividualRequestResultMap">
+        select
+        <include refid="report_individual_column_list"/>
+        from bulk_individual_requests b, provider_services p, new_bulk_recharge_requests nb
+        where b.bulk_request_id = #{id}
+        and   b.service_id = p.id
+        and   nb.id = b.bulk_request_id
+    </select>
+
     <select id="findBulkIndividualFailedRequests"  parameterType="java.lang.String" resultMap="individualRequestResultMap">
         select
         <include refid="individual_column_list"/>
@@ -307,6 +379,27 @@
         <if test="startDate != null and endDate == null">
             and createdAt &gt; #{startDate}
         </if>
+    </select>
+
+
+    <select id = "findBulkRechargeByCriteria" parameterType="io.factorialsystems.msscprovider.domain.report.RechargeReportRequest"  resultMap="newBulkRechargeResultMap">
+        select
+        <include refid="bulk_column_list"/>
+        from providerdb.new_bulk_recharge_requests
+
+        <where>
+            <if test="userId != null">
+                user_id = #{userId}
+            </if>
+
+            <if test="startDate != null and endDate != null">
+                and createdAt between #{startDate} and #{endDate}
+            </if>
+
+            <if test="startDate != null and endDate == null">
+                and createdAt &gt; #{startDate}
+            </if>
+        </where>
     </select>
 
     <select id="findByUserIdToday" parameterType="java.util.Map" resultMap="newBulkRechargeResultMap">

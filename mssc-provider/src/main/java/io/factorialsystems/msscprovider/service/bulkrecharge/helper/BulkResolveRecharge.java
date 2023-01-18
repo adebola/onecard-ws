@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.service.bulkrecharge.helper;
 
-import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
+import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.domain.SingleResolve;
 import io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
@@ -21,7 +21,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class BulkResolveRecharge {
-    private final NewBulkRechargeMapper bulkRechargeMapper;
+    private final BulkRechargeMapper bulkRechargeMapper;
 
     @Transactional
     public Optional<ResolveRechargeDto> resolveBulk(ResolveRechargeDto dto) {

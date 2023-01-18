@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.service.bulkrecharge.helper;
 
-import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
+import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.*;
@@ -29,7 +29,7 @@ public class BulkDownloadRecharge {
 
     @Value("${api.local.host.baseurl}")
     private String baseUrl;
-    private final NewBulkRechargeMapper newBulkRechargeMapper;
+    private final BulkRechargeMapper newBulkRechargeMapper;
 
     public InputStreamResource userBulk(String id) {
         List<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findListBulkRequestByUserId(id);

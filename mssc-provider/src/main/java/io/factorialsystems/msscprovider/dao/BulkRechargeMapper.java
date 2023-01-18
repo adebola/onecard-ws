@@ -7,6 +7,8 @@ import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
+import io.factorialsystems.msscprovider.domain.report.RechargeReportRequest;
+import io.factorialsystems.msscprovider.domain.report.ReportIndividualRequest;
 import io.factorialsystems.msscprovider.dto.CombinedRequestDto;
 import io.factorialsystems.msscprovider.dto.search.SearchBulkFailedRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Mapper
-public interface NewBulkRechargeMapper {
+public interface BulkRechargeMapper {
     NewBulkRechargeRequest findBulkRechargeById(String id);
 
     List<IndividualRequest> findBulkIndividualRequests(String id);
@@ -108,4 +110,10 @@ public interface NewBulkRechargeMapper {
     Integer individualCount(String id);
 
     int duplicateRequest(String id);
+
+    List<NewBulkRechargeRequest> findBulkRechargeByCriteria(RechargeReportRequest request);
+
+    List<ReportIndividualRequest> findBulkReportIndividualRequests(String id);
+
+    List<ReportIndividualRequest> findBulkIndividualRequestsByCriteria(Map<String, String> criteria);
 }

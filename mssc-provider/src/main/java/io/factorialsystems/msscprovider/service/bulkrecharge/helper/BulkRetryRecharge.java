@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.service.bulkrecharge.helper;
 
-import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
+import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
@@ -20,7 +20,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class BulkRetryRecharge {
     private final RechargeInterfaceRequester requester;
-    private final NewBulkRechargeMapper newBulkRechargeMapper;
+    private final BulkRechargeMapper newBulkRechargeMapper;
 
     // Retry List of Recharges
     public void retryRequestsWithoutPayment(List<IndividualRequest> requests) {

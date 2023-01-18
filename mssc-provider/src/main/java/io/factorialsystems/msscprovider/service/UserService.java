@@ -24,4 +24,8 @@ public class UserService {
 
         return Optional.empty();
     }
+
+    public Boolean isUserValid(String id) {
+        return getUserById(id).isPresent();
+    }
 }

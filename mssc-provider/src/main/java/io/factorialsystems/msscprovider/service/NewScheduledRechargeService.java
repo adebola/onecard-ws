@@ -2,8 +2,8 @@ package io.factorialsystems.msscprovider.service;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
-import io.factorialsystems.msscprovider.dao.NewScheduledRechargeMapper;
+import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
+import io.factorialsystems.msscprovider.dao.ScheduledRechargeMapper;
 import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
@@ -43,9 +43,9 @@ import java.util.stream.Collectors;
 public class NewScheduledRechargeService {
     private final FileUploader fileUploader;
     private final ExcelWriter excelWriter;
-    private final NewBulkRechargeMapper newBulkRechargeMapper;
+    private final BulkRechargeMapper newBulkRechargeMapper;
     private final NewBulkRechargeService newBulkRechargeService;
-    private final NewScheduledRechargeMapper newScheduledRechargeMapper;
+    private final ScheduledRechargeMapper scheduledRechargeMapper;
     private final NewBulkRechargeMapstructMapper newBulkRechargeMapstructMapper;
     private final NewScheduledRechargeMapstructMapper newScheduledRechargeMapstructMapper;
 
@@ -108,14 +108,14 @@ public class NewScheduledRechargeService {
         // Save Request
         String id = UUID.randomUUID().toString();
         request.setId(id);
-        newScheduledRechargeMapper.save(request);
+        scheduledRechargeMapper.save(request);
 
         request.getRecipients().forEach(recipient -> {
             recipient.setScheduledRequestId(id);
             recipient.setExternalRequestId(UUID.randomUUID().toString());
         });
 
-        newScheduledRechargeMapper.saveRecipients(request.getRecipients());
+        scheduledRechargeMapper.saveRecipients(request.getRecipients());
 
         // Move SaveTransaction to the Payment Server for
         // Wallet Payment, Transaction should be created once payment goes through
@@ -143,13 +143,13 @@ public class NewScheduledRechargeService {
 
     public PagedDto<NewScheduledRechargeRequestDto> searchByDate(Date date, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
-        Page<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.searchByDate(new SearchByDate(date));
+        Page<NewScheduledRechargeRequest> requests = scheduledRechargeMapper.searchByDate(new SearchByDate(date));
 
         return createDto(requests);
     }
 
     public Boolean finalizeScheduledRecharge(String id) {
-        NewScheduledRechargeRequest request = newScheduledRechargeMapper.findById(id);
+        NewScheduledRechargeRequest request = scheduledRechargeMapper.findById(id);
 
         PaymentHelper helper = PaymentHelper.builder()
                 .build();
@@ -172,7 +172,7 @@ public class NewScheduledRechargeService {
 
     public PagedDto<NewScheduledRechargeRequestDto> getUserRecharges(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
-        Page<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.findRequestByUserId(ProviderSecurity.getUserId());
+        Page<NewScheduledRechargeRequest> requests = scheduledRechargeMapper.findRequestByUserId(ProviderSecurity.getUserId());
 
         return createDto(requests);
     }
@@ -194,7 +194,7 @@ public class NewScheduledRechargeService {
             title = String.format("Scheduled Recharge Download for User %s", dto.getId());
         }
 
-        List<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.findByUserIdAndDateRange(dto);
+        List<NewScheduledRechargeRequest> requests = scheduledRechargeMapper.findByUserIdAndDateRange(dto);
 
         List<NewBulkRechargeRequest> rechargeRequests = requests.stream()
                 .map(newScheduledRechargeMapstructMapper::ToBulkRechargeRequest)
@@ -215,7 +215,7 @@ public class NewScheduledRechargeService {
         requests.forEach(request -> {
             log.info(String.format("Processing Scheduled Recharge (%s)", request.getId()));
 
-            newScheduledRechargeMapper.closeRequest(request.getId());
+            scheduledRechargeMapper.closeRequest(request.getId());
 
             PaymentHelper helper = PaymentHelper.builder()
                     .build();
@@ -233,7 +233,7 @@ public class NewScheduledRechargeService {
                 recipientMap.put("bulkId", id);
                 recipientMap.put("scheduledId", request.getId());
 
-                newScheduledRechargeMapper.setBulkRequestId(recipientMap);
+                scheduledRechargeMapper.setBulkRequestId(recipientMap);
 
                 AsyncRechargeDto rechargeDto = AsyncRechargeDto.builder()
                         .id(id)
@@ -252,7 +252,7 @@ public class NewScheduledRechargeService {
     }
 
     public ByteArrayInputStream generateExcelFile(String id) {
-        NewScheduledRechargeRequest request = newScheduledRechargeMapper.findById(id);
+        NewScheduledRechargeRequest request = scheduledRechargeMapper.findById(id);
 
         if (request == null) {
             throw new ResourceNotFoundException("NewScheduledRechargeRequest", "id", id);

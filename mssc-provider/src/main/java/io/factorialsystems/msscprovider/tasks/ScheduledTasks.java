@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.tasks;
 
-import io.factorialsystems.msscprovider.dao.NewScheduledRechargeMapper;
+import io.factorialsystems.msscprovider.dao.ScheduledRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewScheduledRechargeRequest;
 import io.factorialsystems.msscprovider.service.AutoRechargeService;
 import io.factorialsystems.msscprovider.service.NewScheduledRechargeService;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScheduledTasks {
     private final AutoRechargeService autoRechargeService;
-    private final NewScheduledRechargeMapper newScheduledRechargeMapper;
+    private final ScheduledRechargeMapper scheduledRechargeMapper;
     private final NewScheduledRechargeService newScheduledRechargeService;
 
 
@@ -25,7 +25,7 @@ public class ScheduledTasks {
 
         log.info("Running Scheduled Recharge Requests Run................");
 
-        List<NewScheduledRechargeRequest> requests = newScheduledRechargeMapper.findOpenRequests();
+        List<NewScheduledRechargeRequest> requests = scheduledRechargeMapper.findOpenRequests();
 
         if (requests != null && requests.size() > 0) {
             log.info("Loaded Scheduled Recharge Requests for Processing {}", requests.size());

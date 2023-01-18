@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.mapper.recharge;
 import io.factorialsystems.msscprovider.domain.CombinedRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
+import io.factorialsystems.msscprovider.domain.report.ReportIndividualRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class CombinedRequestMapstructMapperDecorator implements CombinedRequestMapstructMapper {
@@ -24,6 +25,14 @@ public class CombinedRequestMapstructMapperDecorator implements CombinedRequestM
     @Override
     public CombinedRechargeRequest individualToCombined(IndividualRequest individualRequest) {
         CombinedRechargeRequest rechargeRequest = mapstructMapper.individualToCombined(individualRequest);
+        rechargeRequest.setRechargeType("Bulk");
+
+        return rechargeRequest;
+    }
+
+    @Override
+    public CombinedRechargeRequest reportIndividualToCombined(ReportIndividualRequest reportIndividualRequest) {
+        CombinedRechargeRequest rechargeRequest = mapstructMapper.reportIndividualToCombined(reportIndividualRequest);
         rechargeRequest.setRechargeType("Bulk");
 
         return rechargeRequest;

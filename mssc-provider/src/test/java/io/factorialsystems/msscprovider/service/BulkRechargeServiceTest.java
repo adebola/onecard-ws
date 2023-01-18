@@ -1,7 +1,9 @@
 package io.factorialsystems.msscprovider.service;
 
-import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
+import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry;
+import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
+import io.factorialsystems.msscprovider.domain.report.RechargeReportRequest;
 import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
@@ -47,7 +49,7 @@ class BulkRechargeServiceTest {
     @Autowired
     private NewBulkRechargeService service;
     @Autowired
-    NewBulkRechargeMapper newBulkRechargeMapper;
+    BulkRechargeMapper newBulkRechargeMapper;
 
     final String client_id = "public-client";
     final String realmPassword = "password";
@@ -435,6 +437,18 @@ class BulkRechargeServiceTest {
             log.info("Size " + x.getTotalSize());
         }
 
+    }
+
+    @Test
+    public void findByCriteria() {
+        RechargeReportRequest request = new RechargeReportRequest();
+        Date d = new Date();
+        request.setStartDate(d);
+        request.setEndDate((d));
+        List<NewBulkRechargeRequest> bulkRechargeByCriteria = newBulkRechargeMapper.findBulkRechargeByCriteria(request);
+        assertNotNull(bulkRechargeByCriteria);
+        log.info(bulkRechargeByCriteria);
+        log.info(String.format("Size %d", bulkRechargeByCriteria.size()));
     }
 
 

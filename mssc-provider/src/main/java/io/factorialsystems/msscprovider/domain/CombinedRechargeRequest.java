@@ -18,4 +18,8 @@ public class CombinedRechargeRequest {
     private String refundId;
     private String resolveId;
     private String rechargeType;
+    private String results;
+    private String userId;
+    private String userName;
+    private String parentId;
 }

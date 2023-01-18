@@ -310,4 +310,31 @@
             and r.createdAt &gt; #{startDate}
         </if>
     </select>
+
+    <select id="findSingleRechargeByCriteria" parameterType="io.factorialsystems.msscprovider.domain.report.RechargeReportRequest" resultMap="rechargeResultMap">
+        select
+        <include refid="Column_List"/>
+        from recharge_requests r, provider_services p
+        where r.service_id = p.id
+
+        <if test="userId != null">
+            and user_id = #{userId}
+        </if>
+
+        <if test="serviceId != null">
+            and service_id = #{serviceId}
+        </if>
+
+        <if test="status != null">
+            and failed = #{status}
+        </if>
+
+        <if test="startDate != null and endDate != null">
+            and r.createdAt between #{startDate} and #{endDate}
+        </if>
+
+        <if test="startDate != null and endDate == null">
+            and r.createdAt &gt; #{startDate}
+        </if>
+    </select>
 </mapper>

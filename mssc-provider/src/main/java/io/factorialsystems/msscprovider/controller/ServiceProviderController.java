@@ -1,11 +1,11 @@
 package io.factorialsystems.msscprovider.controller;
 
+import io.factorialsystems.msscprovider.dto.PagedDto;
+import io.factorialsystems.msscprovider.dto.ServiceActionDto;
+import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
 import io.factorialsystems.msscprovider.service.ProviderService;
 import io.factorialsystems.msscprovider.service.ServiceActionService;
 import io.factorialsystems.msscprovider.utils.Constants;
-import io.factorialsystems.msscprovider.dto.PagedDto;
-import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
-import io.factorialsystems.msscprovider.dto.ServiceActionDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,6 +21,7 @@ import java.util.List;
 public class ServiceProviderController {
     private final ProviderService providerService;
     private final ServiceActionService actionService;
+
 
     @GetMapping("/{type}")
     ResponseEntity<List<ProviderDto>> getProviderByCategory(@PathVariable("type") String type) {

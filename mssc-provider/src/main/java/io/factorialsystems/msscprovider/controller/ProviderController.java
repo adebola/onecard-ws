@@ -1,13 +1,12 @@
 package io.factorialsystems.msscprovider.controller;
 
-import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.dto.provider.ProviderDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.service.ProviderService;
 import io.factorialsystems.msscprovider.utils.Constants;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.env.Environment;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/provider")
 public class ProviderController {
-
-    private final Environment environment;
     private final ProviderService providerService;
 
     @GetMapping

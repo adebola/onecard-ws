@@ -5,7 +5,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscprovider.cache.ParameterCache;
 import io.factorialsystems.msscprovider.config.JMSConfig;
-import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
+import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.domain.RechargeFactoryParameters;
 import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
@@ -79,7 +79,7 @@ public class NewBulkRechargeService {
     private final ParameterCache parameterCache;
     private final ExcelWriter excelWriter;
     private final NewBulkRechargeMapstructMapper mapper;
-    private final NewBulkRechargeMapper newBulkRechargeMapper;
+    private final BulkRechargeMapper newBulkRechargeMapper;
 
     public void uploadRecharge(MultipartFile file) {
         log.info("Bulk recharge via File upload");

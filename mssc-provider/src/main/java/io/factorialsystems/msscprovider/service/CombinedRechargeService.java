@@ -1,6 +1,6 @@
 package io.factorialsystems.msscprovider.service;
 
-import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
+import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.CombinedRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class CombinedRechargeService {
     private final ExcelWriter excelWriter;
     private final UserService userService;
-    private final NewBulkRechargeMapper bulkRechargeMapper;
+    private final BulkRechargeMapper bulkRechargeMapper;
     private final SingleRechargeMapper singleRechargeMapper;
     private final CombinedRequestMapstructMapper combinedRequestMapstructMapper;
 

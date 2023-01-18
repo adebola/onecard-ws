@@ -2,7 +2,7 @@ package io.factorialsystems.msscprovider.service.bulkrecharge.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.JMSConfig;
-import io.factorialsystems.msscprovider.dao.NewBulkRechargeMapper;
+import io.factorialsystems.msscprovider.dao.BulkRechargeMapper;
 import io.factorialsystems.msscprovider.domain.query.IndividualRequestQuery;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
@@ -24,7 +24,7 @@ import java.util.Map;
 public class BulkRefundRecharge {
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
-    private final NewBulkRechargeMapper bulkRechargeMapper;
+    private final BulkRechargeMapper bulkRechargeMapper;
 
     // Refunds a Single Recharge within a Bulk Recharge
     @SneakyThrows

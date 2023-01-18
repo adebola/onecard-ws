@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @Mapper
-public interface NewScheduledRechargeMapper {
+public interface ScheduledRechargeMapper {
     NewScheduledRechargeRequest findById(String id);
     List<NewScheduledRechargeRequest> findOpenRequests();
     Page<NewScheduledRechargeRequest> findRequestByUserId(String id);
