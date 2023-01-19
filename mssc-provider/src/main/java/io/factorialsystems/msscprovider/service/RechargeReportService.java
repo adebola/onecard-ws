@@ -51,6 +51,7 @@ public class RechargeReportService {
     public CombinedRechargeList runRechargeReport(RechargeReportRequestDto dto) {
         RechargeReportRequest request;
 
+
         if (dto.getType() == null || dto.getType().equals("all")) {
             // Run Singe and Bulk
             request = mapstructMapper.toRequest(dto);
@@ -94,8 +95,14 @@ public class RechargeReportService {
     private List<ReportIndividualRequest> mapBulkToIndividual(NewBulkRechargeRequest b, RechargeReportRequest r) {
         Map<String, String> map = new HashMap<>();
         map.put("id", b.getId());
-        map.put("serviceId", String.valueOf(r.getServiceId()));
-        map.put("status", String.valueOf(r.getStatus()));
+
+        if (r.getServiceId() != null) {
+            map.put("serviceId", String.valueOf(r.getServiceId()));
+        }
+
+        if (r.getStatus() != null) {
+            map.put("status", String.valueOf(r.getStatus()));
+        }
 
         return bulkRechargeMapper.findBulkIndividualRequestsByCriteria(map);
     }
