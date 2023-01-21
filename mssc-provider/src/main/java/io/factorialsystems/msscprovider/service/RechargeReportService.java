@@ -51,10 +51,11 @@ public class RechargeReportService {
     public CombinedRechargeList runRechargeReport(RechargeReportRequestDto dto) {
         RechargeReportRequest request;
 
-
         if (dto.getType() == null || dto.getType().equals("all")) {
             // Run Singe and Bulk
             request = mapstructMapper.toRequest(dto);
+
+            log.info("All Report Request: {}", request);
 
             Stream<CombinedRechargeRequest> singleStream = singleRechargeMapper.findSingleRechargeByCriteria(request)
                     .stream()
@@ -70,6 +71,8 @@ public class RechargeReportService {
             // Run Single ONLY
             request = mapstructMapper.toRequest(dto);
 
+            log.info("Single Only Report Request: {}", request);
+
             return new CombinedRechargeList(
                     singleRechargeMapper.findSingleRechargeByCriteria(request)
                             .stream()
@@ -79,6 +82,8 @@ public class RechargeReportService {
         } else if (dto.getType().equals("bulk")) {
             // Run Bulk Only
             request = mapstructMapper.toRequest(dto);
+
+            log.info("Bulk Only Report Request: {}", request);
 
             return new CombinedRechargeList(
                     bulkRechargeMapper.findBulkRechargeByCriteria(request).stream()
@@ -101,7 +106,11 @@ public class RechargeReportService {
         }
 
         if (r.getStatus() != null) {
-            map.put("status", String.valueOf(r.getStatus()));
+            if (r.getStatus()) {
+                map.put("status", String.valueOf(1));
+            } else {
+                map.put("status", String.valueOf(0));
+            }
         }
 
         return bulkRechargeMapper.findBulkIndividualRequestsByCriteria(map);

@@ -26,9 +26,16 @@ public class RechargeReportController {
     @PostMapping
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public ResponseEntity<CombinedRechargeList> runRechargeReport(@Valid @RequestBody RechargeReportRequestDto dto) {
+
+        long startTime = System.nanoTime();
+        CombinedRechargeList results  = reportService.runRechargeReport(dto);
+        long elapsedTime = (System.nanoTime() - startTime) / 1_000_000;
+
+        log.info("Total execution time of Recharge Report in milliseconds {}, Parameters {}", elapsedTime, dto);
+
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(reportService.runRechargeReport(dto));
+                .body(results);
     }
 
     @PostMapping("/short")

@@ -18,6 +18,8 @@ public class RechargeReportMapstructMapperDecorator implements RechargeReportMap
 
     public static final String SUCCESS_STATUS = "success";
     public static final String FAIL_STATUS = "failed";
+    public static final String BULK_TYPE = "bulk";
+    public static final String SINGLE_TYPE = "single";
 
     @Autowired
     public void setUserService(UserService userService) {
@@ -40,7 +42,6 @@ public class RechargeReportMapstructMapperDecorator implements RechargeReportMap
 
         // Check UserId and make sure it is valid
         if (dto.getUserId() != null) {
-
             if (!userService.isUserValid(dto.getUserId())) {
                 throw new ResourceNotFoundException("User", "id", dto.getUserId());
             }
@@ -69,6 +70,16 @@ public class RechargeReportMapstructMapperDecorator implements RechargeReportMap
                 request.setStatus(true);
             } else {
                 throw new RuntimeException(String.format("Invalid Recharge Status %s specified should either be 'success', 'fail', 'all' or left blank for all", dto.getStatus()));
+            }
+        }
+
+        final String type = dto.getType();
+
+        if (type != null) {
+            if (type.equals(BULK_TYPE) || type.equals(SINGLE_TYPE)) {
+                request.setType(type);
+            } else  {
+                throw new RuntimeException(String.format("Invalid Recharge Type should %s either 'single', 'bulk' oe left blank for both", type));
             }
         }
 
