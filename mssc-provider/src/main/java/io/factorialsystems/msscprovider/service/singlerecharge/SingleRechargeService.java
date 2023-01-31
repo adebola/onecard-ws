@@ -158,7 +158,8 @@ public class SingleRechargeService {
                             .message(status.getMessage())
                             .build();
                 } else {
-                    log.error(String.format("Error in Synchronous Recharge Request (%s), reason : %s", request.getServiceCode(), status.getMessage()));
+                    final String errorMessage = String.format("Error in Synchronous Recharge Request (%s), reason : %s", request.getServiceCode(), status.getMessage());
+                    log.error(errorMessage);
                 }
             }
         }
@@ -217,18 +218,17 @@ public class SingleRechargeService {
 
             Map<String, String> resultsMap = new HashMap<>();
             resultsMap.put("id", request.getId());
+            resultsMap.put("provider", String.valueOf(parameter.getRechargeProviderId()));
+            resultsMap.put("results", status.getResults());
+            request.setResults(status.getResults());
+            sendMail(request, dto, status);
 
-            if (status.getStatus() == HttpStatus.OK) {
+            if (status.getStatus() != HttpStatus.OK) {
+                Map<String, String> paramMap = new HashMap<>();
+                paramMap.put("id", request.getId());
+                paramMap.put("message", status.getMessage());
 
-                resultsMap.put("results", status.getResults());
-                resultsMap.put("provider", String.valueOf(parameter.getRechargeProviderId()));
-
-                if (request.getUserId() != null) {
-                    request.setResults(status.getResults());
-                    sendMail(request, dto, status);
-                }
-            } else {
-                singleRechargeMapper.failRequest(request.getId());
+                singleRechargeMapper.failRequest(paramMap);
                 singleRefundRecharge.asyncRefundRecharge(request);
             }
 

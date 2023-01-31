@@ -59,7 +59,7 @@ public interface SingleRechargeMapper {
 
     List<SingleRechargeRequest> findListUnresolvedFailedRequests();
 
-    Boolean failRequest(String id);
+    Boolean failRequest(Map<String, String> parameters);
 
     List<SingleRechargeRequest> findSingleByUserIdAndDateRange(CombinedRequestDto dto);
 
