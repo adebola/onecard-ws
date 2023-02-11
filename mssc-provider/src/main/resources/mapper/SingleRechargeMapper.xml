@@ -102,7 +102,10 @@
     </insert>
 
     <update id="failRequest" parameterType="java.util.Map">
-        update providerdb.recharge_requests set failed = true, failed_message = #{message} where id = #{id}
+        update providerdb.recharge_requests
+        set failed = true,
+            failed_message = #{message}
+        where id = #{id}
     </update>
 
     <update id="saveSuccessfulRetry" parameterType="java.util.Map">
