@@ -38,7 +38,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -56,6 +59,9 @@ public class UserService {
 
     @Value("${api.host.baseurl}")
     private String url;
+
+    @Value("${realm.admin.id}")
+    private String realmAdminId;
 
     @Autowired
     UserService(Keycloak keycloak, KeycloakUserMapper keycloakUserMapper,
@@ -233,9 +239,19 @@ public class UserService {
         return null;
     }
 
-    public String sendLoginMessage(String id) {
-        User user = Optional.ofNullable(userMapper.findUserById(id))
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+    public void sendLoginMessage(String id) {
+
+       if (id.equals(realmAdminId)) {
+           log.info("Retrieving Realm Admin Id {}", id);
+           return;
+       }
+
+        User user = userMapper.findUserById(id);
+
+        if (user == null) {
+            log.error("User with id {} not found", id);
+            throw new ResourceNotFoundException("User", "id", id);
+        }
 
         final String date = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
 
@@ -248,7 +264,7 @@ public class UserService {
                 .body(message)
                 .build();
 
-        return mailService.sendMailWithOutAttachment(mailMessageDto);
+        mailService.sendMailWithOutAttachment(mailMessageDto);
     }
 
     public List<KeycloakRoleDto> getUserAssignableCompanyRoles(String id) {
