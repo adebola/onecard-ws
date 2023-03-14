@@ -1,6 +1,5 @@
 package io.factorialsystems.msscprovider.dto.recharge;
 
-import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NewBulkRechargeRequestDto {
-
     @Null(message = "id must be null")
     private String id;
 

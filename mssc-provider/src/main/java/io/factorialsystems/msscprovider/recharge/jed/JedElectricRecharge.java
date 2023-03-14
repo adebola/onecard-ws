@@ -32,6 +32,7 @@ public class JedElectricRecharge implements Recharge, ParameterCheck, ExtraDataE
     public RechargeStatus recharge(SingleRechargeRequest request) {
 
         if (request == null || request.getRecipient() == null || request.getServiceCost() == null || request.getTelephone() == null) {
+            log.error("Missing parameters in Jed Recharge Request {}", request);
             throw new RuntimeException("Request parameters for recharge missing");
         }
 
@@ -43,7 +44,7 @@ public class JedElectricRecharge implements Recharge, ParameterCheck, ExtraDataE
         JedVerifyResponse verifyResponse = verifyPlan(dto);
 
         PaymentRequest paymentRequest = new PaymentRequest(verifyResponse.getAccessCode(),
-                (int) request.getServiceCost().doubleValue(),
+                request.getServiceCost().intValue(),
                 request.getTelephone()
         );
 
@@ -128,6 +129,7 @@ public class JedElectricRecharge implements Recharge, ParameterCheck, ExtraDataE
         JedVerifyResponse verify = response.getBody();
 
         if (verify.getStatus() == null || !verify.getStatus().equals("100")) {
+            log.error("Verification Error status {}", verify);
             throw new RuntimeException(String.format("Customer verification failure (%s)", dto.getRecipient()));
         }
 

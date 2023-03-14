@@ -220,29 +220,28 @@ public class AutoRechargeService {
         calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DATE));
         int lastDayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
 
-        log.info(String.format("Last Day of the Month for %s is %d", months[monthOfYear], lastDayOfMonth));
-
         Map<String, String> weeklyMap = new HashMap<>();
         weeklyMap.put("dayOfWeek", String.valueOf(dayOfWeek));
         weeklyMap.put("weekId", String.valueOf(weekOfYear));
-        weeklyMap.put("userId", ProviderSecurity.getUserId());
 
-        log.info(String.format("Running Weekly Recharge for %s of  Week (%d) of the Year", days[dayOfWeek - 1], weekOfYear));
-
-        runEvents(autoRechargeMapper.todaysWeeklyRuns(weeklyMap), weekOfYear);
+        List<AutoRunEvent> autoWeeklyRunEvents = autoRechargeMapper.todaysWeeklyRuns(weeklyMap);
+        log.info("Running Weekly Recharge for {} of Week {} of the Year, Found {} to run", days[dayOfWeek - 1], weekOfYear, autoWeeklyRunEvents.size());
+        if (!autoWeeklyRunEvents.isEmpty()) { runEvents(autoWeeklyRunEvents, weekOfYear); }
 
         Map<String, String> monthlyMap = new HashMap<>();
-        weeklyMap.put("dayOfMonth", String.valueOf(dayOfMonth));
-        weeklyMap.put("monthId", String.valueOf(monthOfYear));
-        weeklyMap.put("userId", ProviderSecurity.getUserId());
+        monthlyMap.put("dayOfMonth", String.valueOf(dayOfMonth));
+        monthlyMap.put("monthId", String.valueOf(monthOfYear));
 
-        log.info(String.format("Running Monthly Recharge for Day (%d) of %s of the Year", dayOfMonth, months[monthOfYear]));
+        List<AutoRunEvent> autoMonthlyRunEvents;
 
         if (lastDayOfMonth == dayOfMonth) {
-            runEvents(autoRechargeMapper.lastDayMonthlyRuns(monthlyMap), monthOfYear);
+            autoMonthlyRunEvents = autoRechargeMapper.lastDayMonthlyRuns(monthlyMap);
         } else {
-            runEvents(autoRechargeMapper.todaysMonthlyRuns(monthlyMap), monthOfYear);
+            autoMonthlyRunEvents = autoRechargeMapper.todaysMonthlyRuns(monthlyMap);
         }
+
+        log.info("Running Monthly Recharge for Day {} of {}  for the Year, Found {} to run", dayOfMonth, months[monthOfYear], autoMonthlyRunEvents.size());
+        if (!autoMonthlyRunEvents.isEmpty()) { runEvents(autoMonthlyRunEvents, monthOfYear); }
     }
 
     public PagedDto<ShortAutoRechargeRequestDto> searchByDate(Date date, Integer pageNumber, Integer pageSize) {
@@ -271,7 +270,7 @@ public class AutoRechargeService {
 
     private void runEvents(List<AutoRunEvent> events, Integer periodId) {
         if (events != null && !events.isEmpty()) {
-           log.info(String.format("Auto Recharge has %d Events", events.size()));
+           log.info("Auto Recharge has {} Events", events.size());
             events.forEach(event -> {
 
                 // Load IndividualRequest and create NewBulkRechargeDto Object
@@ -288,7 +287,7 @@ public class AutoRechargeService {
                         requestDto.setAutoRequestId(event.getAutoRequestId());
                         requestDto.setPaymentMode("wallet");
 
-                        newBulkRechargeService.saveService(requestDto);
+                        newBulkRechargeService.saveService(requestDto, Optional.of(event.getUserId()));
                     } catch (Exception e) {
                         log.error (
                                 String.format("Error running Auto Recharge (%s) RequestId (%s) Event (%d) Reason (%s)",
@@ -298,15 +297,17 @@ public class AutoRechargeService {
                                 e.getMessage())
                         );
                     }
-
-                    AutoEventRan autoEventRan = AutoEventRan.builder()
-                            .recurringEventId(event.getRecurringEventId())
-                            .autoRequestId(event.getAutoRequestId())
-                            .periodId(periodId)
-                            .build();
-
-                    autoRechargeMapper.saveRanEvent(autoEventRan);
                 }
+
+                AutoEventRan autoEventRan = AutoEventRan.builder()
+                        .recurringEventId(event.getRecurringEventId())
+                        .autoRequestId(event.getAutoRequestId())
+                        .periodId(periodId)
+                        .build();
+
+                log.info("Saving Event Ran {}", autoEventRan);
+
+                autoRechargeMapper.saveRanEvent(autoEventRan);
             });
         }
     }

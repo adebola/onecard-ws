@@ -45,6 +45,7 @@
         <result column="auto_request_id" property="autoRequestId" jdbcType="VARCHAR"/>
         <result column="title" property="title" jdbcType="VARCHAR"/>
         <result column="recurring_event_id" property="recurringEventId" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="short_auto_column_list">
@@ -113,11 +114,11 @@
         </foreach>
     </insert>
 
-    <insert id="updateAutoRecurringEvents" parameterType="java.util.List">
+    <update id="updateAutoRecurringEvents" parameterType="java.util.List">
         <foreach item="item" collection="list">
             update auto_recurring_events set disabled = #{item.disabled} where id = #{item.id};
         </foreach>
-    </insert>
+    </update>
 
     <insert id="saveRecipients" parameterType="java.util.List">
         insert into auto_individual_requests(service_id, service_cost, product_id, telephone, recipient, auto_request_id)
@@ -157,9 +158,9 @@
     </select>
 
     <select id="todaysWeeklyRuns" parameterType="java.util.Map" resultMap="autoRunResultMap">
-        select n.id as auto_request_id, n.title, e.id as recurring_event_id from new_auto_recharge_requests n, auto_recurring_events e
-        where n.user_id = #{userId}
-        and n.recurring_type = 1
+        select n.id as auto_request_id, n.title, e.id as recurring_event_id, n.user_id from new_auto_recharge_requests n, auto_recurring_events e
+        where n.recurring_type = 1
+        and n.user_id is not NULL
         and n.deleted = false
         and e.disabled = false
         and e.day_of_period = #{dayOfWeek}
@@ -169,9 +170,9 @@
     </select>
 
     <select id="todaysMonthlyRuns" parameterType="java.util.Map" resultMap="autoRunResultMap">
-        select n.id as auto_request_id, n.title, e.id as recurring_event_id from new_auto_recharge_requests n, auto_recurring_events e
-        where n.user_id = #{userId}
-        and n.deleted = false
+        select n.id as auto_request_id, n.title, e.id as recurring_event_id, n.user_id from new_auto_recharge_requests n, auto_recurring_events e
+        where n.deleted = false
+        and n.user_id is not NULL
         and e.disabled = false
         and n.recurring_type = 2
         and e.day_of_period = #{dayOfMonth}
@@ -180,9 +181,9 @@
     </select>
 
     <select id="lastDayMonthlyRuns" parameterType="java.util.Map" resultMap="autoRunResultMap">
-        select n.id as auto_request_id, n.title, e.id as recurring_event_id from new_auto_recharge_requests n, auto_recurring_events e
-        where n.user_id = #{userId}
-          and n.deleted = false
+        select n.id as auto_request_id, n.title, e.id as recurring_event_id, n.user_id from new_auto_recharge_requests n, auto_recurring_events e
+          where n.deleted = false
+          and n.user_id is not NULL
           and e.disabled = false
           and n.recurring_type = 2
           and e.day_of_period &gt;= #{dayOfMonth}
@@ -206,7 +207,6 @@
         where title like CONCAT(#{search}, '%')
         and user_id = #{userId}
     </select>
-
 
     <select id="findByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.DateRangeDto" resultMap="autoShortRechargeResultMap">
         select

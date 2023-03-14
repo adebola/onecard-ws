@@ -471,7 +471,7 @@ public class SingleRechargeService {
             log.info("Product Id {}, determine price", dto.getProductId());
 
             if (enquiry == null) {
-                log.info("Null DataEnquiry, querying Extra Data Enquiry for Action {}, ServiceCode {}", serviceAction, dto.getServiceCode());
+                log.info("Null DataEnquiry, querying for Extra Data Enquiry for Action {}, ServiceCode {}", serviceAction, dto.getServiceCode());
 
                 ExtraDataEnquiry extraDataEnquiry = factory.getExtraPlans(dto.getServiceCode());
 
@@ -482,6 +482,8 @@ public class SingleRechargeService {
                                     .serviceCode(dto.getServiceCode())
                                     .build()
                     );
+
+                    log.info("Querying for ExtraDataEnquiry Results: {}", extraDataPlanDto);
 
                     Integer price = extraDataPlanDto.getObject().stream()
                             .filter(r -> r.getCode().equals(dto.getProductId()))
@@ -508,6 +510,7 @@ public class SingleRechargeService {
         ParameterCheck parameterCheck = factory.getCheck(serviceAction);
 
         if (!parameterCheck.check(request)) {
+            log.error("Recharge Parameter Check Failure {}", request);
             throw new RuntimeException(String.format("Missing / Wrong Parameter in Request (%s)", request.getServiceCode()));
         }
 

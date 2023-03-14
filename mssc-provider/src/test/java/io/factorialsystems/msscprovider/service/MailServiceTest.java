@@ -29,8 +29,8 @@ class MailServiceTest {
     @WithMockUser
     void sendMailWithOutAttachment() {
 
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        final String accessToken = getUserToken(id);
+        //final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+        //final String accessToken = getUserToken(id);
 
 //        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
 //            k.when(Constants::getUserId).thenReturn(id);

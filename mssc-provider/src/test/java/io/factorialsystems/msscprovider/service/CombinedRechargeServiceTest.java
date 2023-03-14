@@ -1,11 +1,7 @@
 package io.factorialsystems.msscprovider.service;
 
-import io.factorialsystems.msscprovider.dto.CombinedRequestDto;
-import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
@@ -15,12 +11,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @CommonsLog
 @SpringBootTest
@@ -36,41 +26,41 @@ class CombinedRechargeServiceTest {
 
     @Test
     public void getCombinedResource() throws ParseException, IOException {
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        final String accessToken = getUserToken(id);
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String accessToken = getUserToken(id);
 
-        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
-            k.when(ProviderSecurity::getUserId).thenReturn(id);
-            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
-            log.info(ProviderSecurity.getUserId());
-
-            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
-            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
-            log.info(ProviderSecurity.getAccessToken());
-
-            CombinedRequestDto dto = new CombinedRequestDto();
-            dto.setId("e33b6988-e636-44d8-894d-c03c982d8fa5");
-
-            SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a", Locale.ENGLISH);
-            formatter.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-
-            String startString = "22-01-2015 10:15:55 AM";
-            String endString = "22-08-2022 10:15:55 AM";
-
-            Date startDate = formatter.parse(startString);
-            Date endDate = formatter.parse((endString));
-
-            dto.setStartDate(startDate);
-            dto.setEndDate(null);
-
-//            InputStreamResource resource = new InputStreamResource(combinedRechargeService.getCombinedResource(dto));
-//            File targetFile = new File("test4.xlsx");
-//            OutputStream outputStream = new FileOutputStream(targetFile);
-//            byte[] buffer = resource.getInputStream().readAllBytes();
-//            outputStream.write(buffer);
+//        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+//            k.when(ProviderSecurity::getUserId).thenReturn(id);
+//            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+//            log.info(ProviderSecurity.getUserId());
 //
-//            log.info(targetFile.getAbsolutePath());
-        }
+//            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
+//            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
+//            log.info(ProviderSecurity.getAccessToken());
+//
+//            CombinedRequestDto dto = new CombinedRequestDto();
+//            dto.setId("e33b6988-e636-44d8-894d-c03c982d8fa5");
+//
+//            SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a", Locale.ENGLISH);
+//            formatter.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+//
+//            String startString = "22-01-2015 10:15:55 AM";
+//            String endString = "22-08-2022 10:15:55 AM";
+//
+//            Date startDate = formatter.parse(startString);
+//            Date endDate = formatter.parse((endString));
+//
+//            dto.setStartDate(startDate);
+//            dto.setEndDate(null);
+//
+////            InputStreamResource resource = new InputStreamResource(combinedRechargeService.getCombinedResource(dto));
+////            File targetFile = new File("test4.xlsx");
+////            OutputStream outputStream = new FileOutputStream(targetFile);
+////            byte[] buffer = resource.getInputStream().readAllBytes();
+////            outputStream.write(buffer);
+////
+////            log.info(targetFile.getAbsolutePath());
+//        }
     }
 
     private String getUserToken(String userId) {

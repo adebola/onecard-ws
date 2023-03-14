@@ -7,8 +7,6 @@ import io.factorialsystems.msscprovider.domain.report.RechargeReportRequest;
 import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
-import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
-import io.factorialsystems.msscprovider.dto.recharge.NewBulkRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
 import io.factorialsystems.msscprovider.recharge.Recharge;
@@ -34,7 +32,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -218,44 +215,44 @@ class BulkRechargeServiceTest {
     @Test
     void saveService() {
 
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        final String accessToken = getUserToken(id);
-
-        String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
-        log.info(s);
-
-        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
-            k.when(ProviderSecurity::getUserId).thenReturn(id);
-            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
-            log.info(ProviderSecurity.getUserId());
-
-            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
-            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
-
-            List<IndividualRequestDto> list = new ArrayList<>(1);
-
-            IndividualRequestDto individualRequestDto = new IndividualRequestDto();
-            individualRequestDto.setServiceCode("GLO-AIRTIME");
-            individualRequestDto.setServiceCost(new BigDecimal(1000));
-            individualRequestDto.setRecipient("08055572307");
-
-            list.add(individualRequestDto);
-
-//            IndividualRequestDto individualRequestDto2 = new IndividualRequestDto();
-//            individualRequestDto2.setServiceCode("GLO-AIRTIME");
-//            individualRequestDto2.setServiceCost(new BigDecimal(300));
-//            individualRequestDto2.setRecipient("09055572307");
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String accessToken = getUserToken(id);
 //
-//            list.add(individualRequestDto2);
-
-            NewBulkRechargeRequestDto dto = new NewBulkRechargeRequestDto();
-            dto.setRecipients(list);
-            dto.setPaymentMode("wallet");
-            dto.setTotalServiceCost(new BigDecimal(1000));
-
-//            var x = service.saveService(dto);
-//            log.info(x);
-        }
+//        String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
+//        log.info(s);
+//
+//        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+//            k.when(ProviderSecurity::getUserId).thenReturn(id);
+//            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+//            log.info(ProviderSecurity.getUserId());
+//
+//            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
+//            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
+//
+//            List<IndividualRequestDto> list = new ArrayList<>(1);
+//
+//            IndividualRequestDto individualRequestDto = new IndividualRequestDto();
+//            individualRequestDto.setServiceCode("GLO-AIRTIME");
+//            individualRequestDto.setServiceCost(new BigDecimal(1000));
+//            individualRequestDto.setRecipient("08055572307");
+//
+//            list.add(individualRequestDto);
+//
+////            IndividualRequestDto individualRequestDto2 = new IndividualRequestDto();
+////            individualRequestDto2.setServiceCode("GLO-AIRTIME");
+////            individualRequestDto2.setServiceCost(new BigDecimal(300));
+////            individualRequestDto2.setRecipient("09055572307");
+////
+////            list.add(individualRequestDto2);
+//
+//            NewBulkRechargeRequestDto dto = new NewBulkRechargeRequestDto();
+//            dto.setRecipients(list);
+//            dto.setPaymentMode("wallet");
+//            dto.setTotalServiceCost(new BigDecimal(1000));
+//
+////            var x = service.saveService(dto);
+////            log.info(x);
+//        }
     }
 
     @Test

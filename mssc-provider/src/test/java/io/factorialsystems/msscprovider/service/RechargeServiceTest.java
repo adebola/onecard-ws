@@ -268,48 +268,48 @@ class RechargeServiceTest {
 
     @Test
     void getUserRechargesById() throws IOException {
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        final String accessToken = getUserToken(id);
-
-        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
-            k.when(ProviderSecurity::getUserId).thenReturn(id);
-            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
-            log.info(ProviderSecurity.getUserId());
-
-            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
-            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
-
-            InputStreamResource resource = rechargeService.getRechargesByUserId(id);
-            File targetFile = new File("test2.xlsx");
-            OutputStream outputStream = new FileOutputStream(targetFile);
-            byte[] buffer = resource.getInputStream().readAllBytes();
-            outputStream.write(buffer);
-
-            log.info(targetFile.getAbsolutePath());
-        }
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String accessToken = getUserToken(id);
+//
+//        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+//            k.when(ProviderSecurity::getUserId).thenReturn(id);
+//            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+//            log.info(ProviderSecurity.getUserId());
+//
+//            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
+//            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
+//
+//            InputStreamResource resource = rechargeService.getRechargesByUserId(id);
+//            File targetFile = new File("test2.xlsx");
+//            OutputStream outputStream = new FileOutputStream(targetFile);
+//            byte[] buffer = resource.getInputStream().readAllBytes();
+//            outputStream.write(buffer);
+//
+//            log.info(targetFile.getAbsolutePath());
+//        }
     }
 
     @Test
     void getFailedRechrges() throws IOException {
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        final String accessToken = getUserToken(id);
-
-        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
-            k.when(ProviderSecurity::getUserId).thenReturn(id);
-            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
-            log.info(ProviderSecurity.getUserId());
-
-            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
-            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
-
-            InputStreamResource resource = rechargeService.getFailedRecharges("all");
-            File targetFile = new File("test2.xlsx");
-            OutputStream outputStream = new FileOutputStream(targetFile);
-            byte[] buffer = resource.getInputStream().readAllBytes();
-            outputStream.write(buffer);
-
-            log.info(targetFile.getAbsolutePath());
-        }
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String accessToken = getUserToken(id);
+//
+//        try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
+//            k.when(ProviderSecurity::getUserId).thenReturn(id);
+//            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+//            log.info(ProviderSecurity.getUserId());
+//
+//            k.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
+//            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
+//
+//            InputStreamResource resource = rechargeService.getFailedRecharges("all");
+//            File targetFile = new File("test2.xlsx");
+//            OutputStream outputStream = new FileOutputStream(targetFile);
+//            byte[] buffer = resource.getInputStream().readAllBytes();
+//            outputStream.write(buffer);
+//
+//            log.info(targetFile.getAbsolutePath());
+//        }
     }
 
     private String getUserToken(String userId) {

@@ -11,4 +11,5 @@ public class AutoRunEvent {
     private String autoRequestId;
     private String title;
     private Integer recurringEventId;
+    private String userId;
 }

@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -37,7 +38,7 @@ public class BulkRechargeAuthController {
 
     @PostMapping
     public ResponseEntity<NewBulkRechargeResponseDto> startNewBulkRecharge(@Valid @RequestBody NewBulkRechargeRequestDto dto) {
-        NewBulkRechargeResponseDto response = newBulkRechargeService.saveService(dto);
+        NewBulkRechargeResponseDto response = newBulkRechargeService.saveService(dto, Optional.empty());
         return new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatus()));
     }
 

@@ -96,12 +96,12 @@ public class NewBulkRechargeService {
         }
 
         newRequestDto.setRecipients(individualRequests);
-        saveService(newRequestDto);
+        saveService(newRequestDto, Optional.empty());
     }
 
     @SneakyThrows
     @Transactional
-    public NewBulkRechargeResponseDto saveService(NewBulkRechargeRequestDto dto) {
+    public NewBulkRechargeResponseDto saveService(NewBulkRechargeRequestDto dto, Optional<String> userId) {
 
         if (dto.getRecipients() == null || dto.getRecipients().isEmpty()) {
             final String errorMessage = "No Recipients specified, nothing todo";
@@ -114,6 +114,12 @@ public class NewBulkRechargeService {
         }
 
         NewBulkRechargeRequest request = mapper.rechargeDtoToRecharge(dto);
+
+        // Auto Recharges will send their UserId, others will not and expect it to be filled by
+        // Mapstruct Mapper, in particular NewBulkRechargeMapstructMapperDecorator, it gets the UserId
+        // from the Security Context
+        userId.ifPresent(request::setUserId);
+
         PaymentRequestDto requestDto = helper.initializePayment(request);
 
         if (requestDto.getPaymentMode().equals(Constants.WALLET_PAY_MODE) && requestDto.getStatus() != 200) {
