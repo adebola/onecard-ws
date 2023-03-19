@@ -223,4 +223,8 @@
             and new_auto_recharge_requests.created_on &gt; #{startDate}
         </if>
     </select>
+
+    <delete id="deleteRecipientsByAutoRechargeId" parameterType="java.lang.String">
+        delete from auto_individual_requests where auto_individual_requests.auto_request_id = #{id}
+    </delete>
 </mapper>

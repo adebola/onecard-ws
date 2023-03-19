@@ -42,13 +42,32 @@ public class AutoRechargeService {
     public static final int AUTO_RECURRING_MONTHLY_TYPE = 2;
 
     private static final String[] days = {
-            "SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
+            "SUNDAY",
+            "MONDAY",
+            "TUESDAY",
+            "WEDNESDAY",
+            "THURSDAY",
+            "FRIDAY",
+            "SATURDAY"
     };
     private static final String[] months = {
-            "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+            "JANUARY",
+            "FEBRUARY",
+            "MARCH",
+            "APRIL",
+            "MAY",
+            "JUNE",
+            "JULY",
+            "AUGUST",
+            "SEPTEMBER",
+            "OCTOBER",
+            "NOVEMBER",
+            "DECEMBER"
     };
 
     public AutoRechargeResponseDto uploadRecharge(AutoUploadFileRechargeRequestDto dto, MultipartFile file) {
+        log.info("Uploading Bulk Recharge...");
+
         UploadFile uploadFile = fileUploader.uploadFile(file);
         ExcelReader excelReader = new ExcelReader(uploadFile);
         List<IndividualRequestDto> individualRequests = excelReader.readContents();
@@ -88,8 +107,7 @@ public class AutoRechargeService {
         request.getRecipients().forEach(recipient -> recipient.setAutoRequestId(id));
 
         autoRechargeMapper.saveRecipients(request.getRecipients());
-
-        log.info(String.format("AutoRecharge (%s) Saved Successfully by (%s)", id, ProviderSecurity.getUserName()));
+        log.info("AutoRecharge {}, saved successfully by {}", id, ProviderSecurity.getUserName());
 
         return AutoRechargeResponseDto.builder()
                 .id(id)
@@ -100,9 +118,13 @@ public class AutoRechargeService {
 
     @Transactional
     public void updateService(String id, AutoRechargeRequestDto dto) {
+
+        // Convert AutoRechargeRequest to dto and set id
         AutoRechargeRequest request = autoRechargeMapstructMapper.dtoToRequest(dto);
         request.setId(id);
 
+
+        // Extract the List of Recurring Weekly or Monthly days
         List<Integer> daysOfPeriod = null;
 
         if (dto.getDaysOfWeek() != null && !dto.getDaysOfWeek().isEmpty()) {
@@ -115,27 +137,34 @@ public class AutoRechargeService {
             throw new RuntimeException("Nothing to AutoSchedule Days of Week or Days of Month must be specified");
         }
 
+        // Save the AutoRechargeRequest
         autoRechargeMapper.updateAutoRecharge(request);
 
+        // Disable and Load all Recurring Days (Weekly or Monthly) for the AutoRechargeRequest
         List<AutoRecurringEvent> currentEvents = autoRechargeMapper.disableAndLoadRecurringEventsByAutoId(id);
 
         List<Integer> enableQueue = new ArrayList<>();
         List<Integer> createQueue = new ArrayList<>();
 
+        // For the new days submitted for the respective period (Weekly or Monthly)
+        // if the days submitted in the request are in the disabled events above re-enable it, i.e. push into enableQueue
+        // else if the days submitted are not in the disabled events, hence it is a new request,
+        // create new day for the request i.e. push in the CreateQueue
         daysOfPeriod.forEach(day -> {
-            Optional<AutoRecurringEvent> optionalEvent = currentEvents.stream().filter(e -> Objects.equals(e.getDayOfPeriod(), day)).findFirst();
-
-            if (optionalEvent.isPresent()) {
-                AutoRecurringEvent event = optionalEvent.get();
-
-                if (event.isDisabled()) {
-                    enableQueue.add(event.getId());
-                }
-            } else {
-                createQueue.add(day);
-            }
+            currentEvents.stream()
+                    .filter(e -> Objects.equals(e.getDayOfPeriod(), day))
+                    .findFirst()
+                    .ifPresentOrElse(
+                            (value) -> {
+                                enableQueue.add(value.getId());
+                            },
+                            () -> {
+                                createQueue.add(day);
+                            }
+                    );
         });
 
+        // Re-Enable days in Period in the database
         if (!enableQueue.isEmpty()) {
             List<AutoRecurringEvent> updateEvents = enableQueue.stream()
                     .distinct()
@@ -144,6 +173,7 @@ public class AutoRechargeService {
             autoRechargeMapper.updateAutoRecurringEvents(updateEvents);
         }
 
+        // Create new days in period in the database
         if (!createQueue.isEmpty()) {
             List<AutoRecurringEvent> createEvents = createQueue.stream()
                     .distinct()
@@ -151,10 +181,17 @@ public class AutoRechargeService {
                     .collect(Collectors.toList());
             autoRechargeMapper.saveAutoRecurringEvents(createEvents);
         }
+
+        // Update Recipients, by deleting existing recipients and re-populating with submission
+        autoRechargeMapper.deleteRecipientsByAutoRechargeId(id);
+        request.getRecipients().forEach(recipient -> recipient.setAutoRequestId(id));
+        autoRechargeMapper.saveRecipients(request.getRecipients());
     }
 
     public AutoRechargeRequestDto getSingleService(String id) {
         AutoRechargeRequest request = autoRechargeMapper.findAutoRechargeById(id);
+
+        log.info("Retrieving AutoRecharge {}", id);
 
         if (request == null) {
             throw new ResourceNotFoundException("AutoRechargeService", "Id", id);
@@ -204,7 +241,9 @@ public class AutoRechargeService {
         return newBulkRechargeService.getUserRechargesByAutoRequestId(request.getUserId(), pageNumber, pageSize);
     }
 
+    @Transactional
     public void deleteService(String id) {
+        log.info("Deleting AutoRecharge {}", id);
         autoRechargeMapper.deleteAutoRecharge(id);
     }
 
@@ -225,8 +264,11 @@ public class AutoRechargeService {
         weeklyMap.put("weekId", String.valueOf(weekOfYear));
 
         List<AutoRunEvent> autoWeeklyRunEvents = autoRechargeMapper.todaysWeeklyRuns(weeklyMap);
-        log.info("Running Weekly Recharge for {} of Week {} of the Year, Found {} to run", days[dayOfWeek - 1], weekOfYear, autoWeeklyRunEvents.size());
-        if (!autoWeeklyRunEvents.isEmpty()) { runEvents(autoWeeklyRunEvents, weekOfYear); }
+        log.info("Running Weekly Recharge for {} of Week {} of the Year, Found {} to run",
+                days[dayOfWeek - 1], weekOfYear, autoWeeklyRunEvents.size());
+        if (!autoWeeklyRunEvents.isEmpty()) {
+            runEvents(autoWeeklyRunEvents, weekOfYear);
+        }
 
         Map<String, String> monthlyMap = new HashMap<>();
         monthlyMap.put("dayOfMonth", String.valueOf(dayOfMonth));
@@ -240,11 +282,15 @@ public class AutoRechargeService {
             autoMonthlyRunEvents = autoRechargeMapper.todaysMonthlyRuns(monthlyMap);
         }
 
-        log.info("Running Monthly Recharge for Day {} of {}  for the Year, Found {} to run", dayOfMonth, months[monthOfYear], autoMonthlyRunEvents.size());
-        if (!autoMonthlyRunEvents.isEmpty()) { runEvents(autoMonthlyRunEvents, monthOfYear); }
+        log.info("Running Monthly Recharge for Day {} of {}  for the Year, Found {} to run",
+                dayOfMonth, months[monthOfYear], autoMonthlyRunEvents.size());
+        if (!autoMonthlyRunEvents.isEmpty()) {
+            runEvents(autoMonthlyRunEvents, monthOfYear);
+        }
     }
 
     public PagedDto<ShortAutoRechargeRequestDto> searchByDate(Date date, Integer pageNumber, Integer pageSize) {
+        log.info("AutoRecharge search by Date {}", date);
         PageHelper.startPage(pageNumber, pageSize);
         Page<ShortAutoRechargeRequest> requests = autoRechargeMapper.searchByDate(new SearchByDate(date));
 
@@ -252,6 +298,7 @@ public class AutoRechargeService {
     }
 
     public PagedDto<ShortAutoRechargeRequestDto> searchByName(String name, Integer pageNumber, Integer pageSize) {
+        log.info("AutoRecharge search by Name {}", name);
         PageHelper.startPage(pageNumber, pageSize);
         Page<ShortAutoRechargeRequest> requests = autoRechargeMapper.searchByName(new SearchByString(name));
 
@@ -270,16 +317,18 @@ public class AutoRechargeService {
 
     private void runEvents(List<AutoRunEvent> events, Integer periodId) {
         if (events != null && !events.isEmpty()) {
-           log.info("Auto Recharge has {} Events", events.size());
+            log.info("Auto Recharge has {} Events", events.size());
             events.forEach(event -> {
 
                 // Load IndividualRequest and create NewBulkRechargeDto Object
-                List<AutoIndividualRequest> individualRequest = autoRechargeMapper.findBulkIndividualRequests(event.getAutoRequestId());
+                List<AutoIndividualRequest> individualRequest =
+                        autoRechargeMapper.findBulkIndividualRequests(event.getAutoRequestId());
 
                 if (individualRequest == null || individualRequest.isEmpty()) {
-                    log.error(String.format("No IndividualRequests in AutoRecharge Request %s", event.getAutoRequestId()));
+                    log.error("No IndividualRequests in AutoRecharge Request {}", event.getAutoRequestId());
                 } else {
-                    log.info(String.format("Running AutoRecharge Request %s Id %s with %d recipients", event.getTitle(), event.getAutoRequestId(), individualRequest.size()));
+                    log.info("Running AutoRecharge Request {} Id {} with {} recipients for User {}",
+                            event.getTitle(), event.getAutoRequestId(), individualRequest.size(), event.getUserId());
 
                     try {
                         NewBulkRechargeRequestDto requestDto = new NewBulkRechargeRequestDto();
@@ -289,12 +338,12 @@ public class AutoRechargeService {
 
                         newBulkRechargeService.saveService(requestDto, Optional.of(event.getUserId()));
                     } catch (Exception e) {
-                        log.error (
+                        log.error(
                                 String.format("Error running Auto Recharge (%s) RequestId (%s) Event (%d) Reason (%s)",
-                                event.getTitle(),
-                                event.getAutoRequestId(),
-                                event.getRecurringEventId(),
-                                e.getMessage())
+                                        event.getTitle(),
+                                        event.getAutoRequestId(),
+                                        event.getRecurringEventId(),
+                                        e.getMessage())
                         );
                     }
                 }
@@ -324,7 +373,8 @@ public class AutoRechargeService {
             title = String.format("Auto Recharge Download for User %s Date Range %s to %s", dto.getId(),
                     simpleDateFormat.format(dto.getStartDate()), simpleDateFormat.format(dto.getEndDate()));
         } else if (dto.getStartDate() != null) {
-            title = String.format("Auto Recharge Download for User %s Date %s", dto.getId(), simpleDateFormat.format(dto.getStartDate()));
+            title = String.format("Auto Recharge Download for User %s Date %s",
+                    dto.getId(), simpleDateFormat.format(dto.getStartDate()));
         } else {
             title = String.format("Auto Recharge Download for User %s", dto.getId());
         }

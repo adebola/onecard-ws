@@ -30,4 +30,5 @@ public interface AutoRechargeMapper {
     Page<ShortAutoRechargeRequest> searchByDate(SearchByDate s);
     Page<ShortAutoRechargeRequest> searchByName(SearchByString s);
     List<ShortAutoRechargeRequest> findByUserIdAndDateRange(DateRangeDto dto);
+    void deleteRecipientsByAutoRechargeId(String id);
 }
