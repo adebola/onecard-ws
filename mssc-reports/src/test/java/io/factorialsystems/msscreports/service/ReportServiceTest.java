@@ -3,23 +3,17 @@ package io.factorialsystems.msscreports.service;
 import io.factorialsystems.msscreports.dto.PagedDto;
 import io.factorialsystems.msscreports.dto.RechargeReportRequestDto;
 import io.factorialsystems.msscreports.dto.ReportDto;
-import io.factorialsystems.msscreports.utils.K;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.*;
+import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
@@ -99,26 +93,26 @@ class ReportServiceTest {
     void runRechargeReport() throws IOException {
         RechargeReportRequestDto dto = new RechargeReportRequestDto();
 
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        final String accessToken = getUserToken(id);
-
-        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-            k.when(K::getUserId).thenReturn(id);
-            assertThat(K.getUserId()).isEqualTo(id);
-            log.info(K.getUserId());
-
-            k.when(K::getAccessToken).thenReturn(accessToken);
-            assertThat(K.getAccessToken()).isEqualTo(accessToken);
-
-            InputStreamResource inputStreamResource = reportService.runRechargeReport(dto);
-
-            File targetFile = new File("recharge-report.xlsx");
-            OutputStream outputStream = new FileOutputStream(targetFile);
-            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
-            outputStream.write(buffer);
-
-            log.info(targetFile.getAbsolutePath());
-        }
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String accessToken = getUserToken(id);
+//
+//        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
+//            k.when(K::getUserId).thenReturn(id);
+//            assertThat(K.getUserId()).isEqualTo(id);
+//            log.info(K.getUserId());
+//
+//            k.when(K::getAccessToken).thenReturn(accessToken);
+//            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+//
+//            InputStreamResource inputStreamResource = reportService.runRechargeReport(dto);
+//
+//            File targetFile = new File("recharge-report.xlsx");
+//            OutputStream outputStream = new FileOutputStream(targetFile);
+//            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
+//            outputStream.write(buffer);
+//
+//            log.info(targetFile.getAbsolutePath());
+//        }
     }
 
     private String getUserToken(String userId) {

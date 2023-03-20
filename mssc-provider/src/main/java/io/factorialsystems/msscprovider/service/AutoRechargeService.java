@@ -66,7 +66,7 @@ public class AutoRechargeService {
     };
 
     public AutoRechargeResponseDto uploadRecharge(AutoUploadFileRechargeRequestDto dto, MultipartFile file) {
-        log.info("Uploading Bulk Recharge...");
+        log.info("Uploading AutoRecharge Bulk Excel File...");
 
         UploadFile uploadFile = fileUploader.uploadFile(file);
         ExcelReader excelReader = new ExcelReader(uploadFile);
@@ -93,7 +93,19 @@ public class AutoRechargeService {
             request.setRecurringType(AUTO_RECURRING_MONTHLY_TYPE);
             daysOfPeriod = dto.getDaysOfMonth();
         } else {
-            throw new RuntimeException("Nothing to AutoSchedule Days of Week or Days of Month must be specified");
+            throw new RuntimeException("AutoRecharge saveService Days of Week or Days of Month must be specified");
+        }
+
+        if (daysOfPeriod == null || daysOfPeriod.isEmpty()) {
+            final String errorMessage = String.format("AutoRecharge saveService No days of the Week or days of the Month specified for AutoRecharge %s, for Type %d", id, request.getRecurringType());
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
+
+        if (request.getRecipients() == null || request.getRecipients().isEmpty()) {
+            final String errorMessage = String.format("AutoRecharge saveService No recipients for AutoRecharge %s, for Type %d", id, request.getRecurringType());
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
         }
 
         autoRechargeMapper.saveAutoRecharge(request);
@@ -134,7 +146,19 @@ public class AutoRechargeService {
             request.setRecurringType(AUTO_RECURRING_MONTHLY_TYPE);
             daysOfPeriod = dto.getDaysOfMonth();
         } else {
-            throw new RuntimeException("Nothing to AutoSchedule Days of Week or Days of Month must be specified");
+            throw new RuntimeException("AutoRecharge updateService Nothing to AutoSchedule Days of Week or Days of Month must be specified");
+        }
+
+        if (daysOfPeriod == null || daysOfPeriod.isEmpty()) {
+            final String errorMessage = String.format("AutoRecharge updateService No days of the Week or days of the Month specified for AutoRecharge %s, for Type %d", id, request.getRecurringType());
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
+
+        if (request.getRecipients() == null || request.getRecipients().isEmpty()) {
+            final String errorMessage = String.format("AutoRecharge updateService No recipients for AutoRecharge %s, for Type %d", id, request.getRecurringType());
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
         }
 
         // Save the AutoRechargeRequest

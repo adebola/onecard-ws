@@ -39,8 +39,6 @@ public class ReportController {
             pageSize = K.DEFAULT_PAGE_SIZE;
         }
 
-        log.info("iss claim {}", K.getIssClaim());
-
         return new ResponseEntity<>(reportService.findReports(pageNumber, pageSize), HttpStatus.OK);
     }
 
@@ -72,7 +70,7 @@ public class ReportController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createProvider(@Valid @RequestBody ReportDto dto) {
+    public ResponseEntity<?> createReport(@Valid @RequestBody ReportDto dto) {
 
         Integer reportId = reportService.saveReport(K.getUserName(), dto);
         return new ResponseEntity<>(reportService.findReportById(reportId), HttpStatus.CREATED);
@@ -80,6 +78,9 @@ public class ReportController {
 
     @GetMapping("/run/{id}")
     public ResponseEntity<InputStreamResource> runReport(@PathVariable("id") Integer id) {
+
+        log.info("Running Jasper Report {}", id);
+
         ByteArrayInputStream byteArrayInputStream = reportService.runReport(id);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "inline; filename=report.pdf");
@@ -96,10 +97,11 @@ public class ReportController {
     public ResponseEntity<Resource> runRechargeReport(@Valid @RequestBody RechargeReportRequestDto dto) {
         final String filename = String.format("recharge-%s.xlsx", UUID.randomUUID());
 
+        log.info("Running Recharge Report Parameters {}", dto);
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
                 .body(reportService.runRechargeReport(dto));
-
     }
 }
