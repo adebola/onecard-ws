@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -18,6 +19,7 @@ public class ContactController {
     private final ContactService contactService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Customer_Support')")
     public ResponseEntity<PagedDto<ContactMessageDto>> findAll(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                                @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
@@ -33,11 +35,13 @@ public class ContactController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Customer_Support')")
     public ResponseEntity<ContactMessageDto> findById(@PathVariable("id") String id) {
         return new ResponseEntity<>(contactService.findById(id), HttpStatus.OK);
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Customer_Support')")
     public ResponseEntity<PagedDto<ContactMessageDto>> search(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                               @RequestParam(value = "pageSize", required = false) Integer pageSize,
                                                               @RequestParam(value = "searchString") String searchString) {

@@ -19,7 +19,6 @@ class MessageServiceTest {
 
     @Test
     void save() {
-
         AuditMessageDto dto = new AuditMessageDto();
         dto.setServiceAction("TEST");
         dto.setServiceName("test-service");

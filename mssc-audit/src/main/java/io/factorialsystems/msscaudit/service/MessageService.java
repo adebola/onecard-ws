@@ -26,7 +26,6 @@ public class MessageService {
         Page<AuditMessage> messages = auditMessageRepository.findAll(pageable);
         PagedDto<AuditMessageDto> pagedDto = new PagedDto<>();
 
-
         pagedDto.setList(auditMessageMapper.listAuditToAuditDto(messages.toList()));
         pagedDto.setPages(messages.getTotalPages());
         pagedDto.setPageNumber(messages.getNumber());
