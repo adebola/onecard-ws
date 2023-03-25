@@ -18,4 +18,8 @@ public class SecurityService {
 
         return headers;
     }
+
+    public String getUserName() {
+        return SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+    }
 }
