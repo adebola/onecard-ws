@@ -510,7 +510,7 @@ public class SingleRechargeService {
         ParameterCheck parameterCheck = factory.getCheck(serviceAction);
 
         if (!parameterCheck.check(request)) {
-            log.error("Recharge Parameter Check Failure {}", request);
+            log.error("Recharge Parameter Check Failure {}, Parameter {}", request, parameterCheck.getClass().getName());
             throw new RuntimeException(String.format("Missing / Wrong Parameter in Request (%s)", request.getServiceCode()));
         }
 

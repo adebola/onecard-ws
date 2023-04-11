@@ -157,35 +157,43 @@ class AutoRechargeServiceTest {
 
     @Test
     void updateService() {
-        AutoRechargeRequestDto dto = new AutoRechargeRequestDto();
-        List<Integer> days = new ArrayList<>();
+        final String id = "3ad67afe-77e7-11ec-825f-5c5181925b12";
 
-        days.add(1);
-        days.add(2);
-        days.add(4);
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+            log.info(ProviderSecurity.getUserId());
+
+            AutoRechargeRequestDto dto = new AutoRechargeRequestDto();
+            List<Integer> days = new ArrayList<>();
+
+            days.add(1);
+            days.add(2);
+            days.add(4);
 //        days.add(7);
 
-        List<AutoIndividualRequestDto> requests = new ArrayList<>();
+            List<AutoIndividualRequestDto> requests = new ArrayList<>();
 
-        AutoIndividualRequestDto individualRequest = new AutoIndividualRequestDto();
-        individualRequest.setServiceCost(new BigDecimal(100));
-        individualRequest.setRecipient("08188111333");
-        individualRequest.setServiceCode("9MOBILE-AIRTIME");
-        requests.add(individualRequest);
+            AutoIndividualRequestDto individualRequest = new AutoIndividualRequestDto();
+            individualRequest.setServiceCost(new BigDecimal(100));
+            individualRequest.setRecipient("08188111333");
+            individualRequest.setServiceCode("9MOBILE-AIRTIME");
+            requests.add(individualRequest);
 
-        AutoIndividualRequestDto individualRequest2 = new AutoIndividualRequestDto();
-        individualRequest2.setServiceCost(new BigDecimal(155));
-        individualRequest2.setRecipient("08055572307");
-        individualRequest2.setServiceCode("GLO-AIRTIME");
-        requests.add(individualRequest2);
+            AutoIndividualRequestDto individualRequest2 = new AutoIndividualRequestDto();
+            individualRequest2.setServiceCost(new BigDecimal(155));
+            individualRequest2.setRecipient("08055572307");
+            individualRequest2.setServiceCode("GLO-AIRTIME");
+            requests.add(individualRequest2);
 
-        dto.setStartDate(new Date());
-        dto.setPaymentMode("wallet");
-        dto.setTitle("NewTitle");
-        dto.setDaysOfWeek(days);
-        dto.setRecipients(requests);
+            dto.setStartDate(new Date());
+            dto.setPaymentMode("wallet");
+            dto.setTitle("NewTitle");
+            dto.setDaysOfWeek(days);
+            dto.setRecipients(requests);
 
-        autoRechargeService.updateService("2c8ce5e7-f350-4e7c-a5ff-4dba62ba5e50", dto);
+            autoRechargeService.updateService("2c8ce5e7-f350-4e7c-a5ff-4dba62ba5e50", dto);
+        }
     }
 
 

@@ -9,6 +9,7 @@ import java.util.Map;
 public class ProviderSecurity {
     private static final String SYSTEM_NAME = "anonymous";
     private static final String SYSTEM_EMAIL = "anonymous@factorialsystems.io";
+    private static final String SYSTEM_ID = "00000000-0000-0000-0000-000000000000";
 
     private static Map<String, Object> getClaims () {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

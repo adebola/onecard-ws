@@ -28,9 +28,9 @@ public class PaymentModeHelper {
                     .orElseThrow(() -> new RuntimeException(String.format("Invalid PaymentMode String (%s)", paymentMode)));
 
             // Specified Wallet but Not Logged In
-            if (paymentMode.equals(Constants.WALLET_PAY_MODE) && userId == null) {
-                throw new RuntimeException("You must be logged In to do a Wallet purchase, please login or choose and alternate payment method");
-            }
+//            if (paymentMode.equals(Constants.WALLET_PAY_MODE) && userId == null) {
+//                throw new RuntimeException("You must be logged In to do a Wallet purchase, please login or choose and alternate payment method");
+//            }
         }
 
         return finalMode;

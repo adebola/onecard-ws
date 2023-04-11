@@ -130,6 +130,21 @@ public class AutoRechargeService {
 
     @Transactional
     public void updateService(String id, AutoRechargeRequestDto dto) {
+        // Does the User own the AutoRecharge
+        AutoRechargeRequest currentRequest = autoRechargeMapper.findAutoRechargeById(id);
+
+        if (currentRequest == null) {;
+            log.error("AutoRecharge updateService Invalid recharge id {} Not Found", id);
+            throw new ResourceNotFoundException("AutoRechargeRequest", "id", id);
+        }
+
+        if (!currentRequest.getUserId().equals(ProviderSecurity.getUserId())) {
+            final String errorMessage =
+                    String.format("AutoRecharge updateService recharge request %s does not belong to user %s, it belongs to %s",
+                            id, ProviderSecurity.getUserId(), currentRequest.getUserId());
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
 
         // Convert AutoRechargeRequest to dto and set id
         AutoRechargeRequest request = autoRechargeMapstructMapper.dtoToRequest(dto);
@@ -188,7 +203,7 @@ public class AutoRechargeService {
                     );
         });
 
-        // Re-Enable days in Period in the database
+        // Re-Enable disabled days in Period in the database
         if (!enableQueue.isEmpty()) {
             List<AutoRecurringEvent> updateEvents = enableQueue.stream()
                     .distinct()

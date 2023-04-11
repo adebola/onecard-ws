@@ -81,6 +81,7 @@ public class NewBulkRechargeService {
     private final NewBulkRechargeMapstructMapper mapper;
     private final BulkRechargeMapper newBulkRechargeMapper;
 
+    @Transactional
     public void uploadRecharge(MultipartFile file) {
         log.info("Bulk recharge via File upload");
 
@@ -101,7 +102,7 @@ public class NewBulkRechargeService {
 
     @SneakyThrows
     @Transactional
-    public NewBulkRechargeResponseDto saveService(NewBulkRechargeRequestDto dto, Optional<String> userId) {
+    public NewBulkRechargeResponseDto saveService(NewBulkRechargeRequestDto dto, Optional<String> alternateUserId) {
 
         if (dto.getRecipients() == null || dto.getRecipients().isEmpty()) {
             final String errorMessage = "No Recipients specified, nothing todo";
@@ -113,17 +114,26 @@ public class NewBulkRechargeService {
                     .build();
         }
 
-        NewBulkRechargeRequest request = mapper.rechargeDtoToRecharge(dto);
+        NewBulkRechargeRequest request = mapper.rechargeDtoToRecharge(dto);;
 
         // Auto Recharges will send their UserId, others will not and expect it to be filled by
         // Mapstruct Mapper, in particular NewBulkRechargeMapstructMapperDecorator, it gets the UserId
-        // from the Security Context
-        userId.ifPresent(request::setUserId);
+        // from the Security Context, AutoRecharges running in future after persistence need this functionality
+        // Similar functionality should be duplicated to SingleRechargeService, but it is not needed for now
+        // as all AutoRecharges are fulfilled as BulkRecharges
+        // Had to relax checks in PaymentModeHelper::checkPaymentMode which throws an exception when wallet payments
+        // do not have a userId in the Security Context, this has now been cautiously relaxed and the remedies have been made
+        // to NewBulkRechargeService (this class) and NewScheduledRechargeService where the class is used.
+        if (alternateUserId.isPresent() && request.getUserId() != null) {
+            final String errMsg = String.format("Alternate UserId %s and request UserId %s found in Request, only 1 should be present", alternateUserId.get(), request.getUserId());
+            log.error(errMsg);
+            throw new RuntimeException(errMsg);
+        } else alternateUserId.ifPresent(request::setUserId);
 
-        PaymentRequestDto requestDto = helper.initializePayment(request);
+        PaymentRequestDto requestDto = helper.initializePayment(request, alternateUserId);
 
         if (requestDto.getPaymentMode().equals(Constants.WALLET_PAY_MODE) && requestDto.getStatus() != 200) {
-            log.error("Bulk Recharge Payment Failure  status {}", requestDto);
+            log.error("Bulk Recharge Payment Failure  for user {}, status {}", ProviderSecurity.getUserName(), requestDto);
             //throw new RuntimeException(String.format("Payment Failure reason %s", requestDto.getMessage()));
 
             return NewBulkRechargeResponseDto.builder()

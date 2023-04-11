@@ -7,6 +7,8 @@ import io.factorialsystems.msscprovider.domain.report.RechargeReportRequest;
 import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
+import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.NewBulkRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
 import io.factorialsystems.msscprovider.recharge.Recharge;
@@ -32,6 +34,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -215,6 +218,7 @@ class BulkRechargeServiceTest {
     @Test
     void saveService() {
 
+
 //        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
 //        final String accessToken = getUserToken(id);
 //
@@ -253,6 +257,30 @@ class BulkRechargeServiceTest {
 ////            var x = service.saveService(dto);
 ////            log.info(x);
 //        }
+    }
+
+    @Test
+    void saveService_for_AutoRecharge() {
+        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+
+        IndividualRequestDto individualRequestDto1 = new IndividualRequestDto();
+        individualRequestDto1.setServiceCode("MTN-AIRTIME");
+        individualRequestDto1.setRecipient("08033356709");
+        individualRequestDto1.setServiceCost(BigDecimal.valueOf(2000));
+
+        IndividualRequestDto individualRequestDto2 = new IndividualRequestDto();
+        individualRequestDto2.setServiceCode("GLO-AIRTIME");
+        individualRequestDto2.setRecipient("08055572307");
+        individualRequestDto2.setServiceCost(BigDecimal.valueOf(1000));
+
+        List<IndividualRequestDto> requestDtos = new ArrayList<>(Arrays. asList(individualRequestDto1, individualRequestDto2));
+
+        NewBulkRechargeRequestDto requestDto = new NewBulkRechargeRequestDto();
+        requestDto.setRecipients(requestDtos);
+        requestDto.setAutoRequestId(id);
+        requestDto.setPaymentMode("wallet");
+
+        //service.saveService(requestDto, Optional.of(id));
     }
 
     @Test

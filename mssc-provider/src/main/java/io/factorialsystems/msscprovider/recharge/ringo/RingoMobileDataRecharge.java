@@ -36,6 +36,8 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
     private final RingoProperties ringoProperties;
     private final RingoSpectranetRecharge spectranetRecharge;
 
+    private static HttpHeaders headers = null;
+
     @Override
     public RechargeStatus recharge(SingleRechargeRequest request) {
 
@@ -128,10 +130,13 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
     }
 
     private HttpHeaders getHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add(Constants.HEADER_EMAIL, ringoProperties.getMail());
-        headers.add(Constants.HEADER_PASSWORD, ringoProperties.getPassword());
+
+        if (headers == null) {
+            headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.add(Constants.HEADER_EMAIL, ringoProperties.getMail());
+            headers.add(Constants.HEADER_PASSWORD, ringoProperties.getPassword());
+        }
 
         return headers;
     }

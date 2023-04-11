@@ -2,21 +2,28 @@ package io.factorialsystems.msscprovider.service.model;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
+import io.factorialsystems.msscprovider.security.Keycloak;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
+import io.factorialsystems.msscprovider.security.RestTemplateInterceptorWithToken;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
+
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ServiceHelper {
+    private final Keycloak keycloak;
 
     @Value("${api.local.host.baseurl}")
     private String baseLocalUrl;
 
-    public PaymentRequestDto initializePayment(NewBulkRechargeRequest request) {
+    public PaymentRequestDto initializePayment(NewBulkRechargeRequest request, Optional<String> alternateUserId) {
 
         PaymentRequestDto dto = PaymentRequestDto.builder()
                 .amount(request.getTotalServiceCost())
@@ -24,13 +31,15 @@ public class ServiceHelper {
                 .paymentMode(request.getPaymentMode())
                 .build();
 
-        String uri;
         RestTemplate restTemplate = new RestTemplate();
+        String uri = "api/v1/payment";
 
-        if (ProviderSecurity.getUserId() == null) { // Anonymous Login
+        if (alternateUserId.isPresent()) { // Request From Async Request noLogin
+            final String token = keycloak.getUserToken(request.getUserId());
+            restTemplate.getInterceptors().add(new RestTemplateInterceptorWithToken(token));
+        } else if (ProviderSecurity.getUserId() == null) { // Anonymous Login
             uri = "api/v1/pay";
         } else {
-            uri = "api/v1/payment";
             restTemplate.getInterceptors().add(new RestTemplateInterceptor());
         }
 

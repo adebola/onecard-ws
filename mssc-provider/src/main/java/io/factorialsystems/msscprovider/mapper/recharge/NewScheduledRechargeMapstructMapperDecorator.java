@@ -44,7 +44,13 @@ public class NewScheduledRechargeMapstructMapperDecorator implements NewSchedule
         NewScheduledRechargeRequest request = mapstructMapper.rechargeDtoToRecharge(dto);
         request.setUserId(ProviderSecurity.getUserId());
         request.setUserEmail(ProviderSecurity.getEmail());
-        request.setPaymentMode(paymentModeHelper.checkPaymentMode(dto.getPaymentMode()));
+        String paymentMode = paymentModeHelper.checkPaymentMode(dto.getPaymentMode());
+
+        if (paymentMode.equals(Constants.WALLET_PAY_MODE) && request.getUserId() == null) {
+            throw new RuntimeException("You must be logged In to do a Scheduled recharge wallet purchase, please login or choose and alternate payment method");
+        }
+
+        request.setPaymentMode(paymentMode);
 
         // RequestType 'single' or 'bulk'
         if (dto.getRechargeType().equals(Constants.SINGLE_RECHARGE)) {
