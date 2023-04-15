@@ -22,4 +22,5 @@ public class Account {
     private Date createdDate;
     private String createdBy;
     private String chargeAccountId;
+    private String webHook;
 }

@@ -12,10 +12,11 @@
         <result column="createdAt" property="createdDate" jdbcType="TIMESTAMP"/>
         <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
         <result column="charge_account" property="chargeAccountId" jdbcType="VARCHAR"/>
+        <result column="web_hook" property="webHook" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Column_List">
-        id, name, balance, user_id, account_type, activated, createdAt, createdBy, charge_account
+        id, name, balance, user_id, account_type, activated, createdAt, createdBy, charge_account, web_hook
     </sql>
 
     <select id="findAccounts" resultMap="accountResultMap">
@@ -36,6 +37,14 @@
         <include refid="Column_List"/>
         from accounts
         where user_id = #{id} and account_type = 1
+    </select>
+
+    <select id="findAccountByUserIdOrUserName" parameterType="java.lang.String" resultMap="accountResultMap">
+        select
+        <include refid="Column_List"/>
+        from accounts
+        where user_id = #{id} or name = #{id}
+        and account_type = 1
     </select>
 
     <select id="findAnonymousAccount"  resultMap="accountResultMap">

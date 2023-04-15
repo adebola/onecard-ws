@@ -13,7 +13,6 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountDto {
-
     @Null(message = "Account Id cannot be set it is generated")
     private String id;
 

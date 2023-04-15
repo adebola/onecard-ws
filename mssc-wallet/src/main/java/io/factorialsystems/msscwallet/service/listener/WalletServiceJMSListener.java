@@ -10,20 +10,18 @@ import io.factorialsystems.msscwallet.domain.Transaction;
 import io.factorialsystems.msscwallet.domain.User;
 import io.factorialsystems.msscwallet.domain.UserWallet;
 import io.factorialsystems.msscwallet.dto.*;
+import io.factorialsystems.msscwallet.external.client.ProviderClient;
 import io.factorialsystems.msscwallet.service.AccountService;
 import io.factorialsystems.msscwallet.service.MailService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -33,14 +31,14 @@ public class WalletServiceJMSListener {
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
-    private final RestTemplate restTemplate;
+//    private final RestTemplate restTemplate;
     private final AccountMapper accountMapper;
     private final MailService mailService;
     private final TransactionMapper transactionMapper;
+    private final ProviderClient providerClient;
 
-    @Value("${api.host.baseurl}")
-    private String baseUrl;
-
+//    @Value("${api.host.baseurl}")
+//    private String baseUrl;
 
     public static final String WALLET_REFUND_QUEUE = "wallet-refund-queue";
 
@@ -103,16 +101,19 @@ public class WalletServiceJMSListener {
             int serviceId = 0;
 
             if (dto.getServiceId() != null) {
-                Optional<ServiceActionDto> actionDto
-                        = Optional.ofNullable(restTemplate.getForObject(baseUrl + "api/v1/serviceprovider/service/" + dto.getServiceId(), ServiceActionDto.class));
 
-                if (actionDto.isEmpty()) {
+                ServiceActionDto actionDto = providerClient.getService(dto.getServiceId());
+
+//                Optional<ServiceActionDto> actionDto
+//                        = Optional.ofNullable(restTemplate.getForObject(baseUrl + "api/v1/serviceprovider/service/" + dto.getServiceId(), ServiceActionDto.class));
+
+                if (actionDto == null) {
                     final String message = "Error Retrieving Service Action for Service Id " + dto.getServiceId();
                     log.error(message);
                    return;
                 }
 
-                action = actionDto.get().getServiceName();
+                action = actionDto.getServiceName();
                 serviceId = dto.getServiceId();
             } else {
                 action = "Bulk Recharge";

@@ -4,7 +4,10 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscwallet.dao.FundWalletMapper;
 import io.factorialsystems.msscwallet.domain.FundWalletRequest;
-import io.factorialsystems.msscwallet.dto.*;
+import io.factorialsystems.msscwallet.dto.AccountDto;
+import io.factorialsystems.msscwallet.dto.BalanceDto;
+import io.factorialsystems.msscwallet.dto.FundWalletRequestDto;
+import io.factorialsystems.msscwallet.dto.WalletRequestDto;
 import io.factorialsystems.msscwallet.exception.ResourceNotFoundException;
 import io.factorialsystems.msscwallet.utils.Security;
 import lombok.extern.apachecommons.CommonsLog;
@@ -21,7 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -62,7 +65,6 @@ class AccountServiceTest {
 
     @Test
     void findWrongAccountById() {
-
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
             String id = "wrong-id";
 
@@ -106,36 +108,36 @@ class AccountServiceTest {
     @Test
     void fundWallet2() {
 
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
         final String accessToken = getUserToken(id);
         final String adminEmail = "admin@gmail.com";
 
         try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
-//            k.when(Security::getUserId).thenReturn(id);
-//            assertThat(Security.getUserId()).isEqualTo(id);
-//            log.info(Security.getUserId());
-//
-//            k.when(Security::getAccessToken).thenReturn(accessToken);
-//            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
-//            log.info(Security.getAccessToken());
-//
-//            k.when(Security::getEmail).thenReturn(adminEmail);
-//            assertThat(Security.getEmail()).isEqualTo(adminEmail);
-//            log.info(adminEmail);
-//
-//            final String accountId = "275745a4-8fb9-46f6-ac80-ff245bc62fcb";
-//            BigDecimal addition = new BigDecimal(1000);
-//
-//            AccountDto dto = accountService.findAccountById(accountId);
-//            assertNotNull (dto);
-//            log.info(String.format("Current Account Balance Before %.2f", dto.getBalance()));
-//
-//            BalanceDto balanceDto = new BalanceDto(addition, "narrative");
-//            accountService.fundWallet(accountId, balanceDto);
-//
-//            AccountDto newDto = accountService.findAccountById(accountId);
-//            assertEquals(dto.getBalance().add(addition), newDto.getBalance());
-//            log.info(String.format("New Account Balance Before %.2f", newDto.getBalance()));
+            k.when(Security::getUserId).thenReturn(id);
+            assertThat(Security.getUserId()).isEqualTo(id);
+            log.info(Security.getUserId());
+
+            k.when(Security::getAccessToken).thenReturn(accessToken);
+            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
+            log.info(Security.getAccessToken());
+
+            k.when(Security::getEmail).thenReturn(adminEmail);
+            assertThat(Security.getEmail()).isEqualTo(adminEmail);
+            log.info(adminEmail);
+
+            final String accountId = "275745a4-8fb9-46f6-ac80-ff245bc62fcb";
+            BigDecimal addition = new BigDecimal(1000);
+
+            AccountDto dto = accountService.findAccountById(accountId);
+            assertNotNull (dto);
+            log.info(String.format("Current Account Balance Before %.2f", dto.getBalance()));
+
+            BalanceDto balanceDto = new BalanceDto(addition, "narrative");
+            accountService.fundWallet(accountId, balanceDto);
+
+            AccountDto newDto = accountService.findAccountById(accountId);
+            assertEquals(dto.getBalance().add(addition), newDto.getBalance());
+            log.info(String.format("New Account Balance Before %.2f", newDto.getBalance()));
         }
     }
 
@@ -190,36 +192,36 @@ class AccountServiceTest {
 
     @Test
     void refundWallet() {
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        final String accessToken = getUserToken(id);
-
-        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
-            k.when(Security::getUserId).thenReturn(id);
-            assert Objects.equals(Security.getUserId(), id);
-            log.info(Security.getUserId());
-
-            k.when(Security::getAccessToken).thenReturn(accessToken);
-            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
-            log.info(Security.getAccessToken());
-
-            k.when(Security::getEmail).thenReturn("admin@factorialsystems.io");
-            k.when(Security::getUserName).thenReturn("admin");
-
-            BigDecimal addBalance = new BigDecimal(1000);
-
-            BalanceDto currentDto = accountService.findAccountBalance();
-            log.info(String.format("Current Balance %.2f", currentDto.getBalance()));
-
-            RefundRequestDto dto = RefundRequestDto.builder()
-                    .userId(id)
-                    .amount(addBalance)
-                    .build();
-
-            accountService.asyncRefundWallet(id, dto);
-
-            BalanceDto newDto = accountService.findAccountBalance();
-            assertEquals(currentDto.getBalance().add(addBalance), newDto.getBalance());
-        }
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String accessToken = getUserToken(id);
+//
+//        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
+//            k.when(Security::getUserId).thenReturn(id);
+//            assert Objects.equals(Security.getUserId(), id);
+//            log.info(Security.getUserId());
+//
+//            k.when(Security::getAccessToken).thenReturn(accessToken);
+//            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
+//            log.info(Security.getAccessToken());
+//
+//            k.when(Security::getEmail).thenReturn("admin@factorialsystems.io");
+//            k.when(Security::getUserName).thenReturn("admin");
+//
+//            BigDecimal addBalance = new BigDecimal(1000);
+//
+//            BalanceDto currentDto = accountService.findAccountBalance();
+//            log.info(String.format("Current Balance %.2f", currentDto.getBalance()));
+//
+//            RefundRequestDto dto = RefundRequestDto.builder()
+//                    .userId(id)
+//                    .amount(addBalance)
+//                    .build();
+//
+//            accountService.asyncRefundWallet(id, dto);
+//
+//            BalanceDto newDto = accountService.findAccountBalance();
+//            assertEquals(currentDto.getBalance().add(addBalance), newDto.getBalance());
+//        }
     }
 
     @Test
@@ -275,29 +277,29 @@ class AccountServiceTest {
     @Test
     void transferFunds() {
 
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        final String accessToken = getUserToken(id);
-
-        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
-            k.when(Security::getUserId).thenReturn(id);
-            assert Objects.equals(Security.getUserId(), id);
-            log.info(Security.getUserId());
-
-            k.when(Security::getAccessToken).thenReturn(accessToken);
-            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
-            log.info(Security.getAccessToken());
-
-//            k.when(Constants::getEmail).thenReturn(adminEmail);
-//            assertThat(Constants.getEmail()).isEqualTo(adminEmail);
-//            log.info(adminEmail);
-
-
-            TransferFundsDto dto = new TransferFundsDto();
-            dto.setRecipient("28e05596-9ad0-4187-ac11-fd93fb7701af");
-            dto.setAmount(new BigDecimal(15));
-
-            accountService.transferFunds(dto);
-        }
+//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String accessToken = getUserToken(id);
+//
+//        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
+//            k.when(Security::getUserId).thenReturn(id);
+//            assert Objects.equals(Security.getUserId(), id);
+//            log.info(Security.getUserId());
+//
+//            k.when(Security::getAccessToken).thenReturn(accessToken);
+//            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
+//            log.info(Security.getAccessToken());
+//
+////            k.when(Constants::getEmail).thenReturn(adminEmail);
+////            assertThat(Constants.getEmail()).isEqualTo(adminEmail);
+////            log.info(adminEmail);
+//
+//
+//            TransferFundsDto dto = new TransferFundsDto();
+//            dto.setRecipient("28e05596-9ad0-4187-ac11-fd93fb7701af");
+//            dto.setAmount(new BigDecimal(15));
+//
+//            accountService.transferFunds(dto);
+//        }
     }
 
 

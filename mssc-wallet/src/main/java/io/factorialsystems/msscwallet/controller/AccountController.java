@@ -53,7 +53,7 @@ public class AccountController {
     @PutMapping("/refund/{id}")
     @PreAuthorize("hasRole('Onecard_Admin')")
     public ResponseEntity<RefundResponseDto> refundWallet(@PathVariable("id") String id, @Valid @RequestBody RefundRequestDto refundRequestDto) {
-        return new ResponseEntity<>(accountService.asyncRefundWallet(id, refundRequestDto), HttpStatus.OK);
+        return new ResponseEntity<>(accountService.refundWallet(id, refundRequestDto), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

@@ -13,15 +13,19 @@ import io.factorialsystems.msscwallet.domain.FundWalletRequest;
 import io.factorialsystems.msscwallet.domain.Transaction;
 import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.exception.ResourceNotFoundException;
+import io.factorialsystems.msscwallet.external.client.PaymentClient;
+import io.factorialsystems.msscwallet.external.client.UserClient;
 import io.factorialsystems.msscwallet.mapper.AccountMapstructMapper;
 import io.factorialsystems.msscwallet.mapper.FundWalletMapstructMapper;
-import io.factorialsystems.msscwallet.security.RestTemplateInterceptor;
 import io.factorialsystems.msscwallet.utils.Constants;
 import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,17 +39,16 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
+    private final UserClient userClient;
     private final JmsTemplate jmsTemplate;
     private final MailService mailService;
     private final AuditService auditService;
     private final ObjectMapper objectMapper;
+    private final PaymentClient paymentClient;
     private final AccountMapper accountMapper;
     private final FundWalletMapper fundWalletMapper;
     private final AccountMapstructMapper accountMapstructMapper;
     private final FundWalletMapstructMapper fundWalletMapstructMapper;
-
-    @Value("${api.host.baseurl}")
-    private String baseLocalUrl;
 
     public PagedDto<AccountDto> findAccounts(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
@@ -116,20 +119,32 @@ public class AccountService {
                 .redirectUrl(request.getRedirectUrl())
                 .build();
 
-        RestTemplate restTemplate = new RestTemplate();
-
-        String url = null;
+        PaymentRequestDto newDto = null;
 
         if (Security.getUserId() == null) {
-            url = baseLocalUrl + "api/v1/pay";
+            newDto = paymentClient.initializePayment(paymentRequest);
         } else {
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-            url = baseLocalUrl + "api/v1/payment";
+            newDto = paymentClient.makePayment(paymentRequest);
         }
 
-        PaymentRequestDto newDto =
-                Optional.ofNullable(restTemplate.postForObject(url, paymentRequest, PaymentRequestDto.class))
-                        .orElseThrow(() -> new RuntimeException("Error Initializing Payment Engine in Wallet Topup"));
+        if (newDto == null) {
+            throw new RuntimeException("Error Initializing Payment Engine in Wallet Topup");
+        }
+
+//        RestTemplate restTemplate = new RestTemplate();
+//
+//        String url = null;
+//
+//        if (Security.getUserId() == null) {
+//            url = baseUrl + "api/v1/pay";
+//        } else {
+//            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+//            url = baseUrl + "api/v1/payment";
+//        }
+//
+//        PaymentRequestDto newDto =
+//                Optional.ofNullable(restTemplate.postForObject(url, paymentRequest, PaymentRequestDto.class))
+//                        .orElseThrow(() -> new RuntimeException("Error Initializing Payment Engine in Wallet Topup"));
 
         request.setPaymentId(newDto.getId());
         request.setAuthorizationUrl(newDto.getAuthorizationUrl());
@@ -212,7 +227,7 @@ public class AccountService {
 
     @Transactional
     public WalletResponseDto transferFunds(TransferFundsDto dto) {
-        Account toAccount = Optional.ofNullable(accountMapper.findAccountByUserId(dto.getRecipient()))
+        Account toAccount = Optional.ofNullable(accountMapper.findAccountByUserIdOrUserName(dto.getRecipient()))
                 .orElseThrow(() -> new ResourceNotFoundException("To Account", "id", dto.getRecipient()));
 
         Account fromAccount = Optional.ofNullable(accountMapper.findAccountByUserId(Security.getUserId()))
@@ -220,16 +235,29 @@ public class AccountService {
 
         if (fromAccount.getBalance().compareTo(dto.getAmount()) > 0) {
             // Load Accounts from User Module
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
 
-            SimpleUserDto toSimpleDto =
-                    Optional.ofNullable(restTemplate.getForObject(baseLocalUrl + "/api/v1/user/simple/" + toAccount.getUserId(), SimpleUserDto.class))
-                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", toAccount.getUserId()));
+            SimpleUserDto toSimpleDto = userClient.getUserById(toAccount.getUserId());
 
-            SimpleUserDto fromSimpleDto =
-                    Optional.ofNullable(restTemplate.getForObject(baseLocalUrl + "/api/v1/user/simple/" + fromAccount.getUserId(), SimpleUserDto.class))
-                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", fromAccount.getUserId()));
+            if (toSimpleDto == null) {
+                throw new ResourceNotFoundException("SimpleUserDto", "id", toAccount.getUserId());
+            }
+
+            SimpleUserDto fromSimpleDto = userClient.getUserById(fromAccount.getUserId());
+
+            if (fromSimpleDto == null) {
+                throw new ResourceNotFoundException("SimpleUserDto", "id", fromAccount.getUserId());
+            }
+
+//            RestTemplate restTemplate = new RestTemplate();
+//            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+
+//            SimpleUserDto toSimpleDto =
+//                    Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + toAccount.getUserId(), SimpleUserDto.class))
+//                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", toAccount.getUserId()));
+//
+//            SimpleUserDto fromSimpleDto =
+//                    Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + fromAccount.getUserId(), SimpleUserDto.class))
+//                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", fromAccount.getUserId()));
 
             BigDecimal newFromBalance = fromAccount.getBalance().subtract(dto.getAmount());
             BigDecimal newToBalance = toAccount.getBalance().add(dto.getAmount());
@@ -283,6 +311,8 @@ public class AccountService {
         }
     }
 
+    // Refund Wallet request sent via JMS for Automatic Refunds when a Recharge Fails and the Money
+    // already been taken
     @SneakyThrows
     @Transactional
     public void asyncRefundWallet(AsyncRefundRequestDto request) {
@@ -323,10 +353,13 @@ public class AccountService {
         jmsTemplate.convertAndSend(JMSConfig.WALLET_REFUND_RESPONSE_QUEUE_USER, buffer);
         jmsTemplate.convertAndSend(JMSConfig.WALLET_REFUND_RESPONSE_QUEUE_PAYMENT, buffer);
         jmsTemplate.convertAndSend(JMSConfig.WALLET_REFUND_RESPONSE_QUEUE_PROVIDER, buffer);
+
+        if (account.getWebHook() != null) invokeRefundNotification(account, request.getAmount());
     }
 
+    // Admin initiated manual Wallet refund request
     @Transactional
-    public RefundResponseDto asyncRefundWallet(String id, RefundRequestDto dto) {
+    public RefundResponseDto refundWallet(String id, RefundRequestDto dto) {
         Account account = Optional.ofNullable(accountMapper.findAccountByUserId(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
 
@@ -344,12 +377,18 @@ public class AccountService {
         final String refundWalletId = saveFundWalletRequest(dto.getAmount(), Constants.WALLET_ONECARD_REFUNDED, id,
                 Security.getUserName(), String.format("Wallet Refunded By %s", Security.getUserName()));
 
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+//        RestTemplate restTemplate = new RestTemplate();
+//        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+//
+//        SimpleUserDto simpleUserDto =
+//                Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + id, SimpleUserDto.class))
+//                        .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", id));
 
-        SimpleUserDto simpleUserDto =
-                Optional.ofNullable(restTemplate.getForObject(baseLocalUrl + "/api/v1/user/simple/" + id, SimpleUserDto.class))
-                        .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", id));
+        SimpleUserDto simpleUserDto = userClient.getUserById(id);
+
+        if (simpleUserDto == null) {
+            throw new ResourceNotFoundException("SimpleUserDto", "id", id);
+        }
 
         final String message = String.format("Dear %s %s\n\nYour account has been refunded with %.2f by Onecard Admin. Your new balance is %.2f",
                 simpleUserDto.getFirstName(), simpleUserDto.getLastName(), dto.getAmount(), newBalance);
@@ -361,6 +400,8 @@ public class AccountService {
                 .build();
 
         mailService.pushMailMessage(mailMessageDto);
+
+        if (account.getWebHook() != null) invokeRefundNotification(account, dto.getAmount());
 
         return RefundResponseDto.builder()
                 .status(200)
@@ -383,10 +424,12 @@ public class AccountService {
         SimpleUserDto simpleUserDto = null;
 
         if (account.getAccountType() == 1) {
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-            simpleUserDto =
-                    restTemplate.getForObject(baseLocalUrl + "/api/v1/user/simple/" + account.getUserId(), SimpleUserDto.class);
+//            RestTemplate restTemplate = new RestTemplate();
+//            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+//            simpleUserDto =
+//                    restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + account.getUserId(), SimpleUserDto.class);
+
+            simpleUserDto = userClient.getUserById(account.getUserId());
 
             if (simpleUserDto == null) {
                 final String errorMessage = String.format("Unable to retrieve User For Account %s", account.getId());
@@ -449,6 +492,7 @@ public class AccountService {
     @Transactional
     public WalletResponseDto chargeAccount(WalletRequestDto dto) {
         final String userId = Security.getUserId();
+
         final String message = String.format("Charging %.2f to User %s", dto.getAmount(), userId);
 
         log.info(message);
@@ -480,32 +524,10 @@ public class AccountService {
                 .build();
     }
 
-    private Account getActiveUserAccount(String id) {
-        log.info("Getting Active User Account For User : " + id);
-
-        Account account = accountMapper.findAccountByUserId(id);
-        if (account == null) return null;
-
-        if (account.getChargeAccountId() == null) {
-            return account;
-        } else {
-            return accountMapper.findAccountById(account.getChargeAccountId());
-        }
-    }
-
     public PagedDto<FundWalletRequestDto> findWalletFunding(String userId, Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<FundWalletRequest> requests = fundWalletMapper.findByUserId(userId);
         return createFundDto(requests);
-    }
-
-
-    private Boolean checkPayment(String id) {
-        RestTemplate restTemplate = new RestTemplate();
-        PaymentRequestDto dto
-                = restTemplate.getForObject(baseLocalUrl + "api/v1/pay/" + id, PaymentRequestDto.class);
-
-        return dto != null ? dto.getVerified() : false;
     }
 
     public static String saveFundWalletRequest(BigDecimal amount, Integer fundType, String userId,
@@ -532,6 +554,62 @@ public class AccountService {
         return id;
     }
 
+    public static void saveTransaction(BigDecimal amount, String accountId, String narrative) {
+        Transaction transaction = Transaction.builder()
+                .accountId(accountId)
+                .recipient(accountId)
+                .serviceId(100)
+                .serviceName(narrative)
+                .txAmount(amount)
+                .requestId("NOT APPLICABLE")
+                .build();
+
+        ApplicationContextProvider.getBean(TransactionMapper.class).save(transaction);
+    }
+
+    private void invokeRefundNotification(Account account, BigDecimal amount) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            WebHookDto dto = WebHookDto.builder()
+                    .id(account.getId())
+                    .amount(amount)
+                    .narrative("Recharge failed and has been refunded")
+                    .build();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(dto), headers);
+            restTemplate.exchange(account.getWebHook(), HttpMethod.POST, request, Void.class);
+        } catch(Exception ex) {
+            log.error("Exception running hook for Account {}", account.getId());
+            log.error(ex.getMessage());
+        }
+    }
+
+    private Account getActiveUserAccount(String id) {
+        log.info("Getting Active User Account For User : " + id);
+
+        Account account = accountMapper.findAccountByUserId(id);
+        if (account == null) return null;
+
+        if (account.getChargeAccountId() == null) {
+            return account;
+        } else {
+            return accountMapper.findAccountById(account.getChargeAccountId());
+        }
+    }
+
+    private Boolean checkPayment(String id) {
+//        RestTemplate restTemplate = new RestTemplate();
+//        PaymentRequestDto dto
+//                = restTemplate.getForObject(baseUrl + "api/v1/pay/" + id, PaymentRequestDto.class);
+
+        PaymentRequestDto dto = paymentClient.checkPayment(id);
+        return dto != null ? dto.getVerified() : false;
+    }
+
+
     private PagedDto<FundWalletRequestDto> createFundDto(Page<FundWalletRequest> requests) {
         PagedDto<FundWalletRequestDto> pagedDto = new PagedDto<>();
         pagedDto.setTotalSize((int) requests.getTotal());
@@ -550,18 +628,5 @@ public class AccountService {
         pagedDto.setPages(accounts.getPages());
         pagedDto.setList(accountMapstructMapper.listAccountToAccountDto(accounts.getResult()));
         return pagedDto;
-    }
-
-    public static void saveTransaction(BigDecimal amount, String accountId, String narrative) {
-        Transaction transaction = Transaction.builder()
-                .accountId(accountId)
-                .recipient(accountId)
-                .serviceId(100)
-                .serviceName(narrative)
-                .txAmount(amount)
-                .requestId("NOT APPLICABLE")
-                .build();
-
-        ApplicationContextProvider.getBean(TransactionMapper.class).save(transaction);
     }
 }

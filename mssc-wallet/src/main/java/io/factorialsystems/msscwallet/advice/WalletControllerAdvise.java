@@ -1,6 +1,7 @@
 package io.factorialsystems.msscwallet.advice;
 
 import io.factorialsystems.msscwallet.dto.MessageDto;
+import io.factorialsystems.msscwallet.exception.FeignCustomException;
 import io.factorialsystems.msscwallet.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,5 +22,10 @@ public class WalletControllerAdvise {
     public ResponseEntity<MessageDto> handleResourceNotFoundException(ResourceNotFoundException exception) {
         log.error(exception.getMessage(), exception);
         return new ResponseEntity<>(new MessageDto(exception.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(FeignCustomException.class)
+    public ResponseEntity<MessageDto> handleFeignCustomException(FeignCustomException fce) {
+        return new ResponseEntity<>(new MessageDto(fce.getMessage()), HttpStatus.valueOf(fce.getStatus()));
     }
 }

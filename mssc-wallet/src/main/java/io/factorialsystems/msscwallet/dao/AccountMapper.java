@@ -12,6 +12,7 @@ public interface AccountMapper {
     Page<Account> findAccounts();
     Account findAccountById(String id);
     Account findAccountByUserId(String id);
+    Account findAccountByUserIdOrUserName(String id);
     Account findAccountByCorporateId(String id);
     Account findAccountByProviderId(String id);
     Account findAnonymousAccount();

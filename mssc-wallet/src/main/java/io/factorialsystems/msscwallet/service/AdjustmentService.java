@@ -8,6 +8,7 @@ import io.factorialsystems.msscwallet.dto.AdjustmentRequestDto;
 import io.factorialsystems.msscwallet.dto.AdjustmentResponseDto;
 import io.factorialsystems.msscwallet.dto.MailMessageDto;
 import io.factorialsystems.msscwallet.dto.SimpleUserDto;
+import io.factorialsystems.msscwallet.external.client.UserClient;
 import io.factorialsystems.msscwallet.utils.Constants;
 import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
@@ -16,15 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdjustmentService {
+    private final UserClient userClient;
     private final MailService mailService;
-    private final UserService userService;
     private final AccountMapper accountMapper;
     private final AdjustmentMapper adjustmentMapper;
 
@@ -59,18 +59,17 @@ public class AdjustmentService {
             AccountService.saveFundWalletRequest(delta, Constants.WALLET_ONECARD_ADJUSTED, account.getUserId(),
                     Security.getUserName(), dto.getNarrative());
 
-            Optional<SimpleUserDto> simpleUserDto = userService.getUserById(account.getUserId());
+            SimpleUserDto simpleUserDto = userClient.getUserById(account.getUserId());
 
             // Send the Mail
-            if (simpleUserDto.isPresent()) {
-                SimpleUserDto simpleUser = simpleUserDto.get();
+            if (simpleUserDto != null) {
 
                 final String message = String.format("Dear %s %s\n\nYour account has been adjusted from %.2f to %.2f by Onecard Admin. Please contact Onecard for further enquiries",
-                        simpleUser.getFirstName(), simpleUser.getLastName(), oldBalance, dto.getAmount());
+                        simpleUserDto.getFirstName(), simpleUserDto.getLastName(), oldBalance, dto.getAmount());
 
                 MailMessageDto mailMessageDto = MailMessageDto.builder()
                         .subject("Wallet Adjustment")
-                        .to(simpleUser.getEmail())
+                        .to(simpleUserDto.getEmail())
                         .body(message)
                         .build();
 

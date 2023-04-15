@@ -1,7 +1,7 @@
-package io.factorialsystems.msscwallet.service;
+package io.factorialsystems.msscwallet.external.client;
 
-import io.factorialsystems.msscwallet.dto.AdjustmentRequestDto;
-import io.factorialsystems.msscwallet.dto.AdjustmentResponseDto;
+import io.factorialsystems.msscwallet.dto.MailMessageDto;
+import io.factorialsystems.msscwallet.service.TokenResponseDto;
 import io.factorialsystems.msscwallet.utils.Security;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
@@ -14,48 +14,42 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
 import java.util.Objects;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest
 @CommonsLog
-class AdjustmentServiceTest {
+class MailClientTest {
     final String client_id = "public-client";
     final String realmPassword = "password";
     final String realmUser = "realm-admin";
     final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
 
     @Autowired
-    private AdjustmentService service;
+    private MailClient mailClient;
 
     @Test
-    public void adjustBalance() {
-
+    void sendMailWithoutAttachment() {
         final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
-        final String userName = "debug_test";
         final String accessToken = getUserToken(id);
 
         try (MockedStatic<Security> security  = Mockito.mockStatic(Security.class)) {
             security.when(Security::getUserId).thenReturn(id);
             assert Objects.equals(Security.getUserId(), id);
 
-            security.when(Security::getUserName).thenReturn(userName);
-            assert Objects.equals(Security.getUserName(), userName);
-
             security.when(Security::getAccessToken).thenReturn(accessToken);
             assertThat(Security.getAccessToken()).isEqualTo(accessToken);
             log.info(Security.getAccessToken());
 
-            AdjustmentRequestDto dto = AdjustmentRequestDto.builder()
-                    .accountId("275745a4-8fb9-46f6-ac80-ff245bc62fcb")
-                    .narrative("Jesus Is Lord")
-                    .amount(new BigDecimal(21999))
+            MailMessageDto dto = MailMessageDto.builder()
+                    .body("Jesus Is Lord test")
+                    .to("adeomoboya@gmail.com")
+                    .subject("test")
                     .build();
 
-            AdjustmentResponseDto responseDto = service.adjustBalance(dto);
-            log.info(responseDto);
+            String s = mailClient.sendMailWithoutAttachment(dto);
+            log.info(s);
         }
     }
 
@@ -112,5 +106,4 @@ class AdjustmentServiceTest {
 
         return  token.getAccess_token();
     }
-
 }

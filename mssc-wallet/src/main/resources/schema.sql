@@ -13,6 +13,7 @@ create table accounts (
     deleted_date timestamp,
     deleted_by varchar(64),
     threshold_level decimal(10, 2) NOT NULL DEFAULT 0,
+    web_hook varchar(128),
     FOREIGN KEY (charge_account) REFERENCES accounts(id),
     UNIQUE idx_user_id(user_id),
     PRIMARY KEY (id)

@@ -2,16 +2,14 @@ package io.factorialsystems.msscwallet.tasks;
 
 import io.factorialsystems.msscwallet.dao.AccountMapper;
 import io.factorialsystems.msscwallet.domain.Account;
-import io.factorialsystems.msscwallet.security.RestTemplateInterceptor;
-import io.factorialsystems.msscwallet.dto.LowThresholdNotificationDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,21 +32,20 @@ public class ScheduledTasks {
 
         List<Account> accounts = accountMapper.findLowThresholdAccounts();
 
-        if (!accounts.isEmpty()) {
-            List<String> users = extractCategory(accounts, USER_ACCOUNT);
-
-            if (users.size() > 0) {
-                RestTemplate restTemplate = new RestTemplate();
-                restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-                LowThresholdNotificationDto low = new LowThresholdNotificationDto(users);
-                // restTemplate.postForObject();
-            }
-        }
+//        if (!accounts.isEmpty()) {
+//            List<String> users = extractCategory(accounts, USER_ACCOUNT);
+//
+//            if (users.size() > 0) {
+//                RestTemplate restTemplate = new RestTemplate();
+//                restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+//                LowThresholdNotificationDto low = new LowThresholdNotificationDto(users);
+//            }
+//        }
     }
 
     private List<String> extractCategory(List<Account> accounts, Integer categoryId) {
         return  accounts.stream()
-                .filter(a -> a.getAccountType() == categoryId)
+                .filter(a -> Objects.equals(a.getAccountType(), categoryId))
                 .map(Account::getUserId)
                 .collect(Collectors.toList());
     }
