@@ -2,6 +2,7 @@ package io.factorialsystems.mssccommunication.dto;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.Date;
 
@@ -10,6 +11,7 @@ public class MailMessageDto {
     @Null(message = "Id cannot be set")
     private String id;
 
+    @NotNull(message = "Message to must be set")
     private String to;
 
     @Null(message = "From is set Internally")
