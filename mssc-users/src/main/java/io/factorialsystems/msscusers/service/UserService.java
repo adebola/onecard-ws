@@ -7,6 +7,7 @@ import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.domain.search.SearchUserDto;
 import io.factorialsystems.msscusers.dto.*;
 import io.factorialsystems.msscusers.exceptions.ResourceNotFoundException;
+import io.factorialsystems.msscusers.external.client.CommunicationClient;
 import io.factorialsystems.msscusers.mapper.KeycloakRoleMapper;
 import io.factorialsystems.msscusers.mapper.KeycloakUserMapper;
 import io.factorialsystems.msscusers.mapper.dbtransfer.RoleParameter;
@@ -21,22 +22,11 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -47,12 +37,16 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class UserService {
+    private static final String CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%&";
+    private static final String  MAIL_PROFILE_HEADER = "Dear %s %s\n\nYour Profile has successfully been changed";
+    private static final String MAIL_PASSWORD_CHANGE_HEADER = "Dear %s %s\n\nYou have successfully changed your password";
+    private static final String MAIL_LOGIN_HEADER = "Dear %s %s\\n\\nYou have successfully logged on to your Onecard Recharge Suite.\\n%s\"";
     private final UsersResource usersResource;
     private final RolesResource rolesResource;
     private final KeycloakUserMapper keycloakUserMapper;
     private final KeycloakRoleMapper keycloakRoleMapper;
     private final UserMapper userMapper;
-    private final MailService mailService;
+    private final CommunicationClient communicationClient;
 
     @Value("${keycloak.onecard}")
     private String onecardRealm;
@@ -65,14 +59,14 @@ public class UserService {
 
     @Autowired
     UserService(Keycloak keycloak, KeycloakUserMapper keycloakUserMapper,
-                KeycloakRoleMapper keycloakRoleMapper, UserMapper userMapper, MailService mailService) {
+                KeycloakRoleMapper keycloakRoleMapper, UserMapper userMapper, CommunicationClient communicationClient) {
 
         this.keycloakUserMapper = keycloakUserMapper;
         this.keycloakRoleMapper = keycloakRoleMapper;
         this.usersResource = keycloak.realm("onecard").users();
         this.rolesResource = keycloak.realm("onecard").roles();
         this.userMapper = userMapper;
-        this.mailService = mailService;
+        this.communicationClient = communicationClient;
     }
 
     public PagedDto<KeycloakUserDto> findUsers(Integer pageNumber, Integer pageSize) {
@@ -149,16 +143,16 @@ public class UserService {
                 user.update(representation);
                 userMapper.update(u);
 
-                final String message = String.format("Dear %s %s\n\nYour Profile has successfully been changed",
+                final String message = String.format(MAIL_PROFILE_HEADER,
                         representation.getFirstName(), representation.getLastName());
 
                 MailMessageDto mailMessageDto = MailMessageDto.builder()
                         .subject("User Profile Changed")
-                        .to(u.getEmail())
+                        .to(user.toRepresentation().getEmail())
                         .body(message)
                         .build();
 
-                mailService.sendMailWithOutAttachment(mailMessageDto);
+                communicationClient.sendMailWithoutAttachment(mailMessageDto);
             }
         }
     }
@@ -175,7 +169,7 @@ public class UserService {
             user.resetPassword(credential);
             UserRepresentation userRepresentation = user.toRepresentation();
 
-            final String message = String.format("Dear %s %s\n\nYou have successfully changed your password",
+            final String message = String.format(MAIL_PASSWORD_CHANGE_HEADER,
                     userRepresentation.getFirstName(), userRepresentation.getLastName());
 
             MailMessageDto mailMessageDto = MailMessageDto.builder()
@@ -184,7 +178,7 @@ public class UserService {
                     .body(message)
                     .build();
 
-            mailService.sendMailWithOutAttachment(mailMessageDto);
+            communicationClient.sendMailWithoutAttachment(mailMessageDto);
         }
     }
 
@@ -255,7 +249,7 @@ public class UserService {
 
         final String date = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
 
-        final String message = String.format("Dear %s %s\n\nYou have successfully logged on to your Onecard Recharge Suite.\n%s",
+        final String message = String.format(MAIL_LOGIN_HEADER,
                 user.getFirstName(), user.getLastName(), date);
 
         MailMessageDto mailMessageDto = MailMessageDto.builder()
@@ -264,7 +258,7 @@ public class UserService {
                 .body(message)
                 .build();
 
-        mailService.sendMailWithOutAttachment(mailMessageDto);
+        communicationClient.sendMailWithoutAttachment(mailMessageDto);
     }
 
     public List<KeycloakRoleDto> getUserAssignableCompanyRoles(String id) {
@@ -422,48 +416,19 @@ public class UserService {
     }
 
     public String saveImageFile(MultipartFile file) {
-
         if (!file.isEmpty()) {
-            final String fileName = "./" + file.getOriginalFilename();
-            log.info(String.format("Received File %s Sending to UploadServer", fileName));
-
-            try {
-                byte[] bytes = file.getBytes();
-                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(
-                        new FileOutputStream(new File(fileName))
-                );
-
-                bufferedOutputStream.write(bytes);
-                bufferedOutputStream.close();
-
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//                headers.setBearerAuth(Objects.requireNonNull(K.getAccessToken()));
-
-                MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-                body.add("file", new FileSystemResource(fileName));
-
-                HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-                RestTemplate restTemplate = new RestTemplate();
-                // restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-                return restTemplate.postForObject(url + "api/v1/upload2", requestEntity, String.class);
-
-            } catch (IOException ioe) {
-                log.error(ioe.getMessage());
-            }
+            return communicationClient.uploadFile(file);
         }
 
-        throw new RuntimeException("Error Uploading File");
+        return null;
     }
 
     private String generateString() {
-        String chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%&";
         Random rnd = new Random();
 
         StringBuilder sb = new StringBuilder(32);
         for (int i = 0; i < 32; i++)
-            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+            sb.append(CHARS.charAt(rnd.nextInt(CHARS.length())));
 
         return sb.toString();
     }

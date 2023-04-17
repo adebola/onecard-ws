@@ -10,15 +10,14 @@ import io.factorialsystems.msscusers.dao.UserMapper;
 import io.factorialsystems.msscusers.domain.Organization;
 import io.factorialsystems.msscusers.domain.User;
 import io.factorialsystems.msscusers.dto.*;
+import io.factorialsystems.msscusers.external.client.AccountClient;
 import io.factorialsystems.msscusers.mapper.OrganizationMapstructMapper;
-import io.factorialsystems.msscusers.security.RestTemplateInterceptor;
 import io.factorialsystems.msscusers.utils.K;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.security.AccessControlException;
 import java.util.List;
@@ -34,15 +33,13 @@ public class OrganizationService {
     private final UserService userService;
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
+    private final AccountClient accountClient;
     private final OrganizationMapper organizationMapper;
     private final OrganizationMapstructMapper organizationMapstructMapper;
 
     private static final String COMPANY_USER_ROLE = "Company_User";
     private static final String COMPANY_ADMIN_ROLE = "Company_Admin";
     private static final String COMPANY_OPERATOR_ROLE = "Company_Operator";
-
-    @Value("${api.host.baseurl}")
-    private String baseUrl;
 
     public PagedDto<OrganizationDto> findAll(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
@@ -65,15 +62,11 @@ public class OrganizationService {
 
         CreateAccountDto accountDto = CreateAccountDto.builder()
                 .userName(dto.getOrganizationName())
-                .userId(id) // Dummy User Id, Organizations are not users
+                .userId(id) // Dummy User id, Organizations are not users
                 .accountType(K.ACCOUNT_TYPE_CORPORATE)
                 .build();
 
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-        AccountDto newAccount =
-                restTemplate.postForObject(baseUrl + "/api/v1/account/create", accountDto, AccountDto.class);
+        AccountDto newAccount = accountClient.createAccount(accountDto);
 
         if (newAccount == null || newAccount.getId() == null) {
             String message = String.format("Error creating Account for Organization (%s)", dto.getOrganizationName());
@@ -97,6 +90,7 @@ public class OrganizationService {
         return organizationMapstructMapper.organizationToDto(organizationMapper.findById(id));
     }
 
+    @SneakyThrows
     public void delete(String id) {
         Organization organization = organizationMapper.findById(id);
 
@@ -117,13 +111,7 @@ public class OrganizationService {
                     .build();
 
             // Delete the account
-            try {
-                jmsTemplate.convertAndSend(JMSConfig.DELETE_ACCOUNT_QUEUE, objectMapper.writeValueAsString(dto));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-
-            return;
+            jmsTemplate.convertAndSend(JMSConfig.DELETE_ACCOUNT_QUEUE, objectMapper.writeValueAsString(dto));
         }
 
         throw new RuntimeException("Organization cannot be deleted, it has associated Users");

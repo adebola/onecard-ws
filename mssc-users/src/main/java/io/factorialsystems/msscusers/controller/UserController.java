@@ -187,21 +187,4 @@ public class UserController {
     public String uploadFile(@RequestPart(value = "file") MultipartFile file) {
         return userService.saveImageFile(file);
     }
-
-//    private Boolean isAdminOrSelf(String id) {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//
-//        if (authentication == null) return false;
-//
-//        Collection<? extends GrantedAuthority> roles = authentication.getAuthorities();
-//        return (authentication.getName().equals(id) || roles.stream().anyMatch(r -> r.getAuthority().equals(ADMIN_ROLE)));
-//    }
-//
-//    private Boolean isSelf() {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//
-//        if (authentication == null) return false;
-//
-//        return authentication.getName().equals(K.getUserId());
-//    }
 }

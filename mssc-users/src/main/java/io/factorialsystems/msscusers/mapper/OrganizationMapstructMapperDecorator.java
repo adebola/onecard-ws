@@ -3,29 +3,27 @@ package io.factorialsystems.msscusers.mapper;
 import io.factorialsystems.msscusers.domain.Organization;
 import io.factorialsystems.msscusers.dto.AccountDto;
 import io.factorialsystems.msscusers.dto.OrganizationDto;
-import io.factorialsystems.msscusers.security.RestTemplateInterceptor;
+import io.factorialsystems.msscusers.external.client.AccountClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class OrganizationMapstructMapperDecorator implements OrganizationMapstructMapper {
-
-    @Value("${api.host.baseurl}")
-    private String apiHost;
-
-    public static final String ACCOUNT_PATH = "/api/v1/account";
-
+    private AccountClient accountClient;
     private OrganizationMapstructMapper organizationMapstructMapper;
 
     @Autowired
-    public void setMapstructMapper(OrganizationMapstructMapper organizationMapstructMapper) {
+    public void setAccountClient(AccountClient accountClient) {
+        this.accountClient = accountClient;
+    }
+
+    @Autowired
+    public void setOrganizationMapstructMapper(OrganizationMapstructMapper organizationMapstructMapper) {
         this.organizationMapstructMapper = organizationMapstructMapper;
     }
+
 
     @Override
     public Organization dtoToOrganization(OrganizationDto dto) {
@@ -37,13 +35,8 @@ public class OrganizationMapstructMapperDecorator implements OrganizationMapstru
         OrganizationDto dto = organizationMapstructMapper.organizationToDto(organization);
 
         if (organization.getWalletId() != null) {
-            RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-            Optional<AccountDto> accountDto =
-                    Optional.ofNullable(restTemplate.getForObject(apiHost + ACCOUNT_PATH + "/" + organization.getWalletId(), AccountDto.class));
-
-            accountDto.ifPresent(dto::setAccount);
+            AccountDto account = accountClient.getAccount(organization.getWalletId());
+            if (account != null) dto.setAccount(account);
         }
 
         return dto;

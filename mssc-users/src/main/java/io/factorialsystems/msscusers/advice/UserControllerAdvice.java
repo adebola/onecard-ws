@@ -1,6 +1,7 @@
 package io.factorialsystems.msscusers.advice;
 
 import io.factorialsystems.msscusers.dto.MessageDto;
+import io.factorialsystems.msscusers.exceptions.FeignCustomException;
 import io.factorialsystems.msscusers.exceptions.NoPermissionException;
 import io.factorialsystems.msscusers.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -36,5 +37,10 @@ public class UserControllerAdvice {
     public ResponseEntity<MessageDto> handleResourceNotFoundException(ResourceNotFoundException exception) {
         log.error(exception.getMessage(), exception);
         return new ResponseEntity<>(new MessageDto(exception.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(FeignCustomException.class)
+    public ResponseEntity<MessageDto> handleFeignCustomException(FeignCustomException fce) {
+        return new ResponseEntity<>(new MessageDto(fce.getMessage()), HttpStatus.valueOf(fce.getStatus()));
     }
 }

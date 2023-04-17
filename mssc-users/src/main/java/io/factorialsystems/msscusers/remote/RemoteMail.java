@@ -3,7 +3,7 @@ package io.factorialsystems.msscusers.remote;
 import io.factorialsystems.msscusers.dto.AsyncRefundResponseDto;
 import io.factorialsystems.msscusers.dto.MailMessageDto;
 import io.factorialsystems.msscusers.dto.SimpleUserDto;
-import io.factorialsystems.msscusers.service.MailService;
+import io.factorialsystems.msscusers.external.client.CommunicationClient;
 import io.factorialsystems.msscusers.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class RemoteMail {
-    private final MailService mailService;
     private final UserService userService;
+    private final CommunicationClient communicationClient;
 
     public void sendRefundMail(AsyncRefundResponseDto dto) {
         SimpleUserDto userDto = userService.findSimpleUserById(dto.getUserId());
@@ -22,6 +22,6 @@ public class RemoteMail {
                 .subject("Wallet Refund")
                 .build();
 
-        mailService.sendMailWithOutAttachment(mailMessageDto);
+        communicationClient.sendMailWithoutAttachment(mailMessageDto);
     }
 }

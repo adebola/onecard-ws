@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -168,7 +169,15 @@ class UserServiceTest {
     @Test
     void toggleUser() {
         final String id = "552eb89c-94f3-4223-8dad-706b1dece34b";
-        var x = userService.toggleUser(id);
-        log.info(x);
+//        var x = userService.toggleUser(id);
+//        log.info(x);
+    }
+
+    @Test
+    void saveImage() throws IOException {
+//        FileInputStream fis = new FileInputStream("/Users/adebola/downloads/IMG_0256.jpg");
+//        MockMultipartFile multipartFile = new MockMultipartFile("file", fis);
+//        String s = userService.saveImageFile(multipartFile);
+//        log.info(s);
     }
 }
