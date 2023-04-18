@@ -1,9 +1,8 @@
 package io.factorialsystems.msscapiuser.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscapiuser.dto.request.NewBulkRechargeRequestDto;
 import io.factorialsystems.msscapiuser.dto.response.NewBulkRechargeResponseDto;
+import io.factorialsystems.msscapiuser.external.client.ProviderClient;
 import io.factorialsystems.msscapiuser.service.SecurityService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -15,14 +14,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
 
@@ -31,8 +27,7 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/bulk-recharge")
 public class BulkRechargeController {
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+    private final ProviderClient providerClient;
     private final SecurityService securityService;
 
     @Value("${api.host.baseurl}")
@@ -47,11 +42,8 @@ public class BulkRechargeController {
     })
     @Operation(summary = "Submit a Bulk Recharge Request", description = "User Must have enough balance to cover the request otherwise it will fail")
     @PostMapping
-    public ResponseEntity<NewBulkRechargeResponseDto> startNewBulkRecharge(@Valid @RequestBody NewBulkRechargeRequestDto dto) throws JsonProcessingException {
+    public ResponseEntity<NewBulkRechargeResponseDto> startNewBulkRecharge(@Valid @RequestBody NewBulkRechargeRequestDto dto) {
         log.info("BulkRecharge For User {}, Payload {}", securityService.getUserName(), dto);
-
-        HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(dto), securityService.getHttpHeaders());
-        return restTemplate.exchange (baseUrl + "api/v1/auth-recharge/bulk", HttpMethod.POST, request, NewBulkRechargeResponseDto.class);
-
+        return ResponseEntity.ok(providerClient.bulkRecharge(dto));
     }
 }
