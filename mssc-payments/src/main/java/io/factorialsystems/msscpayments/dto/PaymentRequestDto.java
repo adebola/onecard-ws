@@ -16,8 +16,10 @@ import java.math.BigDecimal;
 public class PaymentRequestDto {
     @NotNull(message = "Amount must be specified")
     BigDecimal amount;
+
     @Null(message = "Payment Id cannot be set")
     private String id;
+
     private Integer status;
     private String message;
 

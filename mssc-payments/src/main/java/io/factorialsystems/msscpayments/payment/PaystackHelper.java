@@ -23,9 +23,9 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class PaystackHelper implements Payment {
-
     private final ObjectMapper objectMapper;
     private final PaymentMapper paymentMapper;
+
     @Value("${api.paystack.url}")
     private String paystackURL;
     @Value("${api.paystack.callback.url}")
