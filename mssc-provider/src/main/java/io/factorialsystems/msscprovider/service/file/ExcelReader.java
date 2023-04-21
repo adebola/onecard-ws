@@ -5,6 +5,7 @@ import io.factorialsystems.msscprovider.dto.MailMessageDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
 import io.factorialsystems.msscprovider.exception.FileFormatException;
 import io.factorialsystems.msscprovider.service.MailService;
+import io.factorialsystems.msscprovider.utils.Constants;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.core.io.FileSystemResource;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -127,7 +127,7 @@ public class ExcelReader {
             errorMessage = String.format("File %s format error: %s Uploaded By (%s)", uploadFile.getFileName(), ex.getMessage(), ProviderSecurity.getUserName());
             log.error(errorMessage);
 
-            FileSystemResource fileSystemResource = new FileSystemResource(uploadFile.getFile());
+            //FileSystemResource fileSystemResource = new FileSystemResource(uploadFile.getFile());
             MailService mailService = ApplicationContextProvider.getBean(MailService.class);
 
             MailMessageDto mailMessageDto = MailMessageDto.builder()
@@ -136,7 +136,7 @@ public class ExcelReader {
                     .subject("Bulk Recharge File Upload Error")
                     .build();
 
-            mailService.sendMailWithAttachment(fileSystemResource, mailMessageDto);
+            mailService.sendMailWithAttachment(uploadFile.getFile(), mailMessageDto, Constants.MULTIPART_REQUESTPART_NAME,  Constants.EXCEL_CONTENT_TYPE);
             throw new FileFormatException(errorMessage);
         } finally {
              uploadFile.getFile().delete();

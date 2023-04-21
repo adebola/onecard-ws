@@ -7,14 +7,12 @@ import io.factorialsystems.msscprovider.dto.UserEntryDto;
 import io.factorialsystems.msscprovider.dto.UserEntryListDto;
 import io.factorialsystems.msscprovider.dto.UserIdListDto;
 import io.factorialsystems.msscprovider.dto.user.SimpleUserDto;
-import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
+import io.factorialsystems.msscprovider.external.client.UserClient;
 import io.factorialsystems.msscprovider.service.UserService;
 import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -26,12 +24,10 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class SingleDownloadRecharge {
+    private final UserClient userClient;
     private final UserService userService;
     private final ExcelWriter excelWriter;
     private final SingleRechargeMapper singleRechargeMapper;
-
-    @Value("${api.local.host.baseurl}")
-    private String baseUrl;
 
     public InputStreamResource downloadFailedByUserId(String id) {
         Optional<SimpleUserDto> userById = userService.getUserById(id);
@@ -84,12 +80,13 @@ public class SingleDownloadRecharge {
                 .collect(Collectors.toList());
 
         UserIdListDto dto = new UserIdListDto(ids);
+        UserEntryListDto userEntries = userClient.getUserEntries(dto);
 
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-        UserEntryListDto userEntries =
-                restTemplate.postForObject(baseUrl + "/api/v1/user/usernames", dto, UserEntryListDto.class);
+//        RestTemplate restTemplate = new RestTemplate();
+//        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+//
+//        UserEntryListDto userEntries =
+//                restTemplate.postForObject(baseUrl + "/api/v1/user/usernames", dto, UserEntryListDto.class);
 
         if (userEntries != null && userEntries.getEntries() != null && userEntries.getEntries().size() > 0) {
             Map<String, String> userIdMap = userEntries.getEntries().stream()

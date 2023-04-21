@@ -10,31 +10,25 @@ import io.factorialsystems.msscprovider.dto.recharge.AsyncRefundRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRefundResponseDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
-import io.factorialsystems.msscprovider.utils.ProviderSecurity;
+import io.factorialsystems.msscprovider.external.client.PaymentClient;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class SingleRefundRecharge {
-    private final ObjectMapper objectMapper;
     private final JmsTemplate jmsTemplate;
+    private final ObjectMapper objectMapper;
+    private final PaymentClient paymentClient;
     private final SingleRechargeMapper singleRechargeMapper;
-
-    @Value("${api.local.host.baseurl}")
-    private String baseUrl;
 
     // Asynchronous Response to Asynchronous Refund Request
     public void refundRechargeResponse(AsyncRefundResponseDto dto) {
@@ -64,24 +58,25 @@ public class SingleRefundRecharge {
         if (request.getUserId() == null) {
             throw new RuntimeException("Unable to Refund No User Present");
         }
-
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(Objects.requireNonNull(ProviderSecurity.getAccessToken()));
-
         RefundRequestDto refundRequestDto = RefundRequestDto.builder()
                 .userId(request.getUserId())
                 .amount(request.getServiceCost())
                 .build();
 
-        HttpEntity<String> httpRequest = new HttpEntity<>(objectMapper.writeValueAsString(refundRequestDto), headers);
+        RefundResponseDto dto = paymentClient.refundPayment(request.getPaymentId(), refundRequestDto);
 
-        ResponseEntity<RefundResponseDto> response
-                = restTemplate.exchange (baseUrl + "/api/v1/payment/refund/" + request.getPaymentId(), HttpMethod.PUT, httpRequest, RefundResponseDto.class);
+//        RestTemplate restTemplate = new RestTemplate();
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.setBearerAuth(Objects.requireNonNull(ProviderSecurity.getAccessToken()));
+//
+//        HttpEntity<String> httpRequest = new HttpEntity<>(objectMapper.writeValueAsString(refundRequestDto), headers);
+//
+//        ResponseEntity<RefundResponseDto> response =
+//                = restTemplate.exchange (baseUrl + "/api/v1/payment/refund/" + request.getPaymentId(), HttpMethod.PUT, httpRequest, RefundResponseDto.class);
 
-        RefundResponseDto dto = response.getBody();
+//        RefundResponseDto dto = response.getBody();
 
         if (dto != null && dto.getStatus() == 200) {
             Map<String, String> refundMap = new HashMap<>();

@@ -582,4 +582,3 @@
         where providerdb.bulk_individual_requests.bulk_request_id = #{id};
     </update>
 </mapper>
-

@@ -2,14 +2,12 @@ package io.factorialsystems.msscprovider.helper;
 
 import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
-import io.factorialsystems.msscprovider.properties.GeneralProperties;
-import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
+import io.factorialsystems.msscprovider.external.client.PaymentClient;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 
@@ -29,29 +27,18 @@ public class PaymentHelper {
                 .paymentMode(paymentMode)
                 .build();
 
-        String uri;
-        RestTemplate restTemplate = new RestTemplate();
+        PaymentClient paymentClient = ApplicationContextProvider.getBean(PaymentClient.class);
 
-        if (ProviderSecurity.getUserId() == null) { // Anonymous Login
-            uri = "api/v1/pay";
-        } else {
-            uri = "api/v1/payment";
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+        if (ProviderSecurity.getUserId() == null) {
+            return paymentClient.initializePayment(dto);
         }
 
-        final String url = ApplicationContextProvider.getBean(GeneralProperties.class).getBaseUrl();
-
-        return restTemplate.postForObject( url + uri, dto, PaymentRequestDto.class);
+        return paymentClient.makePayment(dto);
     }
 
     public Boolean checkPayment(String id) {
-        RestTemplate restTemplate = new RestTemplate();
-
-        final String url = ApplicationContextProvider.getBean(GeneralProperties.class).getBaseUrl();
-
-        PaymentRequestDto dto
-                = restTemplate.getForObject(url + "api/v1/pay/" + id, PaymentRequestDto.class);
-
+        PaymentClient paymentClient = ApplicationContextProvider.getBean(PaymentClient.class);
+        PaymentRequestDto dto = paymentClient.checkPayment(id);
         return dto != null ? dto.getVerified() : false;
     }
 }

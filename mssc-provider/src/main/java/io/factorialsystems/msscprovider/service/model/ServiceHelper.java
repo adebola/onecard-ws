@@ -2,8 +2,8 @@ package io.factorialsystems.msscprovider.service.model;
 
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
+import io.factorialsystems.msscprovider.external.client.PaymentClient;
 import io.factorialsystems.msscprovider.security.Keycloak;
-import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.security.RestTemplateInterceptorWithToken;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
@@ -19,53 +19,50 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ServiceHelper {
     private final Keycloak keycloak;
+    private final PaymentClient paymentClient;
 
     @Value("${api.local.host.baseurl}")
-    private String baseLocalUrl;
+    private String baseUrl;
 
     public PaymentRequestDto initializePayment(NewBulkRechargeRequest request, Optional<String> alternateUserId) {
-
         PaymentRequestDto dto = PaymentRequestDto.builder()
                 .amount(request.getTotalServiceCost())
                 .redirectUrl(request.getRedirectUrl())
                 .paymentMode(request.getPaymentMode())
                 .build();
 
-        RestTemplate restTemplate = new RestTemplate();
-        String uri = "api/v1/payment";
+        PaymentRequestDto newDto = null;
 
         if (alternateUserId.isPresent()) { // Request From Async Request noLogin
+            final String uri = "api/v1/payment";
             final String token = keycloak.getUserToken(request.getUserId());
+            RestTemplate restTemplate = new RestTemplate();
+
+            if (token == null) {
+                final String message = String.format("Unable to acquire token for Alternate UserId %s", alternateUserId.get());
+                log.error(message);
+                throw new RuntimeException(message);
+            }
+
             restTemplate.getInterceptors().add(new RestTemplateInterceptorWithToken(token));
+            newDto = restTemplate.postForObject(baseUrl + uri, dto, PaymentRequestDto.class);
         } else if (ProviderSecurity.getUserId() == null) { // Anonymous Login
-            uri = "api/v1/pay";
+            newDto = paymentClient.initializePayment(dto);
         } else {
-            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+            newDto = paymentClient.makePayment(dto);
         }
 
-        PaymentRequestDto newDto =
-                restTemplate.postForObject(baseLocalUrl + uri, dto, PaymentRequestDto.class);
-
-        if (newDto != null) {
-            request.setRedirectUrl(newDto.getRedirectUrl());
-            request.setAuthorizationUrl(newDto.getAuthorizationUrl());
-
-            return newDto;
+        if (newDto == null) {
+            throw new RuntimeException("Error Initializing Payment Please contact OneCard Support");
         }
 
-        throw new RuntimeException("Error Initializing Payment Please contact OneCard Support");
-    }
-
-    public void reversePayment(String id) {
-        log.info(String.format("Reversing Payment %s", id));
+        request.setRedirectUrl(newDto.getRedirectUrl());
+        request.setAuthorizationUrl(newDto.getAuthorizationUrl());
+        return newDto;
     }
 
     public Boolean checkPayment(String id) {
-        RestTemplate restTemplate = new RestTemplate();
-
-        PaymentRequestDto dto
-                = restTemplate.getForObject(baseLocalUrl + "api/v1/pay/" + id, PaymentRequestDto.class);
-
+        PaymentRequestDto dto = paymentClient.checkPayment(id);
         return dto != null ? dto.getVerified() : false;
     }
 }

@@ -14,5 +14,7 @@ public class Constants {
     public static final String HEADER_EMAIL = "email";
     public static final String HEADER_PASSWORD = "password";
     public static final int FIVE_MINUTES = 300;
+    public static final String EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    public static final String MULTIPART_REQUESTPART_NAME = "file";
 
 }

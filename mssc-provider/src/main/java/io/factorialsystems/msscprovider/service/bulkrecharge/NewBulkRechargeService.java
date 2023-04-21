@@ -44,7 +44,6 @@ import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.jms.core.JmsTemplate;
@@ -542,8 +541,8 @@ public class NewBulkRechargeService {
             byte[] buffer = resource.getInputStream().readAllBytes();
             outputStream.write(buffer);
 
-            FileSystemResource fileSystemResource = new FileSystemResource(targetFile);
-            final String emailId = mailService.sendMailWithAttachment(fileSystemResource, mailMessageDto);
+            //FileSystemResource fileSystemResource = new FileSystemResource(targetFile);
+            final String emailId = mailService.sendMailWithAttachment(targetFile, mailMessageDto, Constants.MULTIPART_REQUESTPART_NAME,  Constants.EXCEL_CONTENT_TYPE);
 
             Map<String, String> emailMap = new HashMap<>();
             emailMap.put("id", dto.getId());

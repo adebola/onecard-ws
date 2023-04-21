@@ -8,18 +8,16 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeReq
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.user.SimpleUserDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
+import io.factorialsystems.msscprovider.external.client.UserClient;
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
-import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -28,12 +26,10 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class SingleRetryRecharge {
+    private final UserClient userClient;
     private final FactoryProducer producer;
     private final ParameterCache parameterCache;
     private final SingleRechargeMapper singleRechargeMapper;
-
-    @Value("${api.local.host.baseurl}")
-    private String baseUrl;
 
     public RechargeStatus retryRecharge(String id, String recipient) {
         String email = null;
@@ -63,14 +59,15 @@ public class SingleRetryRecharge {
         List<RechargeFactoryParameters> parameters = parameterCache.getFactoryParameter(request.getServiceId());
 
         if (parameters != null && !parameters.isEmpty()) {
-
             if (request.getUserId() != null) {
-                RestTemplate restTemplate = new RestTemplate();
-                restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-                SimpleUserDto simpleDto =
-                        Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
-                                .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
+                SimpleUserDto simpleDto = userClient.getUserById(request.getUserId());
+//                RestTemplate restTemplate = new RestTemplate();
+//                restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+//
+//                SimpleUserDto simpleDto =
+//                        Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
+//                                .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
+//
                 email = simpleDto.getEmail();;
             }
 

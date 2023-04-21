@@ -5,14 +5,12 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.dto.user.SimpleUserDto;
-import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
+import io.factorialsystems.msscprovider.external.client.UserClient;
 import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.ByteArrayInputStream;
 import java.text.SimpleDateFormat;
@@ -25,10 +23,8 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class BulkDownloadRecharge {
+    private final UserClient userClient;
     private final ExcelWriter excelWriter;
-
-    @Value("${api.local.host.baseurl}")
-    private String baseUrl;
     private final BulkRechargeMapper newBulkRechargeMapper;
 
     public InputStreamResource userBulk(String id) {
@@ -87,12 +83,13 @@ public class BulkDownloadRecharge {
                 .collect(Collectors.toList());
 
         UserIdListDto dto = new UserIdListDto(ids);
+        UserEntryListDto userEntries = userClient.getUserEntries(dto);
 
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-        UserEntryListDto userEntries =
-                restTemplate.postForObject(baseUrl + "/api/v1/user/usernames", dto, UserEntryListDto.class);
+//        RestTemplate restTemplate = new RestTemplate();
+//        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+//
+//        UserEntryListDto userEntries =
+//                restTemplate.postForObject(baseUrl + "/api/v1/user/usernames", dto, UserEntryListDto.class);
 
         if (userEntries != null && userEntries.getEntries() != null && userEntries.getEntries().size() > 0) {
             Map<String, String> userIdMap = userEntries.getEntries().stream()
@@ -137,10 +134,11 @@ public class BulkDownloadRecharge {
     }
 
     private SimpleUserDto getUser(String id) {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-        return restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + id, SimpleUserDto.class);
+        return userClient.getUserById(id);
+//        RestTemplate restTemplate = new RestTemplate();
+//        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
+//
+//        return restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + id, SimpleUserDto.class);
     }
 
     public InputStreamResource downloadRechargeByDateRange(DateRangeDto dto) {

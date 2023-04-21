@@ -3,19 +3,21 @@ package io.factorialsystems.msscprovider.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscprovider.config.JMSConfig;
 import io.factorialsystems.msscprovider.dto.MailMessageDto;
+import io.factorialsystems.msscprovider.external.client.CommunicationClient;
+import io.factorialsystems.msscprovider.external.client.CommunicationJSONClient;
+import io.factorialsystems.msscprovider.service.file.CustomMultipartFile;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.apache.commons.io.IOUtils;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 
 @Slf4j
 @Service
@@ -23,19 +25,12 @@ import org.springframework.web.client.RestTemplate;
 public class MailService {
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
-    private static final String WITHOUT_ATTACHMENT_URL = "/api/v1/mail";
-    private static final String WITH_ATTACHMENT_URL = "/api/v1/mail/attachment";
-
-    @Value("${api.local.host.baseurl}")
-    private String baseUrl;
+    private final CommunicationClient communicationClient;
+    private final CommunicationJSONClient communicationJSONClient;
 
     public String sendMailWithOutAttachment(MailMessageDto dto) {
-
         log.info(String.format("Sending Mail without attachment to %s", dto.getTo()));
-        RestTemplate restTemplate = new RestTemplate();
-        //restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-        return restTemplate.postForObject(baseUrl + WITHOUT_ATTACHMENT_URL, dto, String.class);
+        return communicationJSONClient.sendMailWithoutAttachment(dto);
     }
 
     @SneakyThrows
@@ -43,20 +38,12 @@ public class MailService {
         jmsTemplate.convertAndSend(JMSConfig.SEND_PROVIDER_MAIL_QUEUE, objectMapper.writeValueAsString(dto));
     }
 
-    public String sendMailWithAttachment(FileSystemResource file, MailMessageDto dto) {
-        log.info(String.format("Sending Mail with attachment to %s", dto.getTo()));
-        RestTemplate restTemplate = new RestTemplate();
-        //restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-        MultiValueMap<String, Object> requestBody = new LinkedMultiValueMap<>();
-        requestBody.add("message", dto);
-        requestBody.add("file", file);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-        HttpEntity<MultiValueMap<String, Object>> formEntity = new HttpEntity<>(requestBody, headers);
-
-        return restTemplate.postForObject(baseUrl + WITH_ATTACHMENT_URL, formEntity, String.class);
+    public String sendMailWithAttachment(File file, MailMessageDto dto, String name, String contentType)  {
+        try (FileInputStream input = new FileInputStream(file)) {
+            MultipartFile multipartFile = new CustomMultipartFile(IOUtils.toByteArray(input), name, contentType, file.getName());
+            return communicationClient.sendMailWithAttachment(dto, multipartFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

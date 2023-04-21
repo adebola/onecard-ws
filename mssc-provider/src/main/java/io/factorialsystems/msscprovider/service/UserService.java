@@ -1,28 +1,19 @@
 package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dto.user.SimpleUserDto;
-import io.factorialsystems.msscprovider.security.RestTemplateInterceptor;
-import org.springframework.beans.factory.annotation.Value;
+import io.factorialsystems.msscprovider.external.client.UserClient;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    @Value("${api.local.host.baseurl}")
-    private String baseUrl;
+    private final UserClient userClient;
 
     public Optional<SimpleUserDto> getUserById(String id) {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-        SimpleUserDto simpleDto = restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + id, SimpleUserDto.class);
-
-        if (simpleDto != null) {
-            return Optional.of(simpleDto);
-        }
-
-        return Optional.empty();
+        return Optional.ofNullable(userClient.getUserById(id));
     }
 
     public Boolean isUserValid(String id) {

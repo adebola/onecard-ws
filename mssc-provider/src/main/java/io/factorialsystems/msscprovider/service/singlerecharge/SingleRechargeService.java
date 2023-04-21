@@ -19,9 +19,9 @@ import io.factorialsystems.msscprovider.dto.recharge.*;
 import io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
+import io.factorialsystems.msscprovider.external.client.PaymentClient;
 import io.factorialsystems.msscprovider.helper.PaymentHelper;
 import io.factorialsystems.msscprovider.mapper.recharge.RechargeMapstructMapper;
-import io.factorialsystems.msscprovider.properties.GeneralProperties;
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
@@ -39,7 +39,6 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -51,9 +50,8 @@ public class SingleRechargeService {
     private final JmsTemplate jmsTemplate;
     private final FactoryProducer producer;
     private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate;
+    private final PaymentClient paymentClient;
     private final ParameterCache parameterCache;
-    private final GeneralProperties generalProperties;
     private final ServiceActionMapper serviceActionMapper;
     private final SingleRetryRecharge singleRetryRecharge;
     private final SingleRechargeMapper singleRechargeMapper;
@@ -338,8 +336,9 @@ public class SingleRechargeService {
     }
 
     private Boolean checkPayment(String id) {
-        PaymentRequestDto dto
-                = restTemplate.getForObject(generalProperties.getBaseUrl() + "api/v1/pay/" + id, PaymentRequestDto.class);
+        PaymentRequestDto dto = paymentClient.checkPayment(id);
+//        PaymentRequestDto dto
+//                = restTemplate.getForObject(generalProperties.getBaseUrl() + "api/v1/pay/" + id, PaymentRequestDto.class);
 
         return dto != null ? dto.getVerified() : false;
     }
