@@ -1,16 +1,16 @@
 package io.factorialsystems.msscprovider.service.model;
 
+import io.factorialsystems.msscprovider.config.CachingConfig;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
+import io.factorialsystems.msscprovider.external.client.ImpersonatePaymentClient;
 import io.factorialsystems.msscprovider.external.client.PaymentClient;
-import io.factorialsystems.msscprovider.security.Keycloak;
-import io.factorialsystems.msscprovider.security.RestTemplateInterceptorWithToken;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
 
@@ -18,11 +18,12 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class ServiceHelper {
-    private final Keycloak keycloak;
+    private final CacheManager cacheManager;
     private final PaymentClient paymentClient;
+    private final ImpersonatePaymentClient impersonatePaymentClient;
 
-    @Value("${api.local.host.baseurl}")
-    private String baseUrl;
+//    @Value("${api.local.host.baseurl}")
+//    private String baseUrl;
 
     public PaymentRequestDto initializePayment(NewBulkRechargeRequest request, Optional<String> alternateUserId) {
         PaymentRequestDto dto = PaymentRequestDto.builder()
@@ -34,18 +35,27 @@ public class ServiceHelper {
         PaymentRequestDto newDto = null;
 
         if (alternateUserId.isPresent()) { // Request From Async Request noLogin
-            final String uri = "api/v1/payment";
-            final String token = keycloak.getUserToken(request.getUserId());
-            RestTemplate restTemplate = new RestTemplate();
+            Cache cache = cacheManager.getCache(CachingConfig.ALTERNATE_USER_ID);
 
-            if (token == null) {
-                final String message = String.format("Unable to acquire token for Alternate UserId %s", alternateUserId.get());
-                log.error(message);
-                throw new RuntimeException(message);
-            }
+           if (cache != null) {
+               cache.evictIfPresent("user");
+               cache.put("user", alternateUserId.get());
+               newDto = impersonatePaymentClient.makePayment(dto);
+           }
 
-            restTemplate.getInterceptors().add(new RestTemplateInterceptorWithToken(token));
-            newDto = restTemplate.postForObject(baseUrl + uri, dto, PaymentRequestDto.class);
+
+//            final String uri = "api/v1/payment";
+//            final String token = keycloak.getUserToken(request.getUserId());
+//            RestTemplate restTemplate = new RestTemplate();
+//
+//            if (token == null) {
+//                final String message = String.format("Unable to acquire token for Alternate UserId %s", alternateUserId.get());
+//                log.error(message);
+//                throw new RuntimeException(message);
+//            }
+//
+//            restTemplate.getInterceptors().add(new RestTemplateInterceptorWithToken(token));
+//            newDto = restTemplate.postForObject(baseUrl + uri, dto, PaymentRequestDto.class);
         } else if (ProviderSecurity.getUserId() == null) { // Anonymous Login
             newDto = paymentClient.initializePayment(dto);
         } else {

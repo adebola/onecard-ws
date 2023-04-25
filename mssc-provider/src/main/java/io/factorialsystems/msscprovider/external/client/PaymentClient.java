@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-@FeignClient(value = "payment-server", configuration = FeignConfig.class)
+@FeignClient(value = "payment-server", configuration = FeignConfig.class, contextId = "real-user")
 public interface PaymentClient {
 
     @RequestMapping(method = RequestMethod.POST,
