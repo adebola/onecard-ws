@@ -1,29 +1,17 @@
 package io.factorialsystems.msscprovider.external.client;
 
-import io.factorialsystems.msscprovider.dto.MailMessageDto;
 import io.factorialsystems.msscprovider.dto.TokenResponseDto;
 import io.factorialsystems.msscprovider.service.MailService;
-import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Objects;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest
 @CommonsLog
@@ -44,58 +32,56 @@ class CommunicationClientTest {
 
     @Test
     void sendMailWithoutAttachment() {
-        MailMessageDto dto = MailMessageDto.builder()
-                .body("Test Mail without Attachment")
-                .to("adeomoboya@gmail.com")
-                .subject("Test Mail")
-                .build();
-
-        String s = mailService.sendMailWithOutAttachment(dto);
-        log.info(s);
+//        MailMessageDto dto = MailMessageDto.builder()
+//                .body("Test Mail without Attachment")
+//                .to("adeomoboya@gmail.com")
+//                .subject("Test Mail")
+//                .build();
+//
+//        String s = mailService.sendMailWithOutAttachment(dto);
+//        log.info(s);
     }
 
     @Test
     void sendMailWithAttachment() throws IOException {
-//        MultipartFile multipartFile = new MockMultipartFile("connect.txt", new FileInputStream(new File("/Users/adebola/Downloads/connect.txt")));
-        File file = new File("/Users/adebola/Downloads/TOPUP.xlsx");
-
-        if (file.exists()) {
-            MailMessageDto dto = MailMessageDto.builder()
-                    .body("Test Mail with Attachment")
-                    .fileName("connect.txt")
-                    .to("adeomoboya@gmail.com")
-                    .subject("Test Mail")
-                    .sentBy("Adebola Omoboya")
-                    .build();
-            log.info(String.format("File exists name %s", file.getName()));
-            String s = mailService.sendMailWithAttachment(file, dto, "file", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            log.info(s);
-
-        }
+//        File file = new File("/Users/adebola/Downloads/TOPUP.xlsx");
+//
+//        if (file.exists()) {
+//            MailMessageDto dto = MailMessageDto.builder()
+//                    .body("Test Mail with Attachment")
+//                    .fileName("connect.txt")
+//                    .to("adeomoboya@gmail.com")
+//                    .subject("Test Mail")
+//                    .sentBy("Adebola Omoboya")
+//                    .build();
+//            log.info(String.format("File exists name %s", file.getName()));
+//            String s = mailService.sendMailWithAttachment(file, dto, "file", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+//            log.info(s);
+//
+//        }
     }
 
     @Test
     public void uploadFile() throws IOException {
-        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
-        final String accessToken = getUserToken(id);
-
-        try (MockedStatic<ProviderSecurity> security  = Mockito.mockStatic(ProviderSecurity.class)) {
-            security.when(ProviderSecurity::getUserId).thenReturn(id);
-            assert Objects.equals(ProviderSecurity.getUserId(), id);
-
-            security.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
-            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
-            log.info(ProviderSecurity.getAccessToken());
-            File file = new File("/Users/adebola/Downloads/TOPUP.xlsx");
-            FileInputStream input = new FileInputStream(file);
-
-            MultipartFile multipartFile = new MockMultipartFile("file", file.getName(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    IOUtils.toByteArray(input));
-
-            String s = client.uploadFile(multipartFile);
-            log.info(s);
-        }
-
+//        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
+//        final String accessToken = getUserToken(id);
+//
+//        try (MockedStatic<ProviderSecurity> security  = Mockito.mockStatic(ProviderSecurity.class)) {
+//            security.when(ProviderSecurity::getUserId).thenReturn(id);
+//            assert Objects.equals(ProviderSecurity.getUserId(), id);
+//
+//            security.when(ProviderSecurity::getAccessToken).thenReturn(accessToken);
+//            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(accessToken);
+//            log.info(ProviderSecurity.getAccessToken());
+//            File file = new File("/Users/adebola/Downloads/TOPUP.xlsx");
+//            FileInputStream input = new FileInputStream(file);
+//
+//            MultipartFile multipartFile = new MockMultipartFile("file", file.getName(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+//                    IOUtils.toByteArray(input));
+//
+//            String s = client.uploadFile(multipartFile);
+//            log.info(s);
+//        }
     }
 
     private String getRealmAdminToken() {

@@ -43,6 +43,7 @@ public class MailService {
             MultipartFile multipartFile = new CustomMultipartFile(IOUtils.toByteArray(input), name, contentType, file.getName());
             return communicationClient.sendMailWithAttachment(dto, multipartFile);
         } catch (IOException e) {
+            log.error("error sending mail with attachment : {}", e.getMessage());
             throw new RuntimeException(e);
         }
     }

@@ -116,7 +116,7 @@ create table recharge_requests (
     FOREIGN KEY (successful_retry_id) REFERENCES  single_recharge_request_retries (id),
     FOREIGN KEY (scheduled_request_id) REFERENCES scheduled_recharge(id),
     FOREIGN KEY (auto_request_id) REFERENCES auto_recharge(id),
-    FOREIGN KEY (bulk_request_id) REFERENCES bulk_recharge_requests(id),
+    FOREIGN KEY (bulk_request_id) REFERENCES new_bulk_recharge_requests(id),
     FOREIGN KEY (service_id) REFERENCES provider_services(id),
     FOREIGN KEY (recharge_provider_id) REFERENCES recharge_providers(id),
     PRIMARY KEY (id)
