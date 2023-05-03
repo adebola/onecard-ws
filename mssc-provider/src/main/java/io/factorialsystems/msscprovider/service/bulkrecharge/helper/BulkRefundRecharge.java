@@ -74,7 +74,7 @@ public class BulkRefundRecharge {
         BigDecimal totalToRefunded = BigDecimal.valueOf(aDouble == null ? 0 : aDouble);
 
         if (BigDecimal.ZERO.compareTo(totalToRefunded) == 0) {
-            log.error(String.format("Nothing to Refund in Recharge Request %s, may have been refunded, retried or resolved", request.getId()));
+            log.info("Nothing to Refund in Recharge Request: {}", request.getId());
             return;
         }
 

@@ -23,6 +23,7 @@ public interface CombinedRequestMapstructMapper {
             @Mapping(source = "retryId", target = "retryId"),
             @Mapping(source = "refundId", target = "refundId"),
             @Mapping(source = "resolveId", target = "resolveId"),
+            @Mapping(source = "paymentMode", target = "paymentMode"),
             @Mapping(target = "userName", ignore = true)
     })
     CombinedRechargeRequest singleToCombined(SingleRechargeRequest request);
@@ -55,6 +56,7 @@ public interface CombinedRequestMapstructMapper {
             @Mapping(source = "createdAt", target = "createdAt"),
             @Mapping(source = "userId", target = "userId"),
             @Mapping(source = "parentId", target = "parentId"),
+            @Mapping(source = "paymentMode", target = "paymentMode"),
             @Mapping(target = "userName", ignore = true)
     })
     CombinedRechargeRequest reportIndividualToCombined(ReportIndividualRequest reportIndividualRequest);

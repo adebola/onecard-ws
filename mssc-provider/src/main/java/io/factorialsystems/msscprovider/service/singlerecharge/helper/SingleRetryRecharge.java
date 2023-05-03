@@ -61,13 +61,6 @@ public class SingleRetryRecharge {
         if (parameters != null && !parameters.isEmpty()) {
             if (request.getUserId() != null) {
                 SimpleUserDto simpleDto = userClient.getUserById(request.getUserId());
-//                RestTemplate restTemplate = new RestTemplate();
-//                restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-//
-//                SimpleUserDto simpleDto =
-//                        Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + request.getUserId(), SimpleUserDto.class))
-//                                .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", request.getUserId()));
-//
                 email = simpleDto.getEmail();;
             }
 

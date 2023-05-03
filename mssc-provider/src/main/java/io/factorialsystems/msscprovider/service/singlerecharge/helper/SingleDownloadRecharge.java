@@ -82,12 +82,6 @@ public class SingleDownloadRecharge {
         UserIdListDto dto = new UserIdListDto(ids);
         UserEntryListDto userEntries = userClient.getUserEntries(dto);
 
-//        RestTemplate restTemplate = new RestTemplate();
-//        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-//
-//        UserEntryListDto userEntries =
-//                restTemplate.postForObject(baseUrl + "/api/v1/user/usernames", dto, UserEntryListDto.class);
-
         if (userEntries != null && userEntries.getEntries() != null && userEntries.getEntries().size() > 0) {
             Map<String, String> userIdMap = userEntries.getEntries().stream()
                     .collect(Collectors.toMap(UserEntryDto::getId, UserEntryDto::getName));

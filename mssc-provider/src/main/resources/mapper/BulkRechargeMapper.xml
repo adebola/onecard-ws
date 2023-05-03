@@ -55,6 +55,7 @@
         <result column="user_id" property="userId" jdbcType="VARCHAR"/>
         <result column="createdAt" property="createdAt" jdbcType="TIMESTAMP"/>
         <result column="parent_id" property="parentId" jdbcType="VARCHAR"/>
+        <result column="payment_mode" property="paymentMode" jdbcType="VARCHAR"/>
     </resultMap>
 
     <resultMap id="requestRetryMap" type="io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequestRetry">
@@ -121,7 +122,8 @@
         b.results,
         nb.createdAt,
         nb.user_id,
-        nb.id as parent_id
+        nb.id as parent_id,
+        nb.payment_mode
     </sql>
 
 

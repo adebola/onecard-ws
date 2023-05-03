@@ -29,7 +29,7 @@ public class BulkDownloadRecharge {
 
     public InputStreamResource userBulk(String id) {
         List<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findListBulkRequestByUserId(id);
-        SimpleUserDto simpleDto = getUser(id);
+        SimpleUserDto simpleDto = userClient.getUserById(id);
 
         String title;
 
@@ -49,7 +49,7 @@ public class BulkDownloadRecharge {
             NewBulkRechargeRequest rechargeRequest = newBulkRechargeMapper.findBulkRechargeById(requests.get(0).getBulkRequestId());
 
             if (rechargeRequest != null && rechargeRequest.getUserId() != null) {
-                SimpleUserDto simpleUserDto = getUser(rechargeRequest.getUserId());
+                SimpleUserDto simpleUserDto = userClient.getUserById(rechargeRequest.getUserId());
 
                 String title;
 
@@ -85,12 +85,6 @@ public class BulkDownloadRecharge {
         UserIdListDto dto = new UserIdListDto(ids);
         UserEntryListDto userEntries = userClient.getUserEntries(dto);
 
-//        RestTemplate restTemplate = new RestTemplate();
-//        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-//
-//        UserEntryListDto userEntries =
-//                restTemplate.postForObject(baseUrl + "/api/v1/user/usernames", dto, UserEntryListDto.class);
-
         if (userEntries != null && userEntries.getEntries() != null && userEntries.getEntries().size() > 0) {
             Map<String, String> userIdMap = userEntries.getEntries().stream()
                     .collect(Collectors.toMap(UserEntryDto::getId, UserEntryDto::getName));
@@ -113,7 +107,7 @@ public class BulkDownloadRecharge {
         if (requests != null && requests.size() > 0) {
             NewBulkRechargeRequest bulkRequest = newBulkRechargeMapper.findBulkRechargeById(requests.get(0).getBulkRequestId());
 
-            SimpleUserDto simpleDto = getUser(bulkRequest.getUserId());
+            SimpleUserDto simpleDto = userClient.getUserById(bulkRequest.getUserId());
 
             String title;
 
@@ -131,14 +125,6 @@ public class BulkDownloadRecharge {
         }
 
         throw new RuntimeException(String.format("Unable to load Requests for %s", id));
-    }
-
-    private SimpleUserDto getUser(String id) {
-        return userClient.getUserById(id);
-//        RestTemplate restTemplate = new RestTemplate();
-//        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-//
-//        return restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + id, SimpleUserDto.class);
     }
 
     public InputStreamResource downloadRechargeByDateRange(DateRangeDto dto) {

@@ -65,19 +65,6 @@ public class SingleRefundRecharge {
 
         RefundResponseDto dto = paymentClient.refundPayment(request.getPaymentId(), refundRequestDto);
 
-//        RestTemplate restTemplate = new RestTemplate();
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        headers.setBearerAuth(Objects.requireNonNull(ProviderSecurity.getAccessToken()));
-//
-//        HttpEntity<String> httpRequest = new HttpEntity<>(objectMapper.writeValueAsString(refundRequestDto), headers);
-//
-//        ResponseEntity<RefundResponseDto> response =
-//                = restTemplate.exchange (baseUrl + "/api/v1/payment/refund/" + request.getPaymentId(), HttpMethod.PUT, httpRequest, RefundResponseDto.class);
-
-//        RefundResponseDto dto = response.getBody();
-
         if (dto != null && dto.getStatus() == 200) {
             Map<String, String> refundMap = new HashMap<>();
             refundMap.put("id", request.getId());

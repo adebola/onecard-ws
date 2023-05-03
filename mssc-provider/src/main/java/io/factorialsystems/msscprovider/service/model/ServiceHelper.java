@@ -22,9 +22,6 @@ public class ServiceHelper {
     private final PaymentClient paymentClient;
     private final ImpersonatePaymentClient impersonatePaymentClient;
 
-//    @Value("${api.local.host.baseurl}")
-//    private String baseUrl;
-
     public PaymentRequestDto initializePayment(NewBulkRechargeRequest request, Optional<String> alternateUserId) {
         PaymentRequestDto dto = PaymentRequestDto.builder()
                 .amount(request.getTotalServiceCost())
@@ -42,20 +39,6 @@ public class ServiceHelper {
                cache.put("user", alternateUserId.get());
                newDto = impersonatePaymentClient.makePayment(dto);
            }
-
-
-//            final String uri = "api/v1/payment";
-//            final String token = keycloak.getUserToken(request.getUserId());
-//            RestTemplate restTemplate = new RestTemplate();
-//
-//            if (token == null) {
-//                final String message = String.format("Unable to acquire token for Alternate UserId %s", alternateUserId.get());
-//                log.error(message);
-//                throw new RuntimeException(message);
-//            }
-//
-//            restTemplate.getInterceptors().add(new RestTemplateInterceptorWithToken(token));
-//            newDto = restTemplate.postForObject(baseUrl + uri, dto, PaymentRequestDto.class);
         } else if (ProviderSecurity.getUserId() == null) { // Anonymous Login
             newDto = paymentClient.initializePayment(dto);
         } else {

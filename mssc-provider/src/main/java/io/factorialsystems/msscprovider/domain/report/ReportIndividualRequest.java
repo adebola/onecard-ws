@@ -31,4 +31,5 @@ public class ReportIndividualRequest {
     private String userId;
     private Date createdAt;
     private String parentId;
+    private String paymentMode;
 }

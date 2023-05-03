@@ -337,9 +337,6 @@ public class SingleRechargeService {
 
     private Boolean checkPayment(String id) {
         PaymentRequestDto dto = paymentClient.checkPayment(id);
-//        PaymentRequestDto dto
-//                = restTemplate.getForObject(generalProperties.getBaseUrl() + "api/v1/pay/" + id, PaymentRequestDto.class);
-
         return dto != null ? dto.getVerified() : false;
     }
 
