@@ -32,8 +32,25 @@ public class RechargeReportGenerator {
     public static final int COLUMN_USERID = 10;
     public static final int COLUMN_USERNAME = 11;
     public static final int COLUMN_RESULTS = 12;
+    private static final int COLUMN_PAYMENT_MODE = 13;
 
-    public static final String[] REPORT_HEADERS = {"#", "id", "parent Id","service", "product", "cost", "status","created","refunded", "type", "userId", "userName", "results"};
+    public static final String[] REPORT_HEADERS = {
+            "#",
+            "id",
+            "parent Id",
+            "service",
+            "product",
+            "cost",
+            "status",
+            "created",
+            "refunded",
+            "type",
+            "userId",
+            "userName",
+            "results",
+            "payment"
+    };
+
     public ByteArrayInputStream rechargeToExcel(List<CombinedRechargeRequest> requests, RechargeReportRequestDto dto)  {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("recharge");
@@ -122,6 +139,10 @@ public class RechargeReportGenerator {
 
                 if (request.getResults() != null) {
                     row.createCell(COLUMN_RESULTS).setCellValue(request.getResults());
+                }
+
+                if (request.getPaymentMode() != null) {
+                    row.createCell(COLUMN_PAYMENT_MODE).setCellValue(request.getPaymentMode());
                 }
 
                 rowIdx++;

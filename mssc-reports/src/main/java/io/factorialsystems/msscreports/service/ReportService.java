@@ -9,44 +9,34 @@ import io.factorialsystems.msscreports.dto.CombinedRechargeList;
 import io.factorialsystems.msscreports.dto.PagedDto;
 import io.factorialsystems.msscreports.dto.RechargeReportRequestDto;
 import io.factorialsystems.msscreports.dto.ReportDto;
+import io.factorialsystems.msscreports.external.client.ProviderClient;
 import io.factorialsystems.msscreports.generate.excel.RechargeReportGenerator;
 import io.factorialsystems.msscreports.mapper.ReportMSMapper;
-import io.factorialsystems.msscreports.security.RestTemplateInterceptor;
-import io.factorialsystems.msscreports.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReportService {
-    private final ObjectMapper objectMapper;
     private final AuditService auditService;
     private final ReportMapper reportMapper;
     private final ReportMSMapper reportMSMapper;
+    private final ProviderClient providerClient;
     private final RechargeReportGenerator rechargeReportGenerator;
 
     private static final String UPDATE_REPORT = "Report Updated";
     private static final String CREATE_REPORT = "Create Report";
-    public static final String RECHARGE_REPORT_URL = "api/v1/recharge-report";
-
-    @Value("${api.local.host.baseurl}")
-    private String baseUrl;
 
     public PagedDto<ReportDto> findReports(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
@@ -74,12 +64,10 @@ public class ReportService {
 
     public ReportDto findReportById(Integer id) {
         Report report = reportMapper.findById(id);
-
         return (report == null) ? null : reportMSMapper.reportToReportDto(report);
     }
 
     public Integer saveReport(String userName, ReportDto reportDto) {
-
         Report report = reportMSMapper.reportDtoToReport(reportDto);
         report.setCreatedBy(userName);
         reportMapper.save(report);
@@ -102,24 +90,15 @@ public class ReportService {
 
     @SneakyThrows
     public InputStreamResource runRechargeReport(RechargeReportRequestDto dto) {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(Objects.requireNonNull(K.getAccessToken()));
-
-        HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(dto), headers);
-
-        ResponseEntity<CombinedRechargeList> responseEntity =
-                    restTemplate.exchange (baseUrl + RECHARGE_REPORT_URL, HttpMethod.POST, request, CombinedRechargeList.class);
-
-        if (responseEntity.getBody() != null) {
-            return new InputStreamResource(rechargeReportGenerator.rechargeToExcel(responseEntity.getBody().getRequests(), dto));
+        CombinedRechargeList combinedRechargeList = providerClient.getRechargeReport(dto);
+        if (combinedRechargeList != null) {
+            return new InputStreamResource(
+                    rechargeReportGenerator.rechargeToExcel(combinedRechargeList.getRequests(), dto)
+            );
         }
 
-        final String errorMessage = "Error running recharge report, unable to get report values from upstream service";
-
+        final String errorMessage
+                = "Error running recharge report, unable to get report values from upstream service";
         log.info(errorMessage);
         throw new RuntimeException(errorMessage);
     }

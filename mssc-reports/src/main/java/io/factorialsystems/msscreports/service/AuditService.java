@@ -1,11 +1,11 @@
 package io.factorialsystems.msscreports.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscreports.config.JMSConfig;
 import io.factorialsystems.msscreports.dto.AuditMessageDto;
 import io.factorialsystems.msscreports.utils.K;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
@@ -24,6 +24,7 @@ public class AuditService {
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
 
+    @SneakyThrows
     public void auditEvent(String message, String action) {
 
         AuditMessageDto dto = AuditMessageDto
@@ -35,10 +36,6 @@ public class AuditService {
                 .userName(K.getUserName())
                 .build();
 
-        try {
-            jmsTemplate.convertAndSend(JMSConfig.AUDIT_MESSAGE_QUEUE, objectMapper.writeValueAsString(dto));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        jmsTemplate.convertAndSend(JMSConfig.AUDIT_MESSAGE_QUEUE, objectMapper.writeValueAsString(dto));
     }
 }

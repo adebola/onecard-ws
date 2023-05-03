@@ -1,7 +1,6 @@
 package io.factorialsystems.msscreports.service;
 
 import io.factorialsystems.msscreports.dto.PagedDto;
-import io.factorialsystems.msscreports.dto.RechargeReportRequestDto;
 import io.factorialsystems.msscreports.dto.ReportDto;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
@@ -91,9 +90,9 @@ class ReportServiceTest {
 
     @Test
     void runRechargeReport() throws IOException {
-        RechargeReportRequestDto dto = new RechargeReportRequestDto();
-
-//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        RechargeReportRequestDto dto = new RechargeReportRequestDto();
+//
+//        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
 //        final String accessToken = getUserToken(id);
 //
 //        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
