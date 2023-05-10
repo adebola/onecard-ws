@@ -117,7 +117,8 @@ public class RechargeReportService {
     }
 
     private Optional<List<CombinedRechargeRequest>> mergeUsersToList(List<CombinedRechargeRequest> requests) {
-        List<String> ids = requests.stream().map(CombinedRechargeRequest::getUserId)
+        final List<String> ids = requests.stream()
+                .map(CombinedRechargeRequest::getUserId)
                 .distinct()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

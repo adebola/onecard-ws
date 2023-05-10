@@ -144,7 +144,14 @@ public class ExcelReader {
     }
 
     private String readStringValue(Cell cell, String cellTitle, boolean mandatory) {
-        final String value = cell.getStringCellValue();
+
+        String value;
+
+        try {
+            value = cell.getStringCellValue();
+        } catch (IllegalStateException ise) {
+            value = String.valueOf((int) cell.getNumericCellValue());
+        }
 
         if (value != null && value.trim().length() > 0) {
             return value.trim();
