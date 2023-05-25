@@ -50,6 +50,26 @@
         and payment_verified = true
     </select>
 
+    <select id="findByCriteria" parameterType="io.factorialsystems.msscwallet.dto.WalletReportRequestDto" resultMap="fundWalletResultMap">
+        select
+        <include refid="column_list"/>
+        from fund_wallet_request
+
+        <where>
+            <if test="userId != null and userId != ''">
+                and user_id = #{userId}
+            </if>
+
+            <if test="startDate != null and endDate != null">
+                and created_on between #{startDate} and #{endDate}
+            </if>
+
+            <if test="startDate != null and endDate == null">
+                and created_on &gt; #{startDate}
+            </if>
+        </where>
+    </select>
+
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.FundWalletRequest">
         insert into fund_wallet_request(id, user_id, actioned_by, authorization_url, redirect_url, amount, status, message, payment_id, fund_type) values
             (#{id},  #{userId}, #{actionedBy}, #{authorizationUrl}, #{redirectUrl}, #{amount}, #{status},#{message},#{paymentId}, #{fundType})

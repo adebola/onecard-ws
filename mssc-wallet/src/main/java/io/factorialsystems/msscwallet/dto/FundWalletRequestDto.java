@@ -37,5 +37,8 @@ public class FundWalletRequestDto {
     @Null(message = "Actioned By cannot be specified")
     private String actionedBy;
 
+    @Null(message = "UserName cannot be specified")
+    private String userName;
+
     private String redirectUrl;
 }

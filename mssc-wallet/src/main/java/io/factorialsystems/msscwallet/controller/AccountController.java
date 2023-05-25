@@ -13,6 +13,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -100,9 +102,16 @@ public class AccountController {
         return new ResponseEntity<>(accountService.findWalletFunding(Security.getUserId(), pageNumber, pageSize), HttpStatus.OK);
     }
 
+    @PostMapping("/report")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public List<FundWalletRequestDto> getWalletFundingForReport(@Valid @RequestBody WalletReportRequestDto dto) {
+        return accountService.findWalletRequestReport(dto).orElseGet(ArrayList::new);
+    }
+
     @GetMapping("/wallet/{id}")
     @PreAuthorize("hasRole('Onecard_Admin')")
-    public ResponseEntity<?> getAdminWalletFunding(@PathVariable("id") String id,
+    public ResponseEntity<?> getIndividualWalletFunding(@PathVariable("id") String id,
                                                    @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 

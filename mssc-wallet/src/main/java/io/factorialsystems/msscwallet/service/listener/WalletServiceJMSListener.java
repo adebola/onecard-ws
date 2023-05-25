@@ -31,14 +31,10 @@ public class WalletServiceJMSListener {
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
-//    private final RestTemplate restTemplate;
     private final AccountMapper accountMapper;
     private final MailService mailService;
     private final TransactionMapper transactionMapper;
     private final ProviderClient providerClient;
-
-//    @Value("${api.host.baseurl}")
-//    private String baseUrl;
 
     public static final String WALLET_REFUND_QUEUE = "wallet-refund-queue";
 

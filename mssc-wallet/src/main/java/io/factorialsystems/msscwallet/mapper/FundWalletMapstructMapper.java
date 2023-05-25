@@ -35,7 +35,8 @@ public interface FundWalletMapstructMapper {
             @Mapping(source = "createdOn", target = "createdOn"),
             @Mapping(source = "closed", target = "closed"),
             @Mapping(source = "redirectUrl", target = "redirectUrl"),
-            @Mapping(source = "actionedBy", target = "actionedBy")
+            @Mapping(source = "actionedBy", target = "actionedBy"),
+            @Mapping(target = "userName", ignore = true)
     })
     FundWalletRequestDto requestToRequestDto(FundWalletRequest request);
     List<FundWalletRequestDto> listRequestToRequestDto(List<FundWalletRequest> requests);

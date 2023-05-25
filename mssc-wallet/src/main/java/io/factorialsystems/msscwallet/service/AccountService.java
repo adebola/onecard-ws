@@ -32,8 +32,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -130,21 +132,6 @@ public class AccountService {
         if (newDto == null) {
             throw new RuntimeException("Error Initializing Payment Engine in Wallet Topup");
         }
-
-//        RestTemplate restTemplate = new RestTemplate();
-//
-//        String url = null;
-//
-//        if (Security.getUserId() == null) {
-//            url = baseUrl + "api/v1/pay";
-//        } else {
-//            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-//            url = baseUrl + "api/v1/payment";
-//        }
-//
-//        PaymentRequestDto newDto =
-//                Optional.ofNullable(restTemplate.postForObject(url, paymentRequest, PaymentRequestDto.class))
-//                        .orElseThrow(() -> new RuntimeException("Error Initializing Payment Engine in Wallet Topup"));
 
         request.setPaymentId(newDto.getId());
         request.setAuthorizationUrl(newDto.getAuthorizationUrl());
@@ -247,17 +234,6 @@ public class AccountService {
             if (fromSimpleDto == null) {
                 throw new ResourceNotFoundException("SimpleUserDto", "id", fromAccount.getUserId());
             }
-
-//            RestTemplate restTemplate = new RestTemplate();
-//            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-
-//            SimpleUserDto toSimpleDto =
-//                    Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + toAccount.getUserId(), SimpleUserDto.class))
-//                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", toAccount.getUserId()));
-//
-//            SimpleUserDto fromSimpleDto =
-//                    Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + fromAccount.getUserId(), SimpleUserDto.class))
-//                            .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", fromAccount.getUserId()));
 
             BigDecimal newFromBalance = fromAccount.getBalance().subtract(dto.getAmount());
             BigDecimal newToBalance = toAccount.getBalance().add(dto.getAmount());
@@ -377,13 +353,6 @@ public class AccountService {
         final String refundWalletId = saveFundWalletRequest(dto.getAmount(), Constants.WALLET_ONECARD_REFUNDED, id,
                 Security.getUserName(), String.format("Wallet Refunded By %s", Security.getUserName()));
 
-//        RestTemplate restTemplate = new RestTemplate();
-//        restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-//
-//        SimpleUserDto simpleUserDto =
-//                Optional.ofNullable(restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + id, SimpleUserDto.class))
-//                        .orElseThrow(() -> new ResourceNotFoundException("SimpleUserDto", "id", id));
-
         SimpleUserDto simpleUserDto = userClient.getUserById(id);
 
         if (simpleUserDto == null) {
@@ -424,11 +393,6 @@ public class AccountService {
         SimpleUserDto simpleUserDto = null;
 
         if (account.getAccountType() == 1) {
-//            RestTemplate restTemplate = new RestTemplate();
-//            restTemplate.getInterceptors().add(new RestTemplateInterceptor());
-//            simpleUserDto =
-//                    restTemplate.getForObject(baseUrl + "/api/v1/user/simple/" + account.getUserId(), SimpleUserDto.class);
-
             simpleUserDto = userClient.getUserById(account.getUserId());
 
             if (simpleUserDto == null) {
@@ -493,11 +457,6 @@ public class AccountService {
     public WalletResponseDto chargeAccount(WalletRequestDto dto) {
         final String userId = Security.getUserId();
 
-        final String message = String.format("Charging %.2f to User %s", dto.getAmount(), userId);
-
-        log.info(message);
-        auditService.auditEvent(message, Constants.ACCOUNT_CHARGED);
-
         Account account = Optional.ofNullable(getActiveUserAccount(userId))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "UserId", userId));
 
@@ -518,6 +477,15 @@ public class AccountService {
                     .build();
         }
 
+        final String errorMsg =
+                String.format("Error charging account, Insufficient Balance for UserId %s charging %.2f, balance %.2f",
+                        userId,
+                        dto.getAmount().doubleValue(),
+                        account.getBalance().doubleValue()
+                );
+
+        log.error(errorMsg);
+
         return WalletResponseDto.builder()
                 .message("Insufficient Balance")
                 .status(300)
@@ -528,6 +496,49 @@ public class AccountService {
         PageHelper.startPage(pageNumber, pageSize);
         Page<FundWalletRequest> requests = fundWalletMapper.findByUserId(userId);
         return createFundDto(requests);
+    }
+
+    public Optional<List<FundWalletRequestDto>> findWalletRequestReport(WalletReportRequestDto dto) {
+        List<FundWalletRequest> requests = fundWalletMapper.findByCriteria(dto);
+
+        if (requests.size() > 0) {
+            List<String> ids = requests.stream()
+                    .map(FundWalletRequest::getUserId)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (!ids.isEmpty()) {
+                UserIdListDto userIdListDto = new UserIdListDto(ids);
+                UserEntryListDto userEntries = userClient.getUserEntries(userIdListDto);
+
+                if (userEntries != null && userEntries.getEntries() != null && userEntries.getEntries().size() > 0) {
+                    List<FundWalletRequestDto> response = requests.stream()
+                            .map(m -> {
+                                final FundWalletRequestDto fundWalletRequestDto = fundWalletMapstructMapper.requestToRequestDto(m);
+
+                                if (m.getUserId() != null) {
+                                    Optional<UserEntryDto> first = userEntries.getEntries()
+                                            .stream()
+                                            .filter(x -> x.getId().equals(m.getUserId()))
+                                            .findFirst();
+
+                                    first.ifPresent(userEntryDto -> fundWalletRequestDto.setUserName(userEntryDto.getName()));
+                                }
+
+                                return fundWalletRequestDto;
+                            })
+                    .collect(Collectors.toList());
+
+                    return Optional.of(response);
+                }
+
+                return Optional.of(requests.stream()
+                        .map(fundWalletMapstructMapper::requestToRequestDto)
+                        .collect(Collectors.toList()));
+            }
+        }
+
+        return Optional.empty();
     }
 
     public static String saveFundWalletRequest(BigDecimal amount, Integer fundType, String userId,
@@ -570,6 +581,7 @@ public class AccountService {
     private void invokeRefundNotification(Account account, BigDecimal amount) {
         try {
             RestTemplate restTemplate = new RestTemplate();
+            log.info("invoking Refund Hook {}", account.getWebHook());
 
             WebHookDto dto = WebHookDto.builder()
                     .id(account.getId())
@@ -601,10 +613,6 @@ public class AccountService {
     }
 
     private Boolean checkPayment(String id) {
-//        RestTemplate restTemplate = new RestTemplate();
-//        PaymentRequestDto dto
-//                = restTemplate.getForObject(baseUrl + "api/v1/pay/" + id, PaymentRequestDto.class);
-
         PaymentRequestDto dto = paymentClient.checkPayment(id);
         return dto != null ? dto.getVerified() : false;
     }

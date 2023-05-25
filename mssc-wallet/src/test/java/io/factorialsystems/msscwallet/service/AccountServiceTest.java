@@ -4,10 +4,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscwallet.dao.FundWalletMapper;
 import io.factorialsystems.msscwallet.domain.FundWalletRequest;
-import io.factorialsystems.msscwallet.dto.AccountDto;
-import io.factorialsystems.msscwallet.dto.BalanceDto;
-import io.factorialsystems.msscwallet.dto.FundWalletRequestDto;
-import io.factorialsystems.msscwallet.dto.WalletRequestDto;
+import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.exception.ResourceNotFoundException;
 import io.factorialsystems.msscwallet.utils.Security;
 import lombok.extern.apachecommons.CommonsLog;
@@ -302,6 +299,31 @@ class AccountServiceTest {
 //        }
     }
 
+    @Test
+    void findWalletRequestReport() {
+        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
+        final String accessToken = getUserToken(id);
+
+        WalletReportRequestDto dto = new WalletReportRequestDto();
+        dto.setUserId("28e05596-9ad0-4187-ac11-fd93fb7701af");
+
+        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
+            k.when(Security::getUserId).thenReturn(id);
+            assert Objects.equals(Security.getUserId(), id);
+            log.info(Security.getUserId());
+
+            k.when(Security::getAccessToken).thenReturn(accessToken);
+            assertThat(Security.getAccessToken()).isEqualTo(accessToken);
+            log.info(Security.getAccessToken());
+
+            var y = accountService.findWalletRequestReport(dto);
+            log.info(y.get());
+            log.info(y.get().size());
+        }
+    }
+
+
+
 
     private String getRealmAdminToken() {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
@@ -356,4 +378,6 @@ class AccountServiceTest {
 
         return  token.getAccess_token();
     }
+
+
 }
