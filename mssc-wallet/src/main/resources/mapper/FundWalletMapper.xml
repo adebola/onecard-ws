@@ -56,8 +56,8 @@
         from fund_wallet_request
 
         <where>
-            <if test="userId != null and userId != ''">
-                and user_id = #{userId}
+            <if test="id != null and id != ''">
+                and user_id = #{id}
             </if>
 
             <if test="startDate != null and endDate != null">

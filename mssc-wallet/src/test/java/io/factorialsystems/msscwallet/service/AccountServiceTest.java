@@ -305,7 +305,7 @@ class AccountServiceTest {
         final String accessToken = getUserToken(id);
 
         WalletReportRequestDto dto = new WalletReportRequestDto();
-        dto.setUserId("28e05596-9ad0-4187-ac11-fd93fb7701af");
+        dto.setId("28e05596-9ad0-4187-ac11-fd93fb7701af");
 
         try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
             k.when(Security::getUserId).thenReturn(id);

@@ -8,7 +8,7 @@ import java.util.Date;
 @Data
 
 public class WalletReportRequestDto {
-    private String userId;
+    private String id;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private Date startDate;
