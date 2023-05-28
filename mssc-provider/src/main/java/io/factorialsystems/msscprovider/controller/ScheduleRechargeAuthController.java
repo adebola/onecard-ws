@@ -3,9 +3,10 @@ package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.DateDto;
 import io.factorialsystems.msscprovider.dto.DateRangeDto;
-import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.dto.recharge.NewScheduledRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.service.NewScheduledRechargeService;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRechargeExcelGenerator;
 import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth-recharge/scheduled")
 public class ScheduleRechargeAuthController {
+    private final BulkRechargeExcelGenerator excelGenerator;
     private final NewScheduledRechargeService newScheduledRechargeService;
 
     @PostMapping
@@ -97,7 +99,7 @@ public class ScheduleRechargeAuthController {
     public ResponseEntity<Resource> generateExcelFile(@PathVariable("id") String id) {
         final String filename = String.format("%s.%s", id, "xlsx");
 
-        InputStreamResource file = new InputStreamResource(newScheduledRechargeService.generateExcelFile(id));
+        InputStreamResource file = new InputStreamResource(excelGenerator.generateScheduledBulkExcelFile(id));
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))

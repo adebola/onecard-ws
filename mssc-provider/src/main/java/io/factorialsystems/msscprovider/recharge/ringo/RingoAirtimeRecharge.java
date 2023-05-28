@@ -87,11 +87,6 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, 
     }
 
     @Override
-    public Boolean check(SingleRechargeRequest request) {
-        return request != null && request.getRecipient() != null && request.getServiceCost() != null;
-    }
-
-    @Override
     public BigDecimal getBalance() {
 
         RingoInfoRequest request = RingoInfoRequest.builder()

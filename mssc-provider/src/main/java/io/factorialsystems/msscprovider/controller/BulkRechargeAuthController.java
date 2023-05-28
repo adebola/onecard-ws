@@ -11,6 +11,7 @@ import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
 import io.factorialsystems.msscprovider.dto.status.MessageDto;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRechargeExcelGenerator;
 import io.factorialsystems.msscprovider.utils.Constants;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth-recharge/bulk")
 public class BulkRechargeAuthController {
+    private final BulkRechargeExcelGenerator excelGenerator;
     private final NewBulkRechargeService newBulkRechargeService;
 
     @PostMapping
@@ -173,7 +175,7 @@ public class BulkRechargeAuthController {
     public ResponseEntity<Resource> generateExcelFile(@PathVariable("id") String id) {
         final String filename = String.format("%s.%s", id, "xlsx");
 
-        InputStreamResource file = new InputStreamResource(newBulkRechargeService.generateExcelFile(id));
+        InputStreamResource file = new InputStreamResource(excelGenerator.generateBulkExcelFile(id));
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))

@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.service;
 
 import io.factorialsystems.msscprovider.dto.DateRangeDto;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRechargeExcelGenerator;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ class NewScheduledRechargeServiceTest {
 
     @Autowired
     private NewScheduledRechargeService service;
+
+    @Autowired
+    private BulkRechargeExcelGenerator excelGenerator;
 
 
     @Test
@@ -112,7 +116,7 @@ class NewScheduledRechargeServiceTest {
             assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
             log.info(ProviderSecurity.getUserId());
 
-            InputStreamResource resource = new InputStreamResource(service.generateExcelFile(scheduledId));
+            InputStreamResource resource = new InputStreamResource(excelGenerator.generateScheduledBulkExcelFile(scheduledId));
             File targetFile = new File("test4.xlsx");
             OutputStream outputStream = new FileOutputStream(targetFile);
             byte[] buffer = resource.getInputStream().readAllBytes();

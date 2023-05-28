@@ -390,7 +390,7 @@
         from providerdb.new_bulk_recharge_requests
 
         <where>
-            <if test="userId != null">
+            <if test="userId != null and userId != ''">
                 user_id = #{userId}
             </if>
 

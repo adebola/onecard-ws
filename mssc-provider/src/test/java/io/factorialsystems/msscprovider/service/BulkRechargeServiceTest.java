@@ -14,6 +14,7 @@ import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRechargeExcelGenerator;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification;
@@ -50,6 +51,8 @@ class BulkRechargeServiceTest {
     private NewBulkRechargeService service;
     @Autowired
     BulkRechargeMapper newBulkRechargeMapper;
+    @Autowired
+    private BulkRechargeExcelGenerator excelGenerator;
 
     final String client_id = "public-client";
     final String realmPassword = "password";
@@ -424,7 +427,7 @@ class BulkRechargeServiceTest {
             assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
             log.info(ProviderSecurity.getUserId());
 
-            InputStreamResource resource = new InputStreamResource(service.generateExcelFile(bulkId));
+            InputStreamResource resource = new InputStreamResource(excelGenerator.generateBulkExcelFile(bulkId));
             File targetFile = new File("test2.xlsx");
             OutputStream outputStream = new FileOutputStream(targetFile);
             byte[] buffer = resource.getInputStream().readAllBytes();

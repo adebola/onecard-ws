@@ -11,7 +11,10 @@ import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.*;
+import io.factorialsystems.msscprovider.dto.DateRangeDto;
+import io.factorialsystems.msscprovider.dto.PagedDto;
+import io.factorialsystems.msscprovider.dto.RequestTransactionDto;
+import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
@@ -21,20 +24,14 @@ import io.factorialsystems.msscprovider.dto.search.SearchBulkFailedRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchBulkRechargeDto;
 import io.factorialsystems.msscprovider.dto.search.SearchIndividualDto;
 import io.factorialsystems.msscprovider.dto.status.StatusMessageDto;
-import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.mapper.recharge.NewBulkRechargeMapstructMapper;
 import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.factory.AbstractFactory;
 import io.factorialsystems.msscprovider.recharge.factory.FactoryProducer;
-import io.factorialsystems.msscprovider.service.MailService;
-import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkDownloadRecharge;
-import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRefundRecharge;
-import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkResolveRecharge;
-import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRetryRecharge;
+import io.factorialsystems.msscprovider.service.bulkrecharge.helper.*;
 import io.factorialsystems.msscprovider.service.file.ExcelReader;
-import io.factorialsystems.msscprovider.service.file.ExcelWriter;
 import io.factorialsystems.msscprovider.service.file.FileUploader;
 import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification;
@@ -51,14 +48,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Slf4j
@@ -66,8 +55,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class NewBulkRechargeService {
     private final ServiceHelper helper;
-    private final JmsTemplate jmsTemplate;
-    private final MailService mailService;
+    private final JmsTemplate messageQueue;
     private final FactoryProducer producer;
     private final ObjectMapper objectMapper;
     private final FileUploader fileUploader;
@@ -76,9 +64,10 @@ public class NewBulkRechargeService {
     private final BulkResolveRecharge bulkResolveRecharge;
     private final BulkDownloadRecharge bulkDownloadRecharge;
     private final ParameterCache parameterCache;
-    private final ExcelWriter excelWriter;
     private final NewBulkRechargeMapstructMapper mapper;
     private final BulkRechargeMapper newBulkRechargeMapper;
+    private final BulkRechargeReportSender reportSender;
+    private final BulkRechargeDuplicateFinder duplicateFinder;
 
     @Transactional
     public void uploadRecharge(MultipartFile file) {
@@ -167,8 +156,8 @@ public class NewBulkRechargeService {
                     .balance(requestDto.getBalance())
                     .build();
 
-            log.info(String.format("Sending message for Asynchronous processing of Bulk Recharge Request (%s)", requestId));
-            jmsTemplate.convertAndSend(JMSConfig.NEW_BULK_RECHARGE_QUEUE, objectMapper.writeValueAsString(asyncRechargeDto));
+            log.info("Sending message for Asynchronous processing of Bulk Recharge Request {}", requestId);
+            messageQueue.convertAndSend(JMSConfig.NEW_BULK_RECHARGE_QUEUE, objectMapper.writeValueAsString(asyncRechargeDto));
         }
 
         return NewBulkRechargeResponseDto.builder()
@@ -184,6 +173,8 @@ public class NewBulkRechargeService {
 
     // Performs the actual Bulk Recharges called from NewScheduledRechargeService and
     // Called from the JMS Framework (RechargeListener) to run Bulk Recharges asynchronously
+    // The saveService method in this class persists the request and then send a JMS Message
+    // which eventually ends up calling this function
     public void runBulkRecharge(AsyncRechargeDto dto) {
         final String id = dto.getId();
 
@@ -196,9 +187,10 @@ public class NewBulkRechargeService {
             return;
         }
 
-        if (checkForDuplicates(request)) {
+        // Check for Identical Double submissions
+        if (duplicateFinder.checkForDuplicates(request)) {
             log.error("BulkRecharge Request {} looks like a duplicate request and has been reversed", request.getId());
-            sendDuplicateReport(dto, request);
+            reportSender.sendDuplicateReport(dto, request);
             return;
         }
 
@@ -245,7 +237,6 @@ public class NewBulkRechargeService {
 
                     if (parameterCheck.check(singleRechargeRequest)) {
                         Recharge recharge = factory.getRecharge(parameter.getServiceAction());
-
                         RechargeStatus rechargeStatus = recharge.recharge(singleRechargeRequest);
 
                         if (rechargeStatus.getStatus() == HttpStatus.OK) {
@@ -297,7 +288,7 @@ public class NewBulkRechargeService {
             }
 
             retryFailedRecharges(id);
-            sendReport(dto, request);
+            reportSender.sendReport(dto, request);
             refundFailedRecharges(id);
         } catch (Exception ex) {
             log.error(String.format("Unknown Error Running Bulk Recharge %s Reason %s", id, ex.getMessage()));
@@ -309,7 +300,7 @@ public class NewBulkRechargeService {
     @SneakyThrows
     public void asyncRetryFailedRecharges(String id) {
         log.info("Submitting request to retry recharge failures for {}", id);
-        jmsTemplate.convertAndSend(JMSConfig.RETRY_RECHARGE_QUEUE, objectMapper.writeValueAsString(id));
+        messageQueue.convertAndSend(JMSConfig.RETRY_RECHARGE_QUEUE, objectMapper.writeValueAsString(id));
     }
 
     public void retryFailedRecharges(String id) {
@@ -350,7 +341,7 @@ public class NewBulkRechargeService {
         }
 
         log.info(String.format("AsyncBulk Recharge: Sending message for Asynchronous processing of Bulk Recharge Request (%s)", id));
-        jmsTemplate.convertAndSend(JMSConfig.NEW_BULK_RECHARGE_QUEUE, objectMapper.writeValueAsString(id));
+        messageQueue.convertAndSend(JMSConfig.NEW_BULK_RECHARGE_QUEUE, objectMapper.writeValueAsString(id));
     }
 
     public PagedDto<NewBulkRechargeRequestDto> getUserRechargesByAutoRequestId(String id, Integer pageNumber, Integer pageSize) {
@@ -465,20 +456,6 @@ public class NewBulkRechargeService {
         return createIndividualDto(requests);
     }
 
-    public ByteArrayInputStream generateExcelFile(String id) {
-        NewBulkRechargeRequest request = newBulkRechargeMapper.findBulkRechargeById(id);
-
-        List<IndividualRequest> individualRequests = newBulkRechargeMapper.findBulkIndividualRequests(id);
-
-        if (individualRequests == null || individualRequests.isEmpty()) {
-            throw new ResourceNotFoundException("IndividualRequests", "id", id);
-        }
-
-        String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
-        final String title = String.format("BulkRecharge Request (%s) Created On (%s)", id, s);
-        return excelWriter.bulkIndividualRequestToExcel(individualRequests, title);
-    }
-
     public InputStreamResource failed(String type) {
         return bulkDownloadRecharge.failed(type);
     }
@@ -492,65 +469,6 @@ public class NewBulkRechargeService {
     public InputStreamResource getRechargeByDateRange(DateRangeDto dto) {
         dto.setId(ProviderSecurity.getUserId());
         return bulkDownloadRecharge.downloadRechargeByDateRange(dto);
-    }
-
-    private void sendDuplicateReport(AsyncRechargeDto dto, NewBulkRechargeRequest request) {
-        if (dto.getEmail() == null || dto.getName() == null) {
-            log.info("Unable to Send E-mail for Bulk Transaction, No E-mail Address or Customer Name found");
-            return;
-        }
-
-        String dateString = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
-
-        final String messageBody =
-                String.format("Dear %s\n\nThe Bulk Recharge Request submitted on %s\nwas identified as a duplicate submission and was not run, all charges have been reversed.\nIf you still want to run the Bulk Recharge please re-submit it",
-                dto.getName(), dateString);
-
-        MailMessageDto mailMessageDto = MailMessageDto.builder()
-                .body(messageBody)
-                .to(dto.getEmail())
-                .subject("Duplicate Submission Detected")
-                .build();
-
-        mailService.pushMailWithOutAttachment(mailMessageDto);
-    }
-
-    private void sendReport(AsyncRechargeDto dto, NewBulkRechargeRequest request) {
-
-        if (dto.getEmail() == null || dto.getName() == null) {
-            log.info("Unable to Send E-mail for Bulk Transaction, No E-mail Address or Customer Name found");
-            return;
-        }
-
-       String dateString = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedAt());
-
-        final String messageBody = String.format("Dear %s\n\nPlease find attached report for your Bulk Recharge\nCarried out on %s\nCurrent Balance %.2f",
-                dto.getName(), dateString, dto.getBalance());
-
-        MailMessageDto mailMessageDto = MailMessageDto.builder()
-                .body(messageBody)
-                .to(dto.getEmail())
-                .subject("Bulk Recharge Report")
-                .build();
-
-        InputStreamResource resource = new InputStreamResource(generateExcelFile(dto.getId()));
-        File targetFile = new File(dto.getId() + ".xlsx");
-
-        try {
-            OutputStream outputStream = new FileOutputStream(targetFile);
-            byte[] buffer = resource.getInputStream().readAllBytes();
-            outputStream.write(buffer);
-
-            //FileSystemResource fileSystemResource = new FileSystemResource(targetFile);
-            final String emailId = mailService.sendMailWithAttachment(targetFile, mailMessageDto, Constants.MULTIPART_REQUESTPART_NAME,  Constants.EXCEL_CONTENT_TYPE);
-
-            Map<String, String> emailMap = new HashMap<>();
-            emailMap.put("id", dto.getId());
-            emailMap.put("emailId", emailId);
-            newBulkRechargeMapper.setEmailId(emailMap);
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-        }
     }
 
     private PagedDto<IndividualRequestDto> createIndividualDto(Page<IndividualRequest> requests) {
@@ -573,42 +491,6 @@ public class NewBulkRechargeService {
         return pagedDto;
     }
 
-    private boolean checkForDuplicates(NewBulkRechargeRequest request) {
-        Map<String, String> parameterMap = new HashMap<>();
-        parameterMap.put("id", request.getId());
-        parameterMap.put("userId", request.getUserId());
-
-        List<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findByUserIdToday(parameterMap);
-
-        if (requests.stream().anyMatch(r -> filterDateAndCost(request, r))) {
-            log.info("Bulk Recharge Request {} looks like a duplicate request it will not be run", request.getId());
-            newBulkRechargeMapper.duplicateRequest(request.getId());
-            refundFailedRecharges(request.getId());
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private boolean filterDateAndCost(NewBulkRechargeRequest originalRequest, NewBulkRechargeRequest existingRequest) {
-        if (originalRequest.getTotalServiceCost().equals(existingRequest.getTotalServiceCost())) {
-            LocalDateTime l1 = LocalDateTime.ofInstant(originalRequest.getCreatedAt().toInstant(), ZoneId.systemDefault());
-            LocalDateTime l2 = LocalDateTime.ofInstant(existingRequest.getCreatedAt().toInstant(), ZoneId.systemDefault());
-
-            long diff = ChronoUnit.SECONDS.between(l2, l1);
-
-            if (diff < Constants.FIVE_MINUTES) {
-                Integer i = newBulkRechargeMapper.individualCount(originalRequest.getId());
-                Integer j = newBulkRechargeMapper.individualCount(existingRequest.getId());
-
-                return Objects.equals(i, j);
-            }
-        }
-
-        return false;
-    }
-
     @SneakyThrows
     private void saveTransaction(NewBulkRechargeRequest request) {
         RequestTransactionDto requestTransactionDto = RequestTransactionDto.builder()
@@ -619,6 +501,6 @@ public class NewBulkRechargeService {
                 .recipient("Bulk")
                 .build();
 
-        jmsTemplate.convertAndSend(JMSConfig.NEW_TRANSACTION_QUEUE, objectMapper.writeValueAsString(requestTransactionDto));
+        messageQueue.convertAndSend(JMSConfig.NEW_TRANSACTION_QUEUE, objectMapper.writeValueAsString(requestTransactionDto));
     }
 }

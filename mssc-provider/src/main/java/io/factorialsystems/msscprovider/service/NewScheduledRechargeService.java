@@ -15,7 +15,6 @@ import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.NewScheduledRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.ScheduledRechargeResponseDto;
-import io.factorialsystems.msscprovider.exception.ResourceNotFoundException;
 import io.factorialsystems.msscprovider.helper.PaymentHelper;
 import io.factorialsystems.msscprovider.helper.TransactionHelper;
 import io.factorialsystems.msscprovider.mapper.recharge.NewBulkRechargeMapstructMapper;
@@ -32,7 +31,6 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -249,26 +247,6 @@ public class NewScheduledRechargeService {
                 log.error(errorMessage);
             }
         });
-    }
-
-    public ByteArrayInputStream generateExcelFile(String id) {
-        NewScheduledRechargeRequest request = scheduledRechargeMapper.findById(id);
-
-        if (request == null) {
-            throw new ResourceNotFoundException("NewScheduledRechargeRequest", "id", id);
-        }
-
-        List<IndividualRequest> individualRequests = newBulkRechargeMapper.findBulkIndividualRequestsByScheduleId(id);
-
-        if (individualRequests == null || individualRequests.isEmpty()) {
-            throw new ResourceNotFoundException("ScheduledRequest-IndividualRequests", "id", id);
-        }
-
-        String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(request.getCreatedOn());
-
-        final String title = String.format("ScheduledRecharge Request (%s) Created On (%s)", id, s);
-
-        return excelWriter.bulkIndividualRequestToExcel(individualRequests, title);
     }
 
     private PagedDto<IndividualRequestDto> createIndividualDto(Page<IndividualRequest> requests) {
