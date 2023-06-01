@@ -1,18 +1,28 @@
 package io.factorialsystems.msscreports.service;
 
 import io.factorialsystems.msscreports.dto.PagedDto;
+import io.factorialsystems.msscreports.dto.RechargeReportRequestDto;
 import io.factorialsystems.msscreports.dto.ReportDto;
+import io.factorialsystems.msscreports.dto.WalletReportRequestDto;
+import io.factorialsystems.msscreports.utils.K;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
@@ -90,28 +100,54 @@ class ReportServiceTest {
 
     @Test
     void runRechargeReport() throws IOException {
-//        RechargeReportRequestDto dto = new RechargeReportRequestDto();
-//
-//        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
-//        final String accessToken = getUserToken(id);
-//
-//        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
-//            k.when(K::getUserId).thenReturn(id);
-//            assertThat(K.getUserId()).isEqualTo(id);
-//            log.info(K.getUserId());
-//
-//            k.when(K::getAccessToken).thenReturn(accessToken);
-//            assertThat(K.getAccessToken()).isEqualTo(accessToken);
-//
-//            InputStreamResource inputStreamResource = reportService.runRechargeReport(dto);
-//
-//            File targetFile = new File("recharge-report.xlsx");
-//            OutputStream outputStream = new FileOutputStream(targetFile);
-//            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
-//            outputStream.write(buffer);
-//
-//            log.info(targetFile.getAbsolutePath());
-//        }
+        RechargeReportRequestDto dto = new RechargeReportRequestDto();
+
+        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
+        final String accessToken = getUserToken(id);
+
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            k.when(K::getAccessToken).thenReturn(accessToken);
+            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+
+            InputStreamResource inputStreamResource = reportService.runRechargeReport(dto);
+
+            File targetFile = new File("recharge-report.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
+        }
+    }
+
+    @Test
+    void runWalletReport() throws IOException {
+                WalletReportRequestDto dto = new WalletReportRequestDto();
+
+        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
+        final String accessToken = getUserToken(id);
+
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            k.when(K::getAccessToken).thenReturn(accessToken);
+            assertThat(K.getAccessToken()).isEqualTo(accessToken);
+
+            InputStreamResource inputStreamResource = reportService.runWalletReport(dto);
+
+            File targetFile = new File("wallet-report.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
+        }
     }
 
     private String getUserToken(String userId) {

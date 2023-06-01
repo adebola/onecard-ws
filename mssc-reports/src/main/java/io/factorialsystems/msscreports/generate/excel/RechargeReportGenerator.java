@@ -22,31 +22,29 @@ public class RechargeReportGenerator {
     public static final int COLUMN_LINE_NUMBER = 0;
     public static final int COLUMN_ID = 1;
     public static final int COLUMN_PARENT_ID = 2;
-    public static final int COLUMN_SERVICE = 3;
-    public static final int COLUMN_PRODUCT = 4;
-    public static final int COLUMN_COST = 5;
-    public static final int COLUMN_FAILED = 6;
-    public static final int COLUMN_CREATED = 7;
-    public static final int COLUMN_REFUNDED = 8;
-    public static final int COLUMN_TYPE = 9;
-    public static final int COLUMN_USERID = 10;
-    public static final int COLUMN_USERNAME = 11;
-    public static final int COLUMN_RESULTS = 12;
-    private static final int COLUMN_PAYMENT_MODE = 13;
+    public static final int COLUMN_USER = 3;
+    public static final int COLUMN_SERVICE = 4;
+    public static final int COLUMN_PRODUCT = 5;
+    public static final int COLUMN_COST = 6;
+    public static final int COLUMN_FAILED = 7;
+    public static final int COLUMN_CREATED = 8;
+    public static final int COLUMN_REFUNDED = 9;
+    public static final int COLUMN_TYPE = 10;
+    public static final int COLUMN_RESULTS = 11;
+    private static final int COLUMN_PAYMENT_MODE = 12;
 
     public static final String[] REPORT_HEADERS = {
             "#",
             "id",
-            "parent Id",
-            "service",
-            "product",
-            "cost",
+            "Parent Id",
+            "User",
+            "Service",
+            "Product",
+            "Transaction Amt",
             "status",
-            "created",
+            "Date/Time",
             "refunded",
             "type",
-            "userId",
-            "userName",
             "results",
             "payment"
     };
@@ -96,6 +94,11 @@ public class RechargeReportGenerator {
                 // # Parent Id
                 row.createCell(COLUMN_PARENT_ID).setCellValue(request.getParentId());
 
+                // User
+                if (request.getUserName() != null) {
+                    row.createCell(COLUMN_USER).setCellValue(request.getUserName());
+                }
+
                 // # Service
                 row.createCell(COLUMN_SERVICE).setCellValue(request.getServiceCode());
 
@@ -128,15 +131,6 @@ public class RechargeReportGenerator {
                 // # Recharge Type Bulk or Single
                 row.createCell(COLUMN_TYPE).setCellValue(request.getRechargeType());
 
-                // # UserId
-                if (request.getUserId() != null) {
-                    row.createCell(COLUMN_USERID).setCellValue(request.getUserId());
-                }
-
-                if (request.getUserName() != null) {
-                    row.createCell(COLUMN_USERNAME).setCellValue(request.getUserName());
-                }
-
                 if (request.getResults() != null) {
                     row.createCell(COLUMN_RESULTS).setCellValue(request.getResults());
                 }
@@ -150,7 +144,6 @@ public class RechargeReportGenerator {
 
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
-
         } catch (IOException ioe) {
             throw new RuntimeException("fail to import data to Excel file: " + ioe.getMessage());
         }
