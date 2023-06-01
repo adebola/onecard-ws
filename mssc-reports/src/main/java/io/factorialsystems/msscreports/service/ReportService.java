@@ -5,12 +5,11 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscreports.dao.ReportMapper;
 import io.factorialsystems.msscreports.domain.Report;
-import io.factorialsystems.msscreports.dto.CombinedRechargeList;
-import io.factorialsystems.msscreports.dto.PagedDto;
-import io.factorialsystems.msscreports.dto.RechargeReportRequestDto;
-import io.factorialsystems.msscreports.dto.ReportDto;
+import io.factorialsystems.msscreports.dto.*;
+import io.factorialsystems.msscreports.external.client.AccountClient;
 import io.factorialsystems.msscreports.external.client.ProviderClient;
 import io.factorialsystems.msscreports.generate.excel.RechargeReportGenerator;
+import io.factorialsystems.msscreports.generate.excel.WalletReportGenerator;
 import io.factorialsystems.msscreports.mapper.ReportMSMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -23,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -31,8 +31,10 @@ import java.util.Map;
 public class ReportService {
     private final AuditService auditService;
     private final ReportMapper reportMapper;
+    private final AccountClient accountClient;
     private final ReportMSMapper reportMSMapper;
     private final ProviderClient providerClient;
+    private final WalletReportGenerator walletReportGenerator;
     private final RechargeReportGenerator rechargeReportGenerator;
 
     private static final String UPDATE_REPORT = "Report Updated";
@@ -91,16 +93,23 @@ public class ReportService {
     @SneakyThrows
     public InputStreamResource runRechargeReport(RechargeReportRequestDto dto) {
         CombinedRechargeList combinedRechargeList = providerClient.getRechargeReport(dto);
-        if (combinedRechargeList != null) {
-            return new InputStreamResource(
-                    rechargeReportGenerator.rechargeToExcel(combinedRechargeList.getRequests(), dto)
-            );
-        }
+        return new InputStreamResource(rechargeReportGenerator.rechargeToExcel(combinedRechargeList.getRequests(), dto));
 
-        final String errorMessage
-                = "Error running recharge report, unable to get report values from upstream service";
-        log.info(errorMessage);
-        throw new RuntimeException(errorMessage);
+
+//        final String errorMessage
+//                = "Error running recharge report, unable to get report values from upstream service";
+//        log.info(errorMessage);
+//        throw new RuntimeException(errorMessage);
+    }
+
+    public InputStreamResource runWalletReport(WalletReportRequestDto dto) {
+
+        if (dto.getType().equals("user")) {
+            List<FundWalletRequestDto> requests = accountClient.getWalletFunding(dto);
+            return new InputStreamResource(walletReportGenerator.walletToExcel(requests, dto));
+        } else {
+            return null;
+        }
     }
 
     public ByteArrayInputStream runReport(Integer id) {

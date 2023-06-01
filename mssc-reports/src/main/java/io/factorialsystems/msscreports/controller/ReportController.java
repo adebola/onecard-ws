@@ -3,6 +3,7 @@ package io.factorialsystems.msscreports.controller;
 import io.factorialsystems.msscreports.dto.MessageDto;
 import io.factorialsystems.msscreports.dto.RechargeReportRequestDto;
 import io.factorialsystems.msscreports.dto.ReportDto;
+import io.factorialsystems.msscreports.dto.WalletReportRequestDto;
 import io.factorialsystems.msscreports.service.ReportService;
 import io.factorialsystems.msscreports.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -103,5 +104,18 @@ public class ReportController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(reportService.runRechargeReport(dto));
+    }
+
+    @PostMapping("/wallet")
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<Resource> runWalletReport(@Valid @RequestBody WalletReportRequestDto dto) {
+        final String filename = String.format("wallet-%s.xlsx", UUID.randomUUID());
+
+        log.info("Running Wallet Report Parameters {}", dto);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(reportService.runWalletReport(dto));
     }
 }
