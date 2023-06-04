@@ -56,8 +56,8 @@ public class AmazonS3BucketService {
 
         UploadFile uploadFile = fileService.uploadFile(multipartFile);
         uploadFileToBucket(uploadFile.getFileName(), uploadFile.getFile());
-
-        return  endpointUrl + "/" + bucketName + "/" + uploadFile.getFileName();
+        return String.format("%s/%s/%s", endpointUrl, bucketName, uploadFile.getFileName());
+//        return  endpointUrl + "/" + bucketName + "/" + uploadFile.getFileName();
     }
 
     private void uploadFileToBucket(String fileName, File file) {

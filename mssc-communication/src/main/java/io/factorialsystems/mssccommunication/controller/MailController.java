@@ -26,7 +26,7 @@ public class MailController {
 //    @PostMapping( value = "/attachment", consumes = {MediaType.APPLICATION_JSON_VALUE,MediaType.MULTIPART_FORM_DATA_VALUE})
     @PostMapping("/attachment")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public String sendMailWithAttachment(@RequestPart(value = "message") MailMessageDto dto, @RequestPart(value = "file") MultipartFile file)  {
+    public String sendMailWithAttachment(@RequestPart(value = "message") @Valid MailMessageDto dto, @RequestPart(value = "file") MultipartFile file)  {
         return mailService.sendMail(dto, file);
     }
 }

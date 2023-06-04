@@ -17,7 +17,6 @@ public class UploadController {
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     public String uploadFile(@RequestPart(value = "file") MultipartFile file) {
-        log.info("Inside Multipart File");
         return this.amazonS3BucketService.uploadFile(file);
     }
 }
