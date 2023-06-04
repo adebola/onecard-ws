@@ -27,11 +27,13 @@ public class PaystackHelper implements Payment {
     private final PaymentMapper paymentMapper;
 
     @Value("${api.paystack.url}")
-    private String paystackURL;
+    private String baseUrl;
     @Value("${api.paystack.callback.url}")
-    private String paystackCallbackURL;
+    private String callbackUrl;
     @Value("${paystack.secret}")
-    private String paystackSecret;
+    private String secret;
+
+    private static HttpHeaders headers;
 
     @Override
     public PaymentRequestDto initializePayment(PaymentRequestDto dto) {
@@ -44,20 +46,16 @@ public class PaystackHelper implements Payment {
         if (dto.getRedirectUrl() != null) {
             txRequest.setCallback_url(dto.getRedirectUrl());
         } else {
-            dto.setRedirectUrl(paystackCallbackURL);
-            txRequest.setCallback_url(paystackCallbackURL);
+            dto.setRedirectUrl(callbackUrl);
+            txRequest.setCallback_url(callbackUrl);
         }
 
         RestTemplate restTemplate = new RestTemplate();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(paystackSecret);
-
         try {
-            HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(txRequest), headers);
+            HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(txRequest), getHeader());
             InitializeTransactionResponse response = restTemplate
-                    .postForObject(paystackURL + "/initialize", request, InitializeTransactionResponse.class);
+                    .postForObject(baseUrl + "/initialize", request, InitializeTransactionResponse.class);
 
             if (response != null) {
                 String id = UUID.randomUUID().toString();
@@ -101,15 +99,13 @@ public class PaystackHelper implements Payment {
     public PaymentRequestDto checkPaymentValidity(PaymentRequest paymentRequest) {
         if (paymentRequest != null) {
             RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> request = new HttpEntity<>(getHeader());
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(paystackSecret);
-            HttpEntity<String> request = new HttpEntity<>(headers);
+            log.info("Checking Validity for paystack Payment {}, url {}, secret {}", paymentRequest.getReference(), baseUrl, secret);
 
             ResponseEntity<VerifyTransactionResponse> response =
                     restTemplate.exchange(
-                            paystackURL + "/verify/" + paymentRequest.getReference(),
+                            baseUrl + "/verify/" + paymentRequest.getReference(),
                             HttpMethod.GET,
                             request,
                             VerifyTransactionResponse.class
@@ -119,7 +115,6 @@ public class PaystackHelper implements Payment {
 
             if (transactionResponse != null) {
                 boolean verified = transactionResponse.getData().getStatus().equals("success");
-
 
                 if (verified) {
                     paymentMapper.verifyById(paymentRequest.getId());
@@ -138,5 +133,15 @@ public class PaystackHelper implements Payment {
 
         log.error("Payment Validity Request Error");
         return null;
+    }
+
+    private HttpHeaders getHeader() {
+        if (PaystackHelper.headers == null) {
+            PaystackHelper.headers = new HttpHeaders();
+            PaystackHelper.headers.setContentType(MediaType.APPLICATION_JSON);
+            PaystackHelper.headers.setBearerAuth(secret);
+        }
+
+        return PaystackHelper.headers;
     }
 }
