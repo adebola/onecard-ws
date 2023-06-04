@@ -103,6 +103,7 @@ public class AccountService {
         return accountMapstructMapper.accountToAccountDto(accountMapper.findAccountById(id));
     }
 
+    // 1st Leg of a Self Wallet Funding Request
     public FundWalletResponseDto initializeFundWallet(FundWalletRequestDto dto) {
         final String id = UUID.randomUUID().toString();
         final String userId = Security.getUserId();
@@ -146,6 +147,8 @@ public class AccountService {
                 .build();
     }
 
+    // 2nd Leg of Self Wallet Funding Request after the Payment has been made
+    // through the Payment Gateway
     @Transactional
     public MessageDto fundWallet(String id) {
         FundWalletRequest request = fundWalletMapper.findById(id);
@@ -212,6 +215,7 @@ public class AccountService {
         return new MessageDto(errorMessage);
     }
 
+    // Transfer Funds between Users
     @Transactional
     public WalletResponseDto transferFunds(TransferFundsDto dto) {
         Account toAccount = Optional.ofNullable(accountMapper.findAccountByUserIdOrUserName(dto.getRecipient()))

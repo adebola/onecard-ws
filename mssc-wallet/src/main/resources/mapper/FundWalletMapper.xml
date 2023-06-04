@@ -34,7 +34,6 @@
         closed
     </sql>
 
-
     <select id="findById" parameterType="java.lang.String" resultMap="fundWalletResultMap">
         select
         <include refid="column_list"/>
