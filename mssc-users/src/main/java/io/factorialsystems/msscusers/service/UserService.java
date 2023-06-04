@@ -38,9 +38,9 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
     private static final String CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%&";
-    private static final String  MAIL_PROFILE_HEADER = "Dear %s %s\n\nYour Profile has successfully been changed";
+    private static final String MAIL_PROFILE_HEADER = "Dear %s %s\n\nYour Profile has successfully been changed";
     private static final String MAIL_PASSWORD_CHANGE_HEADER = "Dear %s %s\n\nYou have successfully changed your password";
-    private static final String MAIL_LOGIN_HEADER = "Dear %s %s\\n\\nYou have successfully logged on to your Onecard Recharge Suite.\\n%s\"";
+    private static final String MAIL_LOGIN_HEADER = "Dear %s %s\n\nYou have successfully logged on to your Onecard Recharge Suite.\n%s";
     private final UsersResource usersResource;
     private final RolesResource rolesResource;
     private final KeycloakUserMapper keycloakUserMapper;
