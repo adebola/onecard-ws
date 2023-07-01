@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,7 +23,7 @@ public class MessageService {
     private final AuditMessageRepository auditMessageRepository;
 
     public PagedDto<AuditMessageDto> findAll(Integer pageNumber, Integer pageSize) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("createdDate").descending());
         Page<AuditMessage> messages = auditMessageRepository.findAll(pageable);
         PagedDto<AuditMessageDto> pagedDto = new PagedDto<>();
 
