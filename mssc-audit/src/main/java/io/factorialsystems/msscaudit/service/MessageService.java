@@ -11,9 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -40,7 +41,7 @@ public class MessageService {
                 return createPagedAuditMessage(auditMessageRepository.findPageableByServiceActionLike(auditSearchDto.getSearchAction(), pageable));
             } else if (auditSearchDto.getStart() != null) {
                 if (auditSearchDto.getEnd() == null ) {
-                    return createPagedAuditMessage(auditMessageRepository.findPageableByCreatedDateBetween(auditSearchDto.getStart(), Instant.now(), pageable));
+                    return createPagedAuditMessage(auditMessageRepository.findPageableByCreatedDateBetween(auditSearchDto.getStart(), new Date(), pageable));
                 } else {
                     return createPagedAuditMessage(auditMessageRepository.findPageableByCreatedDateBetween(auditSearchDto.getStart(), auditSearchDto.getEnd(), pageable));
                 }
@@ -68,9 +69,9 @@ public class MessageService {
         if (dto != null) {
             if (dto.getStart() != null) {
                 if (dto.getEnd() == null) {
-                    messages = auditMessageRepository.findByCreatedDateBetween(dto.getStart(), Instant.now());
+                    messages = auditMessageRepository.findByCreatedDateBetween(dto.getStart(), new Date(), Sort.by("createdDate").descending());
                 } else {
-                    messages = auditMessageRepository.findByCreatedDateBetween(dto.getStart(), dto.getEnd());
+                    messages = auditMessageRepository.findByCreatedDateBetween(dto.getStart(), dto.getEnd(), Sort.by("createdDate").descending());
                 }
             }
         }

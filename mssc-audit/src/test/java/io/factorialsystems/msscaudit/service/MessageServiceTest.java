@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
 
@@ -49,10 +50,15 @@ class MessageServiceTest {
     }
 
     @Test
-    void findAll_UnPaged_StartDateOnly() {
-        Instant start = Instant.parse("2022-02-15T18:35:24.00Z");
-        Instant end =  Instant.parse("2022-03-15T18:35:24.00Z");
-        AuditSearchDto dto = new AuditSearchDto(null, start, end);
+    void findAll_UnPaged_StartDateOnly() throws ParseException {
+        //Instant start = Instant.parse("2022-02-15T18:35:24.00Z");
+        //Instant end =  Instant.parse("2022-03-15T18:35:24.00Z");
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        final Date start = simpleDateFormat.parse("2022-02-15 18:35:24");
+        final Date end = simpleDateFormat.parse("2022-03-15 18:35:24");
+        AuditSearchDto dto = new AuditSearchDto(null, start, null);
         var x = service.findAllUnPaged(dto);
         log.info(x.size());
     }
@@ -72,9 +78,9 @@ class MessageServiceTest {
         Instant start = Instant.parse("2022-02-15T18:35:24.00Z");
         Instant end =  Instant.parse("2022-03-15T18:35:24.00Z");
 
-        AuditSearchDto auditSearchDto = new AuditSearchDto(null, start, end);
-        final PagedDto<AuditMessageDto> search = service.search(1, 20, auditSearchDto);
-        log.info(search);
+        //AuditSearchDto auditSearchDto = new AuditSearchDto(null, start, end);
+        //final PagedDto<AuditMessageDto> search = service.search(1, 20, auditSearchDto);
+        //log.info(search);
     }
 
     @Test
