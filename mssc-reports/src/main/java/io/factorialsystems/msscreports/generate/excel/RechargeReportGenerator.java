@@ -19,21 +19,21 @@ import java.util.Locale;
 
 @Component
 public class RechargeReportGenerator {
-    public static final int COLUMN_LINE_NUMBER = 0;
-    public static final int COLUMN_ID = 1;
-    public static final int COLUMN_PARENT_ID = 2;
-    public static final int COLUMN_USER = 3;
-    public static final int COLUMN_SERVICE = 4;
-    public static final int COLUMN_PRODUCT = 5;
-    public static final int COLUMN_COST = 6;
-    public static final int COLUMN_FAILED = 7;
-    public static final int COLUMN_CREATED = 8;
-    public static final int COLUMN_REFUNDED = 9;
-    public static final int COLUMN_TYPE = 10;
-    public static final int COLUMN_RESULTS = 11;
+    private static final int COLUMN_LINE_NUMBER = 0;
+    private static final int COLUMN_ID = 1;
+    private static final int COLUMN_PARENT_ID = 2;
+    private static final int COLUMN_USER = 3;
+    private static final int COLUMN_SERVICE = 4;
+    private static final int COLUMN_PRODUCT = 5;
+    private static final int COLUMN_COST = 6;
+    private static final int COLUMN_FAILED = 7;
+    private static final int COLUMN_CREATED = 8;
+    private static final int COLUMN_REFUNDED = 9;
+    private static final int COLUMN_TYPE = 10;
+    private static final int COLUMN_RESULTS = 11;
     private static final int COLUMN_PAYMENT_MODE = 12;
 
-    public static final String[] REPORT_HEADERS = {
+    private static final String[] REPORT_HEADERS = {
             "#",
             "id",
             "Parent Id",

@@ -1,14 +1,10 @@
 package io.factorialsystems.msscreports.controller;
 
-import io.factorialsystems.msscreports.dto.MessageDto;
-import io.factorialsystems.msscreports.dto.RechargeReportRequestDto;
-import io.factorialsystems.msscreports.dto.ReportDto;
-import io.factorialsystems.msscreports.dto.WalletReportRequestDto;
+import io.factorialsystems.msscreports.dto.*;
 import io.factorialsystems.msscreports.service.ReportService;
 import io.factorialsystems.msscreports.utils.K;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,7 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.io.ByteArrayInputStream;
 import java.util.UUID;
 
 @Slf4j
@@ -77,21 +72,21 @@ public class ReportController {
         return new ResponseEntity<>(reportService.findReportById(reportId), HttpStatus.CREATED);
     }
 
-    @GetMapping("/run/{id}")
-    public ResponseEntity<InputStreamResource> runReport(@PathVariable("id") Integer id) {
-
-        log.info("Running Jasper Report {}", id);
-
-        ByteArrayInputStream byteArrayInputStream = reportService.runReport(id);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "inline; filename=report.pdf");
-
-        return ResponseEntity
-                .ok()
-                .headers(headers)
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(new InputStreamResource(byteArrayInputStream));
-    }
+//    @GetMapping("/run/{id}")
+//    public ResponseEntity<InputStreamResource> runReport(@PathVariable("id") Integer id) {
+//
+//        log.info("Running Jasper Report {}", id);
+//
+//        ByteArrayInputStream byteArrayInputStream = reportService.runReport(id);
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add("Content-Disposition", "inline; filename=report.pdf");
+//
+//        return ResponseEntity
+//                .ok()
+//                .headers(headers)
+//                .contentType(MediaType.APPLICATION_PDF)
+//                .body(new InputStreamResource(byteArrayInputStream));
+//    }
 
     @PostMapping("/recharge")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
@@ -117,5 +112,18 @@ public class ReportController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(reportService.runWalletReport(dto));
+    }
+
+    @PostMapping("/audit")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Audit', 'Onecard_Revenue_Assurance')")
+    public ResponseEntity<Resource> runAuditReport(@Valid @RequestBody AuditSearchDto auditSearchDto) {
+        final String filename = String.format("audit-%s.xlsx", UUID.randomUUID());
+        log.info("Running Audit Report Parameters {}", auditSearchDto);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(reportService.runAuditReport(auditSearchDto));
     }
 }

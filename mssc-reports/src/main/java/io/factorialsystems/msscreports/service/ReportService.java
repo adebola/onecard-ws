@@ -7,33 +7,31 @@ import io.factorialsystems.msscreports.dao.ReportMapper;
 import io.factorialsystems.msscreports.domain.Report;
 import io.factorialsystems.msscreports.dto.*;
 import io.factorialsystems.msscreports.external.client.AccountClient;
+import io.factorialsystems.msscreports.external.client.AuditClient;
 import io.factorialsystems.msscreports.external.client.ProviderClient;
+import io.factorialsystems.msscreports.generate.excel.AuditReportGenerator;
 import io.factorialsystems.msscreports.generate.excel.RechargeReportGenerator;
 import io.factorialsystems.msscreports.generate.excel.WalletReportGenerator;
 import io.factorialsystems.msscreports.mapper.ReportMSMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.jasperreports.engine.*;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReportService {
+    private final AuditClient auditClient;
     private final AuditService auditService;
     private final ReportMapper reportMapper;
     private final AccountClient accountClient;
     private final ReportMSMapper reportMSMapper;
     private final ProviderClient providerClient;
+    private final AuditReportGenerator auditReportGenerator;
     private final WalletReportGenerator walletReportGenerator;
     private final RechargeReportGenerator rechargeReportGenerator;
 
@@ -45,16 +43,6 @@ public class ReportService {
         Page<Report> reports = reportMapper.findAll();
 
         return createDto(reports);
-    }
-
-    private PagedDto<ReportDto> createDto(Page<Report> reports) {
-        PagedDto<ReportDto> pagedDto = new PagedDto<>();
-        pagedDto.setTotalSize((int) reports.getTotal());
-        pagedDto.setPageNumber(reports.getPageNum());
-        pagedDto.setPageSize(reports.getPageSize());
-        pagedDto.setPages(reports.getPages());
-        pagedDto.setList(reportMSMapper.listReportToReportDto(reports.getResult()));
-        return pagedDto;
     }
 
     public PagedDto<ReportDto> searchReports(Integer pageNumber, Integer pageSize, String searchString) {
@@ -94,12 +82,6 @@ public class ReportService {
     public InputStreamResource runRechargeReport(RechargeReportRequestDto dto) {
         CombinedRechargeList combinedRechargeList = providerClient.getRechargeReport(dto);
         return new InputStreamResource(rechargeReportGenerator.rechargeToExcel(combinedRechargeList.getRequests(), dto));
-
-
-//        final String errorMessage
-//                = "Error running recharge report, unable to get report values from upstream service";
-//        log.info(errorMessage);
-//        throw new RuntimeException(errorMessage);
     }
 
     public InputStreamResource runWalletReport(WalletReportRequestDto dto) {
@@ -107,47 +89,28 @@ public class ReportService {
         if (dto.getType().equals("user")) {
             List<FundWalletRequestDto> requests = accountClient.getWalletFunding(dto);
             return new InputStreamResource(walletReportGenerator.walletToExcel(requests, dto));
-        } else {
+        } else if (dto.getType().equals("provider")) {
+            // Get Reports From Provider
+            //providerClient.getProviderTransactions(dto);
             return null;
-        }
-    }
-
-    public ByteArrayInputStream runReport(Integer id) {
-        Report report = reportMapper.findById(id);
-
-        try {
-            InputStream in = getFileAsIOStream(report.getReportFile());
-
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put("reportDetails", "Sample Report");
-
-//            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(orders);
-//            parameters.put("tableData", dataSource);
-
-            JasperReport jasperReport = JasperCompileManager.compileReport(in);
-            JasperPrint print = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
-
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            JasperExportManager.exportReportToPdfStream(print, bos);
-
-            bos.flush();
-            bos.close();
-
-            return new ByteArrayInputStream(bos.toByteArray());
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         return null;
     }
 
-    private InputStream getFileAsIOStream(final String fileName) {
-        InputStream ios = this.getClass().getResourceAsStream("/jasper/" + fileName);
+    public InputStreamResource runAuditReport(AuditSearchDto auditSearchDto) {
+        List<AuditMessageDto> auditMessages = auditClient.getAudits(auditSearchDto);
+        log.info("Run Audit Report AuditMessages dto {}, size {}", auditSearchDto, auditMessages.size());
+        return new InputStreamResource(auditReportGenerator.generate(auditMessages, auditSearchDto));
+    }
 
-        if (ios == null) {
-            throw new IllegalArgumentException(fileName + " Not Found!!!");
-        }
-
-        return ios;
+    private PagedDto<ReportDto> createDto(Page<Report> reports) {
+        PagedDto<ReportDto> pagedDto = new PagedDto<>();
+        pagedDto.setTotalSize((int) reports.getTotal());
+        pagedDto.setPageNumber(reports.getPageNum());
+        pagedDto.setPageSize(reports.getPageSize());
+        pagedDto.setPages(reports.getPages());
+        pagedDto.setList(reportMSMapper.listReportToReportDto(reports.getResult()));
+        return pagedDto;
     }
 }
