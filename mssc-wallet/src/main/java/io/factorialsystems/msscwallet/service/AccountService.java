@@ -52,6 +52,8 @@ public class AccountService {
     private final AccountMapstructMapper accountMapstructMapper;
     private final FundWalletMapstructMapper fundWalletMapstructMapper;
 
+    private static final BigDecimal FIFTY_NAIRA = new BigDecimal(50);
+
     public PagedDto<AccountDto> findAccounts(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<Account> accounts = accountMapper.findAccounts();
@@ -218,6 +220,15 @@ public class AccountService {
     // Transfer Funds between Users
     @Transactional
     public WalletResponseDto transferFunds(TransferFundsDto dto) {
+
+        if (dto.getAmount().compareTo(FIFTY_NAIRA) <= 0) {
+            throw new RuntimeException(String.format("Unable to Transfer Amount <= 50 : %.2f", dto.getAmount()));
+        }
+
+        if (dto.getRecipient().equals(Security.getUserId())) {
+            throw new RuntimeException(String.format("Cannot transfer from self to Self, From %s to %s", Security.getUserId(), dto.getRecipient()));
+        }
+
         Account toAccount = Optional.ofNullable(accountMapper.findAccountByUserIdOrUserName(dto.getRecipient()))
                 .orElseThrow(() -> new ResourceNotFoundException("To Account", "id", dto.getRecipient()));
 
@@ -241,6 +252,14 @@ public class AccountService {
 
             BigDecimal newFromBalance = fromAccount.getBalance().subtract(dto.getAmount());
             BigDecimal newToBalance = toAccount.getBalance().add(dto.getAmount());
+
+            if (newFromBalance.compareTo(BigDecimal.ZERO) < 0 ) {
+                throw new RuntimeException(String.format("Transfer Funds From Account Balance cannot be less than 0 : %.2f", newFromBalance));
+            }
+
+            if (newToBalance.compareTo(BigDecimal.ZERO) < 0) {
+                throw new RuntimeException(String.format("Transfer Funds To Account Balance cannot be less than 0 : %.2f", newFromBalance));
+            }
 
             fromAccount.setBalance(newFromBalance);
             toAccount.setBalance(newToBalance);
@@ -386,8 +405,15 @@ public class AccountService {
     // Called by Admin to Fund Wallet
     @Transactional
     public NewBalanceDto fundWallet(String id, BalanceDto dto) {
+
         Account account = Optional.ofNullable(accountMapper.findAccountById(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
+
+        if (dto.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
+            final String errorMessage = String.format("Top-Up Balance Request for %s cannot be 0 or Negative, value submitted %.2f", id, dto.getBalance());
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
 
         BigDecimal newBalance = account.getBalance().add(dto.getBalance());
 

@@ -4,6 +4,7 @@
 <mapper namespace="io.factorialsystems.msscwallet.dao.AdjustmentMapper">
     <resultMap id="adjustResultMap" type="io.factorialsystems.msscwallet.domain.Adjustment">
         <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="fund_wallet_request_id" property="fundWalletRequestId" jdbcType="VARCHAR"/>
         <result column="adjusted_value" property="adjustedValue" jdbcType="VARCHAR"/>
         <result column="previous_value" property="previousValue" jdbcType="VARCHAR"/>
         <result column="adjusted_on" property="adjustedOn" jdbcType="TIMESTAMP"/>
@@ -13,12 +14,12 @@
     </resultMap>
 
     <sql id="column_List">
-      id, adjustment_value, adjusted_on, adjusted_by, account_id, adjustment_narrative
+      id, adjustment_value, fund_wallet_request_id, adjusted_on, adjusted_by, account_id, adjustment_narrative
     </sql>
 
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.Adjustment">
-        insert into adjustments(id, adjusted_value, previous_value, adjusted_by, account_id, narrative) values
-            (#{id, jdbcType=VARCHAR}, #{adjustedValue, jdbcType=DECIMAL}, #{previousValue, jdbcType=DECIMAL},
+        insert into adjustments(id, fund_wallet_request_id, adjusted_value, previous_value, adjusted_by, account_id, narrative) values
+            (#{id, jdbcType=VARCHAR}, #{fundWalletRequestId, jdbcType=VARCHAR},  #{adjustedValue, jdbcType=DECIMAL}, #{previousValue, jdbcType=DECIMAL},
              #{adjustedBy, jdbcType=VARCHAR}, #{accountId, jdbcType=VARCHAR}, #{narrative, jdbcType=VARCHAR})
     </insert>
 </mapper>

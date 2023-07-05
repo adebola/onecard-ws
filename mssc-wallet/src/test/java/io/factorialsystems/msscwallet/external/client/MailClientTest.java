@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Objects;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CommonsLog

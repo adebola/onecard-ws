@@ -25,6 +25,7 @@ import java.util.UUID;
 public class AdjustmentService {
     private final UserClient userClient;
     private final MailService mailService;
+    private final AuditService auditService;
     private final AccountMapper accountMapper;
     private final AdjustmentMapper adjustmentMapper;
 
@@ -39,11 +40,18 @@ public class AdjustmentService {
             account.setBalance(dto.getAmount());
             accountMapper.changeBalance(account);
 
+            BigDecimal delta = dto.getAmount().subtract(oldBalance);
+
+            // Save the corresponding FundWallet request
+            final String requestId = AccountService.saveFundWalletRequest(delta, Constants.WALLET_ONECARD_ADJUSTED, account.getUserId(),
+                    Security.getUserName(), dto.getNarrative());
+
             final String id = UUID.randomUUID().toString();
 
             // Save the Adjustment
             Adjustment adjustment = Adjustment.builder()
                     .id(id)
+                    .fundWalletRequestId(requestId)
                     .narrative(dto.getNarrative())
                     .adjustedBy(Security.getUserId())
                     .adjustedValue(dto.getAmount())
@@ -53,17 +61,10 @@ public class AdjustmentService {
 
             adjustmentMapper.save(adjustment);
 
-            BigDecimal delta = dto.getAmount().subtract(oldBalance);
-
-            // Save the corresponding FundWallet request
-            AccountService.saveFundWalletRequest(delta, Constants.WALLET_ONECARD_ADJUSTED, account.getUserId(),
-                    Security.getUserName(), dto.getNarrative());
-
             SimpleUserDto simpleUserDto = userClient.getUserById(account.getUserId());
 
             // Send the Mail
             if (simpleUserDto != null) {
-
                 final String message = String.format("Dear %s %s\n\nYour account has been adjusted from %.2f to %.2f by Onecard Admin. Please contact Onecard for further enquiries",
                         simpleUserDto.getFirstName(), simpleUserDto.getLastName(), oldBalance, dto.getAmount());
 
@@ -79,9 +80,14 @@ public class AdjustmentService {
             // Save the Transaction
             AccountService.saveTransaction(delta, dto.getAccountId(), Constants.ACCOUNT_BALANCE_ADJUSTED);
 
+            // Save Audit
+            final String auditMessage = String.format("Account Balance adjusted from %.2f to %.2f by %s", oldBalance, dto.getAmount(), Security.getUserName());
+            auditService.auditEvent(auditMessage, Constants.ACCOUNT_BALANCE_ADJUSTED);
+
             return AdjustmentResponseDto.builder()
                     .id(id)
                     .status(200)
+                    .balance(dto.getAmount())
                     .message("Success")
                     .build();
         }

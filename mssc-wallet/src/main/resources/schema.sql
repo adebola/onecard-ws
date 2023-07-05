@@ -54,6 +54,7 @@ create table fund_wallet_request (
 
 create table adjustments(
     id varchar(64) NOT NULL,
+    fund_wallet_request_id varchar(64) NOT NULL,
     adjusted_value DECIMAL(10, 2) NOT NULL,
     previous_value DECIMAL(10, 2) NOT NULL,
     adjusted_on timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -61,6 +62,7 @@ create table adjustments(
     account_id varchar(64) NOT NULL,
     narrative varchar(512),
     FOREIGN KEY (account_id) REFERENCES accounts(id),
+    FOREIGN KEY (fund_wallet_request_id) REFERENCES fund_wallet_request(id),
     PRIMARY KEY (id)
 );
 

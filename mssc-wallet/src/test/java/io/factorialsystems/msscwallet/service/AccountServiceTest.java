@@ -14,6 +14,8 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -103,24 +105,27 @@ class AccountServiceTest {
     }
 
     @Test
+    @Rollback
+    @Transactional
     void fundWallet2() {
 
         final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
         final String accessToken = getUserToken(id);
         final String adminEmail = "admin@gmail.com";
+        final String userName = "test-user";
 
         try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
             k.when(Security::getUserId).thenReturn(id);
             assertThat(Security.getUserId()).isEqualTo(id);
-            log.info(Security.getUserId());
 
             k.when(Security::getAccessToken).thenReturn(accessToken);
             assertThat(Security.getAccessToken()).isEqualTo(accessToken);
-            log.info(Security.getAccessToken());
 
             k.when(Security::getEmail).thenReturn(adminEmail);
             assertThat(Security.getEmail()).isEqualTo(adminEmail);
-            log.info(adminEmail);
+
+            k.when(Security::getUserName).thenReturn(userName);
+            assertThat(Security.getUserName()).isEqualTo(userName);
 
             final String accountId = "275745a4-8fb9-46f6-ac80-ff245bc62fcb";
             BigDecimal addition = new BigDecimal(1000);
@@ -172,6 +177,8 @@ class AccountServiceTest {
     }
 
     @Test
+    @Transactional
+    @Rollback
     void fundWallet() {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final String transactionId = "897dc52c-79ef-4bd6-b5d0-57367ba0c4b0";
@@ -222,6 +229,8 @@ class AccountServiceTest {
     }
 
     @Test
+    @Rollback
+    @Transactional
     void chargeAccount() {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
         final int amount = 200;
@@ -274,7 +283,7 @@ class AccountServiceTest {
     @Test
     void transferFunds() {
 
-//        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
+//        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
 //        final String accessToken = getUserToken(id);
 //
 //        try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
@@ -293,7 +302,8 @@ class AccountServiceTest {
 //
 //            TransferFundsDto dto = new TransferFundsDto();
 //            dto.setRecipient("28e05596-9ad0-4187-ac11-fd93fb7701af");
-//            dto.setAmount(new BigDecimal(15));
+////            dto.setRecipient("91b1d158-01fa-4f9f-9634-23fcfe72f76a");
+//            dto.setAmount(new BigDecimal(51));
 //
 //            accountService.transferFunds(dto);
 //        }
@@ -321,9 +331,6 @@ class AccountServiceTest {
             log.info(y.get().size());
         }
     }
-
-
-
 
     private String getRealmAdminToken() {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();

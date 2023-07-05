@@ -47,6 +47,7 @@
         from fund_wallet_request
         where user_id = #{id}
         and payment_verified = true
+        order by created_on desc
     </select>
 
     <select id="findByCriteria" parameterType="io.factorialsystems.msscwallet.dto.WalletReportRequestDto" resultMap="fundWalletResultMap">
@@ -67,6 +68,7 @@
                 and created_on &gt; #{startDate}
             </if>
         </where>
+        order by created_on desc
     </select>
 
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.FundWalletRequest">

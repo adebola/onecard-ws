@@ -11,7 +11,6 @@
         <result column="tx_datetime" property="txDate" jdbcType="TIMESTAMP"/>
         <result column="tx_amount" property="txAmount"  jdbcType="DECIMAL"/>
         <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
-        <result column="charge_account_id" property="chargeAccountId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="column_list">
@@ -24,6 +23,7 @@
         from transactions t, accounts a
         where a.user_id = #{id}
         and t.account_id = a.id
+        order by t.tx_datetime desc
     </select>
 
     <select id="findOrganizationTransactionsByAccountId" parameterType="java.lang.String" resultMap="transactionResultMap">
@@ -31,6 +31,7 @@
         <include refid="column_list"/>
         from transactions t
         where t.charge_account_id = #{id}
+        order by tx_datetime desc
     </select>
 
 

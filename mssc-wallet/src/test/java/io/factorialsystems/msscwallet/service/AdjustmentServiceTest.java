@@ -51,7 +51,7 @@ class AdjustmentServiceTest {
             AdjustmentRequestDto dto = AdjustmentRequestDto.builder()
                     .accountId("275745a4-8fb9-46f6-ac80-ff245bc62fcb")
                     .narrative("Jesus Is Lord")
-                    .amount(new BigDecimal(21999))
+                    .amount(new BigDecimal(500))
                     .build();
 
             AdjustmentResponseDto responseDto = service.adjustBalance(dto);

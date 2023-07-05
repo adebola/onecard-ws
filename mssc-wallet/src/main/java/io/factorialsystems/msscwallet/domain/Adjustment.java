@@ -1,19 +1,18 @@
 package io.factorialsystems.msscwallet.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Adjustment {
     private String id;
+    private String fundWalletRequestId;
     private BigDecimal adjustedValue;
     private BigDecimal previousValue;
     private Timestamp adjustedOn;
