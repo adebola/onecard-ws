@@ -90,7 +90,7 @@ public class AuditReportGenerator {
                 row.createCell(COLUMN_DATETIME).setCellValue(s);
 
                 // Description
-                row.createCell(COLUMN_DESCRIPTION).setCellValue(auditMessageDto.getUserName());
+                row.createCell(COLUMN_DESCRIPTION).setCellValue(auditMessageDto.getDescription());
                 rowIdx++;
             }
 
