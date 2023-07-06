@@ -23,6 +23,8 @@ import java.util.UUID;
 public class ReportController {
     private final ReportService reportService;
 
+    private static final String EXCEL_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
     @GetMapping
     public ResponseEntity<?> getAllReports(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
                                            @RequestParam(value = "pageSize", required = false) Integer pageSize) {
@@ -72,22 +74,6 @@ public class ReportController {
         return new ResponseEntity<>(reportService.findReportById(reportId), HttpStatus.CREATED);
     }
 
-//    @GetMapping("/run/{id}")
-//    public ResponseEntity<InputStreamResource> runReport(@PathVariable("id") Integer id) {
-//
-//        log.info("Running Jasper Report {}", id);
-//
-//        ByteArrayInputStream byteArrayInputStream = reportService.runReport(id);
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.add("Content-Disposition", "inline; filename=report.pdf");
-//
-//        return ResponseEntity
-//                .ok()
-//                .headers(headers)
-//                .contentType(MediaType.APPLICATION_PDF)
-//                .body(new InputStreamResource(byteArrayInputStream));
-//    }
-
     @PostMapping("/recharge")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public ResponseEntity<Resource> runRechargeReport(@Valid @RequestBody RechargeReportRequestDto dto) {
@@ -97,7 +83,7 @@ public class ReportController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
                 .body(reportService.runRechargeReport(dto));
     }
 
@@ -110,7 +96,7 @@ public class ReportController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
                 .body(reportService.runWalletReport(dto));
     }
 
@@ -123,7 +109,21 @@ public class ReportController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
                 .body(reportService.runAuditReport(auditSearchDto));
+    }
+
+    @GetMapping("/users")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Audit', 'Onecard_Revenue_Assurance')")
+    public ResponseEntity<Resource> runUserReport() {
+        final String filename = "all-user-report.xlsx";
+        log.info("Running All Users Report");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
+                .body(reportService.runUserReport());
+
     }
 }

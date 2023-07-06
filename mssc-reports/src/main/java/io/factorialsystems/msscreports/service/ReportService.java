@@ -9,8 +9,10 @@ import io.factorialsystems.msscreports.dto.*;
 import io.factorialsystems.msscreports.external.client.AccountClient;
 import io.factorialsystems.msscreports.external.client.AuditClient;
 import io.factorialsystems.msscreports.external.client.ProviderClient;
+import io.factorialsystems.msscreports.external.client.UserClient;
 import io.factorialsystems.msscreports.generate.excel.AuditReportGenerator;
 import io.factorialsystems.msscreports.generate.excel.RechargeReportGenerator;
+import io.factorialsystems.msscreports.generate.excel.UserReportGenerator;
 import io.factorialsystems.msscreports.generate.excel.WalletReportGenerator;
 import io.factorialsystems.msscreports.mapper.ReportMSMapper;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +27,14 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ReportService {
+    private final UserClient userClient;
     private final AuditClient auditClient;
     private final AuditService auditService;
     private final ReportMapper reportMapper;
     private final AccountClient accountClient;
     private final ReportMSMapper reportMSMapper;
     private final ProviderClient providerClient;
+    private final UserReportGenerator userReportGenerator;
     private final AuditReportGenerator auditReportGenerator;
     private final WalletReportGenerator walletReportGenerator;
     private final RechargeReportGenerator rechargeReportGenerator;
@@ -102,6 +106,12 @@ public class ReportService {
         List<AuditMessageDto> auditMessages = auditClient.getAudits(auditSearchDto);
         log.info("Run Audit Report AuditMessages dto {}, size {}", auditSearchDto, auditMessages.size());
         return new InputStreamResource(auditReportGenerator.generate(auditMessages, auditSearchDto));
+    }
+
+    public InputStreamResource runUserReport() {
+        List<SimpleUserDto> users = userClient.getAllUsers();
+        log.info("Run User Report size {}", users.size());
+        return new InputStreamResource(userReportGenerator.reportToExcel(users));
     }
 
     private PagedDto<ReportDto> createDto(Page<Report> reports) {
