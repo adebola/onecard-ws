@@ -19,7 +19,6 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         converter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
 
         http.authorizeRequests()
-                .antMatchers("/api/v1/upload2","/api/v1/upload2/*","/api/v1/upload2/**").permitAll()
                 .antMatchers("/api/v1/mail","/api/v1/mail/*","/api/v1/mail/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
@@ -30,7 +29,6 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(org.springframework.security.config.annotation.web.builders.WebSecurity web)  {
         web.ignoring()
-                .antMatchers("/api/v1/upload2","/api/v1/upload2/**")
                 .antMatchers("/api/v1/mail","/api/v1/mail/**");
     }
 }
