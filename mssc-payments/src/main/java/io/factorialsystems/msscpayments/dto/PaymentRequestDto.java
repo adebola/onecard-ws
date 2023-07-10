@@ -1,10 +1,8 @@
 package io.factorialsystems.msscpayments.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.math.BigDecimal;
@@ -14,6 +12,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentRequestDto {
+
+    @Min(1L)
     @NotNull(message = "Amount must be specified")
     BigDecimal amount;
 

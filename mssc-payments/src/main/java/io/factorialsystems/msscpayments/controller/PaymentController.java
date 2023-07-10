@@ -3,6 +3,7 @@ package io.factorialsystems.msscpayments.controller;
 import io.factorialsystems.msscpayments.domain.PaymentRequest;
 import io.factorialsystems.msscpayments.dto.PaymentRequestDto;
 import io.factorialsystems.msscpayments.dto.RefundRequestDto;
+import io.factorialsystems.msscpayments.dto.RefundResponseDto;
 import io.factorialsystems.msscpayments.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ public class PaymentController {
 
     @PutMapping("/refund/{id}")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
-    public ResponseEntity<?> refundPayment(@PathVariable("id") String id, @Valid @RequestBody RefundRequestDto dto) {
+    public ResponseEntity<RefundResponseDto> refundPayment(@PathVariable("id") String id, @Valid @RequestBody RefundRequestDto dto) {
         return new ResponseEntity<>(paymentService.refundPayment(id, dto), HttpStatus.OK);
     }
 
