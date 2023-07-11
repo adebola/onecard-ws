@@ -10,6 +10,7 @@ import io.factorialsystems.msscprovider.recharge.factory.JedRechargeFactory;
 import io.factorialsystems.msscprovider.recharge.jed.request.PaymentRequest;
 import io.factorialsystems.msscprovider.recharge.jed.response.JedPaymentResponse;
 import io.factorialsystems.msscprovider.recharge.jed.response.JedVerifyResponse;
+import io.factorialsystems.msscprovider.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -94,6 +95,7 @@ public class JedElectricRecharge implements Recharge, ParameterCheck, ExtraDataE
         return request != null &&
                 request.getRecipient() != null &&
                 request.getServiceCost() != null &&
+                request.getServiceCost().compareTo(Constants.MINIMUM_RECHARGE_VALUE) > 0 &&
                 request.getTelephone() != null;
     }
 

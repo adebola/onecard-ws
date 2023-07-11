@@ -39,6 +39,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -60,6 +61,7 @@ public class SingleRechargeService {
     private final SingleDownloadRecharge singleDownloadRecharge;
     private final RechargeMapstructMapper rechargeMapstructMapper;
 
+    @Transactional
     public SingleRechargeResponseDto startRecharge(SingleRechargeRequestDto dto) {
         SingleRechargeRequest request = rechargeMapstructMapper.rechargeDtoToRecharge(dto);
 
@@ -112,6 +114,16 @@ public class SingleRechargeService {
                             .balance(paymentRequest.getBalance())
                             .build();
                     jmsTemplate.convertAndSend(JMSConfig.SINGLE_RECHARGE_QUEUE, objectMapper.writeValueAsString(asyncRechargeDto));
+
+                    return SingleRechargeResponseDto.builder()
+                            .id(request.getId())
+                            .authorizationUrl(request.getAuthorizationUrl())
+                            .amount(request.getServiceCost())
+                            .message(request.getMessage())
+                            .status(request.getStatus())
+                            .paymentMode(paymentRequest.getPaymentMode())
+                            .redirectUrl(paymentRequest.getRedirectUrl())
+                            .build();
                 } catch (JsonProcessingException e) {
                     log.error("Error sending Single Recharge Service to Self {}", e.getMessage());
 
@@ -130,7 +142,7 @@ public class SingleRechargeService {
             // the actual recharge is performed by calling finishRecharge after payment
             // If it is a Scheduled or Bulk Request it also will run Asynchronously automatically
 
-            if (request.getAsyncRequest() || request.getPaymentMode().equals("paystack")) {
+            if (request.getPaymentMode().equals("paystack")) {
                 return SingleRechargeResponseDto.builder()
                         .id(request.getId())
                         .authorizationUrl(request.getAuthorizationUrl())
@@ -167,6 +179,7 @@ public class SingleRechargeService {
         throw new RuntimeException(message);
     }
 
+    @Transactional
     public RechargeStatus finishRecharge(AsyncRechargeDto dto) {
         final String id = dto.getId();
 
@@ -439,12 +452,12 @@ public class SingleRechargeService {
         return helper.initializePayment();
     }
 
-    public static Boolean checkParameters(SingleRechargeRequest request, SingleRechargeRequestDto dto) {
+    private Boolean checkParameters(SingleRechargeRequest request, SingleRechargeRequestDto dto) {
         String serviceAction = null;
         String rechargeProviderCode = null;
 
-        ParameterCache cache = ApplicationContextProvider.getBean(ParameterCache.class);
-        List<RechargeFactoryParameters> parameters = cache.getFactoryParameter(request.getServiceId());
+//        ParameterCache cache = ApplicationContextProvider.getBean(ParameterCache.class);
+        List<RechargeFactoryParameters> parameters = parameterCache.getFactoryParameter(request.getServiceId());
 
         if (parameters != null && !parameters.isEmpty()) {
             RechargeFactoryParameters parameter = parameters.get(0);
@@ -455,8 +468,8 @@ public class SingleRechargeService {
             throw new RuntimeException(String.format("Unable to Load RechargeFactoryParameters for (%s)", dto.getServiceCode()));
         }
 
-        FactoryProducer factoryProducer = ApplicationContextProvider.getBean(FactoryProducer.class);
-        AbstractFactory factory = factoryProducer.getFactory(rechargeProviderCode);
+//        FactoryProducer factoryProducer = ApplicationContextProvider.getBean(FactoryProducer.class);
+        AbstractFactory factory = producer.getFactory(rechargeProviderCode);
 
         if (factory == null) {
             throw new RuntimeException(String.format("Unable to get Factory for Request (%s), Please ensure factories are configured appropriately", dto.getServiceCode()));
@@ -499,8 +512,10 @@ public class SingleRechargeService {
 
         if (request.getServiceCost() == null) {
             throw new RuntimeException(
-                    String.format("Unable to determine Price of Recharge Request (%s/%s) by (%s) User may not be eligible to subscribe to the service",
-                            request.getServiceCode(), request.getProductId(), request.getUserId()));
+                    String.format(
+                            "Unable to determine Price of Recharge Request (%s/%s) by (%s) User may not be eligible to subscribe to the service",
+                            request.getServiceCode(), request.getProductId(), request.getUserId())
+            );
         }
 
         ParameterCheck parameterCheck = factory.getCheck(serviceAction);

@@ -16,6 +16,7 @@ public class CachingConfig {
     public static final String RINGO_SMILE_DATA_PLAN_CACHE = "ringosmiledataplans";
     public static final String SPECTRANET_DATA_PLAN = "spectranetdataplans";
     public static final String ALTERNATE_USER_ID = "alternateuser";
+    public static final String ONECARD_PLAN_CACHE = "onecardplans";
 
     @Bean
     public CacheManager cacheManager() {
@@ -25,7 +26,8 @@ public class CachingConfig {
                 SMILE_DATA_PLAN_CACHE,
                 RINGO_SMILE_DATA_PLAN_CACHE,
                 SPECTRANET_DATA_PLAN,
-                ALTERNATE_USER_ID
+                ALTERNATE_USER_ID,
+                ONECARD_PLAN_CACHE
         );
     }
 }

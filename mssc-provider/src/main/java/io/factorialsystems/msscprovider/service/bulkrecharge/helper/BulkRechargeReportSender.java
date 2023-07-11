@@ -29,7 +29,7 @@ public class BulkRechargeReportSender {
     public void sendReport(AsyncRechargeDto dto, NewBulkRechargeRequest request) {
 
         if (dto.getEmail() == null || dto.getName() == null) {
-            log.info("Unable to Send E-mail for Bulk Transaction, No E-mail Address or Customer Name found");
+            log.error("Unable to Send E-mail for Bulk Transaction, No E-mail Address or Customer Name found");
             return;
         }
 
@@ -55,6 +55,8 @@ public class BulkRechargeReportSender {
             //FileSystemResource fileSystemResource = new FileSystemResource(targetFile);
             final String emailId = mailService.sendMailWithAttachment(targetFile, mailMessageDto, Constants.MULTIPART_REQUESTPART_NAME, Constants.EXCEL_CONTENT_TYPE);
 
+            log.info("BulkRecharge Sending Mail with attachment to {}", dto.getEmail());
+
             Map<String, String> emailMap = new HashMap<>();
             emailMap.put("id", dto.getId());
             emailMap.put("emailId", emailId);
@@ -66,7 +68,7 @@ public class BulkRechargeReportSender {
 
     public void sendDuplicateReport(AsyncRechargeDto dto, NewBulkRechargeRequest request) {
         if (dto.getEmail() == null || dto.getName() == null) {
-            log.info("Unable to Send E-mail for Bulk Transaction, No E-mail Address or Customer Name found");
+            log.error("Unable to Send E-mail for Bulk Transaction, No E-mail Address or Customer Name found");
             return;
         }
 
@@ -75,6 +77,8 @@ public class BulkRechargeReportSender {
         final String messageBody =
                 String.format("Dear %s\n\nThe Bulk Recharge Request submitted on %s\nwas identified as a duplicate submission and was not run, all charges have been reversed.\nIf you still want to run the Bulk Recharge please re-submit it",
                         dto.getName(), dateString);
+
+        log.info("BulkRecharge Sending Duplicate Recharge Request Mail to {}", dto.getEmail());
 
         MailMessageDto mailMessageDto = MailMessageDto.builder()
                 .body(messageBody)

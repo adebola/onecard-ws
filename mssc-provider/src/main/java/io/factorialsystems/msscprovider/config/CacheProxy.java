@@ -1,6 +1,7 @@
 package io.factorialsystems.msscprovider.config;
 
 import io.factorialsystems.msscprovider.dto.recharge.DataPlanDto;
+import io.factorialsystems.msscprovider.recharge.onecard.OnecardAirtimeRecharge;
 import io.factorialsystems.msscprovider.recharge.ringo.RingoMobileDataRecharge;
 import io.factorialsystems.msscprovider.recharge.ringo.RingoSmileRecharge;
 import io.factorialsystems.msscprovider.recharge.ringo.RingoSpectranetRecharge;
@@ -25,5 +26,9 @@ public class CacheProxy {
 
     public List<DataPlanDto> getSmileDataPlans(String requestCode) {
         return ApplicationContextProvider.getBean(SmileDataRecharge.class).getDataPlans(requestCode);
+    }
+
+    public List<DataPlanDto> getOnecardPlans(String requestCode) {
+        return ApplicationContextProvider.getBean(OnecardAirtimeRecharge.class).getDataPlans(requestCode);
     }
 }

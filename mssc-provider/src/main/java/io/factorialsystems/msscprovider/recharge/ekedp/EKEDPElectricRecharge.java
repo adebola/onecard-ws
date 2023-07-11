@@ -6,6 +6,7 @@ import io.factorialsystems.msscprovider.recharge.ParameterCheck;
 import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.recharge.factory.EKEDPRechargeFactory;
+import io.factorialsystems.msscprovider.utils.Constants;
 import io.factorialsystems.msscprovider.wsdl.ekedp.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,6 +69,7 @@ public class EKEDPElectricRecharge implements Recharge, ParameterCheck, Balance 
         return request != null &&
                 request.getRecipient() != null &&
                 request.getServiceCost() != null &&
+                request.getServiceCost().compareTo(Constants.MINIMUM_RECHARGE_VALUE) > 0 &&
                 request.getAccountType() != null;
     }
 

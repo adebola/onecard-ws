@@ -5,6 +5,8 @@ import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeReq
 import io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge;
 import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
+import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeResponseDto;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
@@ -20,7 +22,11 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -168,7 +174,7 @@ class RechargeServiceTest {
             //dto.setEndDate(formatter.parse("12-12-2022 01:00:00"));
 
             InputStreamResource resource = rechargeService.getRechargeByDateRange(dto);
-            File targetFile = new File("date-range.xlsx");
+            File targetFile = new File("/Users/adebola/Downloads/date-range.xlsx");
             OutputStream outputStream = new FileOutputStream(targetFile);
             byte[] buffer = resource.getInputStream().readAllBytes();
             outputStream.write(buffer);
@@ -179,13 +185,25 @@ class RechargeServiceTest {
 
     @Test
     void rechargeMTN() {
-//        RechargeRequestDto dto = new RechargeRequestDto();
-//        dto.setServiceCode("MTN-AIRTIME");
-//        dto.setServiceCost(new BigDecimal(1500));
-//        dto.setRecipient("08055572307");
-//        log.info(dto);
-//        RechargeRequestDto newDto = rechargeService.startRecharge(dto);
-//        log.info(newDto);
+        final String id = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
+        final String token = getUserToken(id);
+
+
+        try (MockedStatic<ProviderSecurity> k  = Mockito.mockStatic(ProviderSecurity.class)) {
+            k.when(ProviderSecurity::getUserId).thenReturn(id);
+            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
+
+            k.when(ProviderSecurity::getAccessToken).thenReturn(token);
+            assertThat(ProviderSecurity.getAccessToken()).isEqualTo(token);
+
+            SingleRechargeRequestDto dto = new SingleRechargeRequestDto();
+            dto.setServiceCode("MTN-AIRTIME");
+            dto.setServiceCost(new BigDecimal(15));
+            dto.setRecipient("08055572307");
+
+            final SingleRechargeResponseDto singleRechargeResponseDto = rechargeService.startRecharge(dto);
+            log.info(singleRechargeResponseDto);
+        }
     }
 
     @Test

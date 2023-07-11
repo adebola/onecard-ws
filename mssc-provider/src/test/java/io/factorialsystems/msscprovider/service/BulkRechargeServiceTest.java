@@ -87,7 +87,7 @@ class BulkRechargeServiceTest {
             //dto.setEndDate(formatter.parse("12-12-2022 01:00:00"));
 
             InputStreamResource resource = service.getRechargeByDateRange(dto);
-            File targetFile = new File("bulk-date-range.xlsx");
+            File targetFile = new File("/Users/adebola/Downloads/bulk-date-range.xlsx");
             OutputStream outputStream = new FileOutputStream(targetFile);
             byte[] buffer = resource.getInputStream().readAllBytes();
             outputStream.write(buffer);
@@ -428,7 +428,7 @@ class BulkRechargeServiceTest {
             log.info(ProviderSecurity.getUserId());
 
             InputStreamResource resource = new InputStreamResource(excelGenerator.generateBulkExcelFile(bulkId));
-            File targetFile = new File("test2.xlsx");
+            File targetFile = new File("/Users/adebola/Downloads/test2.xlsx");
             OutputStream outputStream = new FileOutputStream(targetFile);
             byte[] buffer = resource.getInputStream().readAllBytes();
             outputStream.write(buffer);

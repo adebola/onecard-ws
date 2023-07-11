@@ -1,6 +1,8 @@
 package io.factorialsystems.msscprovider.mapper.report;
 
+import io.factorialsystems.msscprovider.dao.RechargeProviderMapper;
 import io.factorialsystems.msscprovider.dao.ServiceActionMapper;
+import io.factorialsystems.msscprovider.domain.RechargeProvider;
 import io.factorialsystems.msscprovider.domain.ServiceAction;
 import io.factorialsystems.msscprovider.domain.report.RechargeReportRequest;
 import io.factorialsystems.msscprovider.dto.report.RechargeReportRequestDto;
@@ -13,6 +15,7 @@ import java.util.Date;
 
 public class RechargeReportMapstructMapperDecorator implements RechargeReportMapstructMapper {
     private  UserService userService;
+    private RechargeProviderMapper rechargeProviderMapper;
     private  ServiceActionMapper serviceActionMapper;
     private  RechargeReportMapstructMapper mapstructMapper;
 
@@ -34,6 +37,11 @@ public class RechargeReportMapstructMapperDecorator implements RechargeReportMap
     @Autowired
     public void setServiceActionMapper(ServiceActionMapper serviceActionMapper) {
         this.serviceActionMapper = serviceActionMapper;
+    }
+
+    @Autowired
+    void setRechargeMapper(RechargeProviderMapper rechargeProviderMapper) {
+        this.rechargeProviderMapper = rechargeProviderMapper;
     }
 
     @Override
@@ -93,6 +101,16 @@ public class RechargeReportMapstructMapperDecorator implements RechargeReportMap
 
         if (endDate != null) {
             request.setEndDate(Utility.maxDateTime(endDate));
+        }
+
+        if (dto.getProviderId() != null) {
+            RechargeProvider byId = rechargeProviderMapper.findById(dto.getProviderId());
+
+            if (byId == null) {
+                throw new RuntimeException(String.format("Invalid Recharge Provider id : %d", dto.getProviderId()));
+            }
+
+            request.setProviderId(dto.getProviderId());
         }
 
         return request;

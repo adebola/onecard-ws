@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,6 +32,34 @@ public class RechargeProviderService {
         PageHelper.startPage(pageNumber, pageSize);
         Page<RechargeProvider> providers = rechargeMapper.findAll();
         return createDto(providers);
+    }
+
+    public List<RechargeProviderDto> findAllWithBalances() {
+        PageHelper.startPage(1, 1000);
+        try (Page<RechargeProvider> providers = rechargeMapper.findAll()) {
+
+            return providers.getResult()
+                    .stream()
+                    .map(r -> {
+                        RechargeProviderDto rechargeProviderDto = rechargeMapstructMapper.rechargeToRechargeDto(r);
+
+                        AbstractFactory abstractFactory = factoryProducer.getFactory(r.getCode());
+
+                        if (abstractFactory != null) {
+                            Balance balance = abstractFactory.getBalance();
+
+                            if (balance != null) {
+                                rechargeProviderDto.setBalance(balance.getBalance());
+                            }
+                        }
+
+                        return rechargeProviderDto;
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception ex) {
+            log.error("FindAllWithBalance Error {}", ex.getMessage());
+            throw new RuntimeException(ex.getMessage());
+        }
     }
 
     public RechargeProviderDto findById(Integer id) {

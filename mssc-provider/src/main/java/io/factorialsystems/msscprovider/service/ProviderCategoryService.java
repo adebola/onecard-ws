@@ -7,6 +7,7 @@ import io.factorialsystems.msscprovider.domain.ProviderCategory;
 import io.factorialsystems.msscprovider.mapper.category.ProviderCategoryMapstructMapper;
 import io.factorialsystems.msscprovider.dto.provider.ProviderCategoryDto;
 import io.factorialsystems.msscprovider.dto.PagedDto;
+import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,8 @@ public class ProviderCategoryService {
     private final ProviderCategoryMapper categoryMapper;
     private final ProviderCategoryMapstructMapper categoryMapstructMapper;
 
-    private static final String CREATE_CATEGORY = "Create Category";
-    private static final String UPDATE_CATEGORY = "Update Category";
+    private static final String EVENT_CREATE_CATEGORY = "Create Category";
+    private static final String EVENT_UPDATE_CATEGORY = "Update Category";
 
     public PagedDto<ProviderCategoryDto> findProviderCategories(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
@@ -48,8 +49,8 @@ public class ProviderCategoryService {
 
         categoryMapper.save(providerCategory);
 
-        String message = String.format("Created new Provider Category %s", dto.getCategoryName());
-        auditService.auditEvent(message, CREATE_CATEGORY);
+        String message = String.format("%s Created new Provider Category %s", ProviderSecurity.getUserName(), dto.getCategoryName());
+        auditService.auditEvent(message, EVENT_CREATE_CATEGORY);
 
         return providerCategory.getId();
     }
@@ -58,8 +59,8 @@ public class ProviderCategoryService {
         ProviderCategory providerCategory = categoryMapstructMapper.fromProviderCategory(dto);
         providerCategory.setId(id);
 
-        String message = String.format("Updated Provider Category %s", dto.getCategoryName());
-        auditService.auditEvent(message, UPDATE_CATEGORY);
+        String message = String.format("%s Updated Provider Category %s", ProviderSecurity.getUserName(), dto.getCategoryName());
+        auditService.auditEvent(message, EVENT_UPDATE_CATEGORY);
 
         categoryMapper.update(providerCategory);
 

@@ -44,4 +44,5 @@ public class SingleRechargeRequest {
     private String resolveId;
     private String results;
     private Integer rechargeProviderId;
+    private String rechargeProvider;
 }

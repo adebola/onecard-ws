@@ -102,7 +102,7 @@ public class ScheduleRechargeAuthController {
         InputStreamResource file = new InputStreamResource(excelGenerator.generateScheduledBulkExcelFile(id));
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(file);
 
     }
@@ -113,7 +113,7 @@ public class ScheduleRechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(newScheduledRechargeService.getRechargeByDateRange(dto));
     }
 }

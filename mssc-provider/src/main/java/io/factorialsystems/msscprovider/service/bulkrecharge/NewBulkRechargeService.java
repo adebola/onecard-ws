@@ -59,14 +59,14 @@ public class NewBulkRechargeService {
     private final FactoryProducer producer;
     private final ObjectMapper objectMapper;
     private final FileUploader fileUploader;
+    private final ParameterCache parameterCache;
     private final BulkRetryRecharge bulkRetryRecharge;
+    private final NewBulkRechargeMapstructMapper mapper;
+    private final BulkRechargeReportSender reportSender;
     private final BulkRefundRecharge bulkRefundRecharge;
     private final BulkResolveRecharge bulkResolveRecharge;
-    private final BulkDownloadRecharge bulkDownloadRecharge;
-    private final ParameterCache parameterCache;
-    private final NewBulkRechargeMapstructMapper mapper;
     private final BulkRechargeMapper newBulkRechargeMapper;
-    private final BulkRechargeReportSender reportSender;
+    private final BulkDownloadRecharge bulkDownloadRecharge;
     private final BulkRechargeDuplicateFinder duplicateFinder;
 
     @Transactional
@@ -91,6 +91,7 @@ public class NewBulkRechargeService {
     @SneakyThrows
     @Transactional
     public NewBulkRechargeResponseDto saveService(NewBulkRechargeRequestDto dto, Optional<String> alternateUserId) {
+        log.info("Bulk Recharge via Web / Upload for {}", ProviderSecurity.getUserName());
 
         if (dto.getRecipients() == null || dto.getRecipients().isEmpty()) {
             final String errorMessage = "No Recipients specified, nothing todo";

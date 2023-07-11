@@ -23,4 +23,5 @@ public class CombinedRechargeRequest {
     private String userName;
     private String parentId;
     private String paymentMode;
+    private String rechargeProvider;
 }

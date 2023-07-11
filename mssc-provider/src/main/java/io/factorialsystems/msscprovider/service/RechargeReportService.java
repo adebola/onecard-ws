@@ -8,9 +8,7 @@ import io.factorialsystems.msscprovider.domain.CombinedRechargeRequest;
 import io.factorialsystems.msscprovider.domain.report.ProviderExpenditure;
 import io.factorialsystems.msscprovider.domain.report.RechargeReportRequest;
 import io.factorialsystems.msscprovider.domain.report.ReportIndividualRequest;
-import io.factorialsystems.msscprovider.dto.UserEntryDto;
-import io.factorialsystems.msscprovider.dto.UserEntryListDto;
-import io.factorialsystems.msscprovider.dto.UserIdListDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.dto.report.RechargeProviderRequestDto;
 import io.factorialsystems.msscprovider.dto.report.RechargeReportRequestDto;
 import io.factorialsystems.msscprovider.external.client.UserClient;
@@ -30,6 +28,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class RechargeReportService {
     private final UserClient userClient;
+    private final RechargeProviderService providerService;
     private final BulkRechargeMapper bulkRechargeMapper;
     private final RechargeReportMapper rechargeReportMapper;
     private final SingleRechargeMapper singleRechargeMapper;
@@ -114,6 +113,28 @@ public class RechargeReportService {
         } else {
             throw new RuntimeException(String.format("Invalid Report type %s requested, valid options are 'all', 'single' and 'bulk'", dto.getType()));
         }
+    }
+
+    public RechargeProviderTransactionsDto runProviderWalletReport(RechargeReportRequestDto dto) {
+        RechargeProviderTransactionsDto response = new RechargeProviderTransactionsDto();
+
+        List<ProviderBalanceDto> providers = providerService.findAllWithBalances()
+                .stream()
+                .map(r -> new ProviderBalanceDto(r.getName(), r.getBalance()))
+                .collect(Collectors.toList());
+
+        response.setProviders(providers);
+
+        RechargeReportRequest request = mapstructMapper.toRequest(dto);
+
+        List<CombinedRechargeRequest> singleList = singleRechargeMapper.findSingleRechargeByCriteria(request)
+                .stream()
+                .map(combinedRequestMapstructMapper::singleToCombined)
+                .collect(Collectors.toList());
+
+        response.setRequests(singleList);
+
+        return response;
     }
 
     private Optional<List<CombinedRechargeRequest>> mergeUsersToList(List<CombinedRechargeRequest> requests) {

@@ -28,7 +28,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.net.URLConnection;
 import java.util.UUID;
 
 @Slf4j
@@ -198,7 +197,7 @@ public class RechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(rechargeService.getRechargesByUserId(id));
     }
 
@@ -211,12 +210,9 @@ public class RechargeAuthController {
         log.info("Downloading Combined Recharge File {} from Date {} to {}", fileName, dto.getStartDate(),
                 dto.getEndDate() == null ? "Date" : dto.getEndDate());
 
-        String mimeType = URLConnection.guessContentTypeFromName(fileName);
-
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileName)
-                .contentType(MediaType.valueOf(mimeType))
-                //.contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(file);
     }
 
@@ -227,7 +223,7 @@ public class RechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(rechargeService.getFailedRecharges(type));
     }
 
@@ -237,7 +233,7 @@ public class RechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(rechargeService.getRechargeByDateRange(dto));
     }
 }

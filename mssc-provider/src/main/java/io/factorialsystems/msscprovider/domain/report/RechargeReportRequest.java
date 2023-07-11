@@ -16,4 +16,5 @@ public class RechargeReportRequest {
     private Boolean status;
     private Date startDate;
     private Date endDate;
+    private Integer providerId;
 }

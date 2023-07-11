@@ -107,7 +107,10 @@ public class RingoElectricRecharge implements Recharge, ParameterCheck, ExtraDat
                 return false;
             }
 
-            return request.getRecipient() != null && request.getServiceCost() != null && request.getTelephone() != null;
+            return request.getRecipient() != null &&
+                    request.getServiceCost() != null &&
+                    request.getServiceCost().compareTo(Constants.MINIMUM_RECHARGE_VALUE) > 0 &&
+                    request.getTelephone() != null;
         }
 
         return false;

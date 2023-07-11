@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Digits;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Null;
 import java.math.BigDecimal;
@@ -26,6 +27,7 @@ public class SingleRechargeRequestDto {
     private String productId;
     private String telephone;
 
+    @Min(0L)
     @Digits(integer = 9, fraction = 2)
     private BigDecimal serviceCost;
 

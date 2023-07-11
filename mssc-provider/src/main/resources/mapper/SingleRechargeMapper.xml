@@ -30,6 +30,7 @@
         <result column="failed" property="failed" jdbcType="BOOLEAN"/>
         <result column="results" property="results" jdbcType="VARCHAR"/>
         <result column="recharge_provider_id" property="rechargeProviderId" jdbcType="INTEGER"/>
+        <result column="recharge_provider" property="rechargeProvider" jdbcType="VARCHAR"/>
     </resultMap>
 
     <resultMap id="factoryResultMap" type="io.factorialsystems.msscprovider.domain.RechargeFactoryParameters">
@@ -77,7 +78,8 @@
         r.refund_id,
         r.resolve_id,
         r.results,
-        r.recharge_provider_id
+        r.recharge_provider_id,
+        rp.name as recharge_provider
     </sql>
 
     <sql id="retry_column_list">
@@ -115,17 +117,17 @@
     <select id="findById" parameterType="java.lang.String" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
         where r.id = #{id}
-        and r.service_id = p.id
     </select>
 
     <select id="findSingleByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.CombinedRequestDto" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
         where r.user_id = #{id}
-        and r.service_id = p.id
 
         <if test="startDate != null and endDate != null">
             and p.createdAt between #{startDate} and #{endDate}
@@ -139,9 +141,9 @@
     <select id="findByUserId" parameterType="java.lang.String" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
         where r.user_id = #{id}
-        and r.service_id = p.id
     </select>
 
     <select id="factory" parameterType="java.lang.Integer" resultMap="factoryResultMap">
@@ -187,9 +189,9 @@
     <select id="findRequestsByUserId" parameterType="java.lang.String" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
         where r.user_id = #{id}
-        and r.service_id = p.id
     </select>
 
     <update id="setEmailId" parameterType="java.util.Map">
@@ -203,9 +205,9 @@
     <select id="search" parameterType="io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where user_id = #{userId}
-        and r.service_id = p.id
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
+        where r.user_id = #{userId}
 
         <if test="recipient != null">
             and r.recipient like CONCAT(#{recipient}, '%')
@@ -220,7 +222,7 @@
         </if>
 
         <if test="startDate != null and endDate == null">
-            and date(r.createdAt) = date(#{startDate})
+            and r.createdAt &gt; #{startDate}
         </if>
 
         <if test="rechargeId != null">
@@ -228,7 +230,7 @@
         </if>
 
         <if test="failed != null">
-            and r.failed = #{failed,jdbcType=BOOLEAN}
+            and r.failed = #{failed, jdbcType=BOOLEAN}
         </if>
 
         <if test="unresolved != null and unresolved == true">
@@ -239,9 +241,9 @@
     <select id="adminFailedSearch" parameterType="io.factorialsystems.msscprovider.dto.search.SearchSingleFailedRechargeDto" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where r.service_id = p.id
-        and r.failed = true
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
+        where r.failed = true
 
         <if test="unresolved != null">
            and r.successful_retry_id is NULL and r.refund_id is NULL and r.resolve_id is NULL
@@ -263,9 +265,9 @@
     <select id="findFailedUnResolvedRequests" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where r.service_id = p.id
-        and r.failed = true
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
+        where r.failed = true
         and r.refund_id is NULL
         and r.resolve_id is NULL
         and r.successful_retry_id is NULL
@@ -274,25 +276,25 @@
     <select id="findFailedRequests" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where r.service_id = p.id
-        and r.failed = true
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
+        where r.failed = true
     </select>
 
     <select id="findListFailedRequests" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where r.service_id = p.id
-        and r.failed = true
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
+        where r.failed = true
     </select>
 
     <select id="findListUnresolvedFailedRequests" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where r.service_id = p.id
-        and r.failed = true
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
+        where r.failed = true
         and refund_id is NULL
         and resolve_id is NULL
         and successful_retry_id is NULL
@@ -301,9 +303,9 @@
     <select id="findByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.DateRangeDto" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where user_id = #{id}
-        and r.service_id = p.id
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
+        where r.user_id = #{id}
 
         <if test="startDate != null and endDate != null">
             and r.createdAt between #{startDate} and #{endDate}
@@ -317,27 +319,34 @@
     <select id="findSingleRechargeByCriteria" parameterType="io.factorialsystems.msscprovider.domain.report.RechargeReportRequest" resultMap="rechargeResultMap">
         select
         <include refid="Column_List"/>
-        from recharge_requests r, provider_services p
-        where r.service_id = p.id
 
-        <if test="userId != null">
-            and user_id = #{userId}
-        </if>
+        from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
+        inner join provider_services p on r.service_id = p.id
 
-        <if test="serviceId != null">
-            and service_id = #{serviceId}
-        </if>
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
 
-        <if test="status != null">
-            and failed = #{status}
-        </if>
+            <if test="serviceId != null">
+                and service_id = #{serviceId}
+            </if>
 
-        <if test="startDate != null and endDate != null">
-            and r.createdAt between #{startDate} and #{endDate}
-        </if>
+            <if test="providerId != null">
+                and recharge_provider_id = #{providerId}
+            </if>
 
-        <if test="startDate != null and endDate == null">
-            and r.createdAt &gt; #{startDate}
-        </if>
+            <if test="status != null">
+                and failed = #{status}
+            </if>
+
+            <if test="startDate != null and endDate != null">
+                and r.createdAt between #{startDate} and #{endDate}
+            </if>
+
+            <if test="startDate != null and endDate == null">
+                and r.createdAt &gt; #{startDate}
+            </if>
+        </where>
     </select>
 </mapper>

@@ -120,7 +120,7 @@ public class AutoRechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(autoRechargeService.getRechargeByDateRange(dto));
     }
 }

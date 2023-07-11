@@ -74,7 +74,7 @@ class NewScheduledRechargeServiceTest {
             dto.setEndDate(formatter.parse("12-12-2022 01:00:00"));
 
             InputStreamResource resource = service.getRechargeByDateRange(dto);
-            File targetFile = new File("scheduled-date-range.xlsx");
+            File targetFile = new File("/Users/adebola/Downloads/scheduled-date-range.xlsx");
             OutputStream outputStream = new FileOutputStream(targetFile);
             byte[] buffer = resource.getInputStream().readAllBytes();
             outputStream.write(buffer);
@@ -117,7 +117,7 @@ class NewScheduledRechargeServiceTest {
             log.info(ProviderSecurity.getUserId());
 
             InputStreamResource resource = new InputStreamResource(excelGenerator.generateScheduledBulkExcelFile(scheduledId));
-            File targetFile = new File("test4.xlsx");
+            File targetFile = new File("/Users/adebola/Downloads/test4.xlsx");
             OutputStream outputStream = new FileOutputStream(targetFile);
             byte[] buffer = resource.getInputStream().readAllBytes();
             outputStream.write(buffer);

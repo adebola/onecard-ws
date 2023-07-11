@@ -24,6 +24,7 @@ public interface CombinedRequestMapstructMapper {
             @Mapping(source = "refundId", target = "refundId"),
             @Mapping(source = "resolveId", target = "resolveId"),
             @Mapping(source = "paymentMode", target = "paymentMode"),
+            @Mapping(source = "rechargeProvider", target = "rechargeProvider"),
             @Mapping(target = "userName", ignore = true)
     })
     CombinedRechargeRequest singleToCombined(SingleRechargeRequest request);

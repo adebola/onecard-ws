@@ -16,6 +16,8 @@ public class RechargeReportRequestDto {
     private String type;
     private String status;
 
+    private Integer providerId;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", shape = JsonFormat.Shape.STRING)
     private Date startDate;
 

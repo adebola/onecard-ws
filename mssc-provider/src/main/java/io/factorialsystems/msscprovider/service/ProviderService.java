@@ -24,8 +24,10 @@ public class ProviderService {
     private final ProviderMapper providerMapper;
     private final ProviderMapstructMapper providerMapstructMapper;
 
-    private static final String CREATE_PROVIDER="Create Provider";
-    private static final String UPDATE_PROVIDER="Update Provider";
+    private static final String EVENT_CREATE_PROVIDER = "Create Provider";
+    private static final String EVENT_UPDATE_PROVIDER = "Update Provider";
+    private static final String EVENT_SUSPEND_PROVIDER = "Suspend provider";
+    private static final String EVENT_ACTIVATE_PROVIDER = "Activate Provider";
 
     public PagedDto<ProviderDto> findProviders(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
@@ -59,8 +61,8 @@ public class ProviderService {
         provider.setCreatedBy(userName);
         providerMapper.save(provider);
 
-        String message = String.format("Created Provider %s", provider.getName());
-        auditService.auditEvent(message,CREATE_PROVIDER);
+        String message = String.format("Created Provider %s by %s", provider.getName(), ProviderSecurity.getUserName());
+        auditService.auditEvent(message,EVENT_CREATE_PROVIDER);
 
         return provider.getId();
     }
@@ -69,8 +71,8 @@ public class ProviderService {
         Provider provider = providerMapstructMapper.providerDtoToProvider(dto);
         provider.setId(id);
 
-        String message = String.format("Updated Provider %s", provider.getName());
-        auditService.auditEvent(message, UPDATE_PROVIDER);
+        String message = String.format("Updated Provider %s by %s", provider.getName(), ProviderSecurity.getUserName());
+        auditService.auditEvent(message, EVENT_UPDATE_PROVIDER);
 
         providerMapper.update(provider);
     }

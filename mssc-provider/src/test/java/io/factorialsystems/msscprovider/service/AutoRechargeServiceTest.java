@@ -57,7 +57,7 @@ class AutoRechargeServiceTest {
             //dto.setEndDate(formatter.parse("12-12-2022 01:00:00"));
 
             InputStreamResource resource = autoRechargeService.getRechargeByDateRange(dto);
-            File targetFile = new File("auto-date-range.xlsx");
+            File targetFile = new File("/Users/adebola/Downloads/auto-date-range.xlsx");
             OutputStream outputStream = new FileOutputStream(targetFile);
             byte[] buffer = resource.getInputStream().readAllBytes();
             outputStream.write(buffer);

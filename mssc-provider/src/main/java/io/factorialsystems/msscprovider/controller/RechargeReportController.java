@@ -1,20 +1,20 @@
 package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.domain.CombinedRechargeList;
+import io.factorialsystems.msscprovider.dto.RechargeProviderTransactionsDto;
 import io.factorialsystems.msscprovider.dto.report.RechargeProviderRequestDto;
 import io.factorialsystems.msscprovider.dto.report.RechargeReportRequestDto;
 import io.factorialsystems.msscprovider.service.RechargeReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -36,6 +36,13 @@ public class RechargeReportController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(results);
+    }
+
+    @GetMapping("/provider")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public List<RechargeProviderTransactionsDto> getProviderBalances() {
+        return null;
     }
 
     @PostMapping("/short")

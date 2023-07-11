@@ -1,13 +1,17 @@
 package io.factorialsystems.msscprovider.recharge.factory;
 
-import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.ekedp.EKEDPElectricRecharge;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
+@RequiredArgsConstructor
 public class EKEDPRechargeFactory extends AbstractFactory {
+    private final EKEDPElectricRecharge electricRecharge;
 
     public static final Map<String, String> codeMapper = new HashMap<>();
     public static final String ACCOUNT_TYPE_PREPAID = "prepaid";
@@ -21,7 +25,7 @@ public class EKEDPRechargeFactory extends AbstractFactory {
     @Override
     public Recharge getRecharge(String action) {
         if (action.equalsIgnoreCase("ELECTRICITY")) {
-            return ApplicationContextProvider.getBean(EKEDPElectricRecharge.class);
+            return electricRecharge;
         }
 
         return null;
@@ -39,7 +43,7 @@ public class EKEDPRechargeFactory extends AbstractFactory {
 
     @Override
     public ParameterCheck getCheck(String s) {
-        return ApplicationContextProvider.getBean(EKEDPElectricRecharge.class);
+        return electricRecharge;
     }
 
     @Override

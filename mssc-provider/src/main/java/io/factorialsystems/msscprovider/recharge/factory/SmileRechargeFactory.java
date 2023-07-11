@@ -1,21 +1,25 @@
 package io.factorialsystems.msscprovider.recharge.factory;
 
-import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.smile.SmileDataRecharge;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class SmileRechargeFactory extends AbstractFactory {
+    private final SmileDataRecharge smileDataRecharge;
 
     @Override
     public Recharge getRecharge(String action) {
-        return ApplicationContextProvider.getBean(SmileDataRecharge.class);
+        return smileDataRecharge;
     }
 
     @Override
     public DataEnquiry getPlans(String action) {
-        return ApplicationContextProvider.getBean(SmileDataRecharge.class);
+        return smileDataRecharge;
     }
 
     @Override
@@ -25,12 +29,12 @@ public class SmileRechargeFactory extends AbstractFactory {
 
     @Override
     public ParameterCheck getCheck(String action) {
-        return ApplicationContextProvider.getBean(SmileDataRecharge.class);
+        return smileDataRecharge;
     }
 
     @Override
     public Balance getBalance() {
-        return ApplicationContextProvider.getBean(SmileDataRecharge.class);
+        return smileDataRecharge;
     }
 
     @Override

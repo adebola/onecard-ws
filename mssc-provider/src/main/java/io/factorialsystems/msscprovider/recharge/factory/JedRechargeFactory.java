@@ -1,13 +1,17 @@
 package io.factorialsystems.msscprovider.recharge.factory;
 
-import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.jed.JedElectricRecharge;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
+@RequiredArgsConstructor
 public class JedRechargeFactory extends AbstractFactory {
+    private final JedElectricRecharge jedElectricRecharge;
 
     public static final Map<String, String> messages = new HashMap<>();
     public static final String TOKEN = "TOKEN";
@@ -30,7 +34,7 @@ public class JedRechargeFactory extends AbstractFactory {
     @Override
     public Recharge getRecharge(String action) {
         if (action.equalsIgnoreCase("ELECTRICITY")) {
-            return ApplicationContextProvider.getBean(JedElectricRecharge.class);
+            return jedElectricRecharge;
         }
 
         return null;
@@ -45,7 +49,7 @@ public class JedRechargeFactory extends AbstractFactory {
     public ExtraDataEnquiry getExtraPlans(String action) {
 
         if (action.equalsIgnoreCase("JED")) {
-            return ApplicationContextProvider.getBean(JedElectricRecharge.class);
+            return jedElectricRecharge;
         }
 
         return null;
@@ -53,7 +57,7 @@ public class JedRechargeFactory extends AbstractFactory {
 
     @Override
     public ParameterCheck getCheck(String s) {
-        return ApplicationContextProvider.getBean(JedElectricRecharge.class);
+        return jedElectricRecharge;
     }
 
     @Override

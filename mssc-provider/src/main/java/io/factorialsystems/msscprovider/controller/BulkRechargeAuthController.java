@@ -178,7 +178,7 @@ public class BulkRechargeAuthController {
         InputStreamResource file = new InputStreamResource(excelGenerator.generateBulkExcelFile(id));
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(file);
     }
 
@@ -189,7 +189,7 @@ public class BulkRechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(newBulkRechargeService.failed(type));
     }
 
@@ -201,7 +201,7 @@ public class BulkRechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(newBulkRechargeService.failedIndividual(id, type));
     }
 
@@ -212,7 +212,7 @@ public class BulkRechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(newBulkRechargeService.downloadUserBulk(id));
     }
 
@@ -223,7 +223,7 @@ public class BulkRechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(newBulkRechargeService.downloadUserIndividual(id));
     }
 
@@ -341,7 +341,7 @@ public class BulkRechargeAuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(newBulkRechargeService.getRechargeByDateRange(dto));
     }
 }

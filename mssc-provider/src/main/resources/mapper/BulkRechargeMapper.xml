@@ -287,8 +287,6 @@
         </if>
     </select>
 
-
-
     <select id="findBulkReportIndividualRequests"  parameterType="java.lang.String" resultMap="bulkIndividualRequestResultMap">
         select
         <include refid="report_individual_column_list"/>

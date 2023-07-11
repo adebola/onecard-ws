@@ -1,17 +1,24 @@
 package io.factorialsystems.msscprovider.recharge.factory;
 
-import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.ringo.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class RingoRechargeFactory extends AbstractFactory {
+    private final RingoAirtimeRecharge airtimeRecharge;
+    private final RingoSpectranetRecharge spectranetRecharge;
+    private final RingoMobileDataRecharge mobileDataRecharge;
+    private final RingoElectricRecharge electricRecharge;
+    private final RingoDstvRecharge dstvRecharge;
+    private final RingoSmileRecharge smileRecharge;
 
     public static final Map<String, String> codeMapper = new HashMap<>();
 
@@ -65,17 +72,17 @@ public class RingoRechargeFactory extends AbstractFactory {
             case MTN_DATA_LABEL:
             case AIRTEL_DATA_LABEL:
             case NINEMOBILE_DATA_LABEL:
-                enquiry = ApplicationContextProvider.getBean(RingoMobileDataRecharge.class);
+                enquiry = mobileDataRecharge;
                 break;
 
             case SPECTRANET_LABEL:
             case SPECTRANET_DATA_LABEL:
-                enquiry =  ApplicationContextProvider.getBean(RingoSpectranetRecharge.class);
+                enquiry =  spectranetRecharge;
                 break;
 
             case SMILE_LABEL:
             case SMILE_DATA_LABEL:
-                enquiry =  ApplicationContextProvider.getBean(RingoSmileRecharge.class);
+                enquiry =  smileRecharge;
                 break;
         }
 
@@ -90,11 +97,11 @@ public class RingoRechargeFactory extends AbstractFactory {
             case DSTV_LABEL:
             case GOTV_LABEL:
             case STARTIMES_LABEL:
-                extraEnquiry =  ApplicationContextProvider.getBean(RingoDstvRecharge.class);
+                extraEnquiry =  dstvRecharge;
                 break;
 
             case EKEDP_LABEL:
-                extraEnquiry = ApplicationContextProvider.getBean(RingoElectricRecharge.class);
+                extraEnquiry = electricRecharge;
         }
 
         return extraEnquiry;
@@ -113,12 +120,12 @@ public class RingoRechargeFactory extends AbstractFactory {
 
     @Override
     public Balance getBalance() {
-        return ApplicationContextProvider.getBean(RingoAirtimeRecharge.class);
+        return airtimeRecharge;
     }
 
     @Override
     public ReQuery getReQuery() {
-        return ApplicationContextProvider.getBean(RingoAirtimeRecharge.class);
+        return airtimeRecharge;
     }
 
     private Recharge getClass(String action) {
@@ -126,29 +133,29 @@ public class RingoRechargeFactory extends AbstractFactory {
 
         switch (action) {
             case AIRTIME_LABEL:
-                recharge = ApplicationContextProvider.getBean(RingoAirtimeRecharge.class);
+                recharge = airtimeRecharge;
                 break;
 
             case DATA_LABEL:
-                recharge = ApplicationContextProvider.getBean(RingoMobileDataRecharge.class);
+                recharge = mobileDataRecharge;
                 break;
 
             case ELECTRICITY_LABEL:
-                recharge = ApplicationContextProvider.getBean(RingoElectricRecharge.class);
+                recharge = electricRecharge;
                 break;
 
             case SPECTRANET_LABEL:
-                recharge = ApplicationContextProvider.getBean(RingoSpectranetRecharge.class);
+                recharge = spectranetRecharge;
                 break;
 
             case SMILE_LABEL:
-                recharge = ApplicationContextProvider.getBean(RingoSmileRecharge.class);
+                recharge = smileRecharge;
                 break;
 
             case DSTV_LABEL:
             case GOTV_LABEL:
             case STARTIMES_LABEL:
-                recharge = ApplicationContextProvider.getBean(RingoDstvRecharge.class);
+                recharge = dstvRecharge;
         }
 
         return recharge;

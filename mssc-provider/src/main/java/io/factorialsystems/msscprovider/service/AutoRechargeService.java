@@ -34,12 +34,19 @@ import java.util.stream.Collectors;
 public class AutoRechargeService {
     private final ExcelWriter excelWriter;
     private final FileUploader fileUploader;
+    private final AuditService auditService;
     private final AutoRechargeMapper autoRechargeMapper;
     private final NewBulkRechargeService newBulkRechargeService;
     private final AutoRechargeMapstructMapper autoRechargeMapstructMapper;
 
+    private final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm");
+
     public static final int AUTO_RECURRING_WEEKLY_TYPE = 1;
     public static final int AUTO_RECURRING_MONTHLY_TYPE = 2;
+
+    private static final String EVENT_AUTO_RECHARGE_CREATE = "Create Auto-Recharge";
+    private static final String EVENT_AUTO_RECHARGE_UPDATE = "Update Auto-recharge";
+    private static final String EVENT_AUTO_RECHARGE_DELETE = "Delete Auto-Recharge";
 
     private static final String[] days = {
             "SUNDAY",
@@ -65,6 +72,7 @@ public class AutoRechargeService {
             "DECEMBER"
     };
 
+    @Transactional
     public AutoRechargeResponseDto uploadRecharge(AutoUploadFileRechargeRequestDto dto, MultipartFile file) {
         log.info("Uploading AutoRecharge Bulk Excel File...");
 
@@ -78,7 +86,6 @@ public class AutoRechargeService {
 
     @Transactional
     public AutoRechargeResponseDto saveService(AutoRechargeRequestDto dto) {
-
         AutoRechargeRequest request = autoRechargeMapstructMapper.dtoToRequest(dto);
 
         final String id = UUID.randomUUID().toString();
@@ -120,6 +127,10 @@ public class AutoRechargeService {
 
         autoRechargeMapper.saveRecipients(request.getRecipients());
         log.info("AutoRecharge {}, saved successfully by {}", id, ProviderSecurity.getUserName());
+
+        String s = simpleDateFormat.format(new Date());
+        final String auditMessage = String.format("%s uploaded AutoRecharge %s at %s", ProviderSecurity.getUserName(), id, s);
+        auditService.auditEvent(auditMessage, EVENT_AUTO_RECHARGE_CREATE);
 
         return AutoRechargeResponseDto.builder()
                 .id(id)
@@ -178,6 +189,10 @@ public class AutoRechargeService {
 
         // Save the AutoRechargeRequest
         autoRechargeMapper.updateAutoRecharge(request);
+
+        String s = simpleDateFormat.format(new Date());
+        final String auditMessage = String.format("%s updated AutoRecharge %s at %s", ProviderSecurity.getUserName(), id, s);
+        auditService.auditEvent(auditMessage, EVENT_AUTO_RECHARGE_UPDATE);
 
         // Disable and Load all Recurring Days (Weekly or Monthly) for the AutoRechargeRequest
         List<AutoRecurringEvent> currentEvents = autoRechargeMapper.disableAndLoadRecurringEventsByAutoId(id);
@@ -283,6 +298,9 @@ public class AutoRechargeService {
     @Transactional
     public void deleteService(String id) {
         log.info("Deleting AutoRecharge {}", id);
+        String s = simpleDateFormat.format(new Date());
+        final String auditMessage = String.format("%s deleted AutoRecharge %s at %s", ProviderSecurity.getUserName(), id, s);
+        auditService.auditEvent(auditMessage, EVENT_AUTO_RECHARGE_DELETE);
         autoRechargeMapper.deleteAutoRecharge(id);
     }
 
@@ -342,16 +360,6 @@ public class AutoRechargeService {
         Page<ShortAutoRechargeRequest> requests = autoRechargeMapper.searchByName(new SearchByString(name));
 
         return createShortDto(requests);
-    }
-
-    private PagedDto<ShortAutoRechargeRequestDto> createShortDto(Page<ShortAutoRechargeRequest> requests) {
-        PagedDto<ShortAutoRechargeRequestDto> pagedDto = new PagedDto<>();
-        pagedDto.setTotalSize((int) requests.getTotal());
-        pagedDto.setPageNumber(requests.getPageNum());
-        pagedDto.setPageSize(requests.getPageSize());
-        pagedDto.setPages(requests.getPages());
-        pagedDto.setList(autoRechargeMapstructMapper.listShortDtoToShort(requests.getResult()));
-        return pagedDto;
     }
 
     private void runEvents(List<AutoRunEvent> events, Integer periodId) {
@@ -420,5 +428,15 @@ public class AutoRechargeService {
         List<ShortAutoRechargeRequest> requests = autoRechargeMapper.findByUserIdAndDateRange(dto);
 
         return new InputStreamResource(excelWriter.autoRequestToExcel(requests, title));
+    }
+
+    private PagedDto<ShortAutoRechargeRequestDto> createShortDto(Page<ShortAutoRechargeRequest> requests) {
+        PagedDto<ShortAutoRechargeRequestDto> pagedDto = new PagedDto<>();
+        pagedDto.setTotalSize((int) requests.getTotal());
+        pagedDto.setPageNumber(requests.getPageNum());
+        pagedDto.setPageSize(requests.getPageSize());
+        pagedDto.setPages(requests.getPages());
+        pagedDto.setList(autoRechargeMapstructMapper.listShortDtoToShort(requests.getResult()));
+        return pagedDto;
     }
 }

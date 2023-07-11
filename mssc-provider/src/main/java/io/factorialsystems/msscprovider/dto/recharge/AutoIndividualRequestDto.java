@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Digits;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Null;
 import java.math.BigDecimal;
@@ -20,6 +21,7 @@ public class AutoIndividualRequestDto {
     @NotEmpty(message = "Please provide ServiceCde")
     private String serviceCode;
 
+    @Min(0L)
     @Digits(integer = 9, fraction = 2)
     private BigDecimal serviceCost;
 

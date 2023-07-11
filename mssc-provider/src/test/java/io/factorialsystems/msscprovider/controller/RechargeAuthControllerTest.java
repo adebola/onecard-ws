@@ -1,125 +1,230 @@
 package io.factorialsystems.msscprovider.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.factorialsystems.msscprovider.service.TokenResponseDto;
+import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
+import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
+import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeResponseDto;
+import io.factorialsystems.msscprovider.dto.status.MessageDto;
+import io.factorialsystems.msscprovider.recharge.RechargeStatus;
+import io.factorialsystems.msscprovider.service.CombinedRechargeService;
+import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
-import lombok.SneakyThrows;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@CommonsLog
+@Slf4j
+@AutoConfigureMockMvc(addFilters = false)
+@WebMvcTest(RechargeAuthController.class)
 class RechargeAuthControllerTest {
 
     @Autowired
-    private RestTemplate restTemplate;
+    MockMvc mockMvc;
+
+    @MockBean
+    SingleRechargeService rechargeService;
+
+    @MockBean
+    CombinedRechargeService combinedRechargeService;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    final String client_id = "public-client";
-    final String realmPassword = "password";
-    final String realmUser = "realm-admin";
-    final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
+    ObjectMapper objectMapper;
 
     @Test
-    @SneakyThrows
-    void startRecharge() {
-        final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        // final String accessToken = getUserToken(id);
+    @WithMockUser(username = "spring")
+    void testStartRecharge() throws Exception {
+        SingleRechargeRequestDto requestDto = createRequestDto();
+        SingleRechargeResponseDto responseDto = createResponseDto();
+
+        given(rechargeService.startRecharge(any(SingleRechargeRequestDto.class))).willReturn(responseDto);
+
+        mockMvc.perform(post("/api/v1/auth-recharge")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding("UTF-8")
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()", is(7)));
+
+        ArgumentCaptor<SingleRechargeRequestDto> argumentCaptor = ArgumentCaptor.forClass(SingleRechargeRequestDto.class);
+        verify(rechargeService).startRecharge(argumentCaptor.capture());
+
+        assertThat(argumentCaptor.getValue().getRecipient()).isEqualTo("08055572307");
+    }
+
+    @Test
+    @WithMockUser(username = "spring")
+    void finishRecharge() throws Exception {
+        final String id = UUID.randomUUID().toString();
+
+        RechargeStatus rechargeStatus = createRechargeStatus();
+
+        AsyncRechargeDto dto = AsyncRechargeDto.builder()
+                .id(id)
+                .email("adeomoboya@gmail.com")
+                .balance(new BigDecimal(1250))
+                .build();
 
         try (MockedStatic<ProviderSecurity> k = Mockito.mockStatic(ProviderSecurity.class)) {
-            k.when(ProviderSecurity::getUserId).thenReturn(id);
-            assertThat(ProviderSecurity.getUserId()).isEqualTo(id);
-            log.info(ProviderSecurity.getUserId());
+            k.when(ProviderSecurity::getEmail).thenReturn("adeomoboya@gmail.com");
+            k.when(ProviderSecurity::getUserName).thenReturn("adebola");
 
-//            k.when(Constants::getAccessToken).thenReturn(accessToken);
-//            assertThat(Constants.getAccessToken()).isEqualTo(accessToken);
-//            log.info(accessToken);
-//
-//            SingleRechargeRequestDto dto = new SingleRechargeRequestDto();
-//            dto.setRecipient("1505001425");
-//            dto.setServiceCode("SMILE-DATA");
-//            dto.setProductId("508");
-//            dto.setPaymentMode("wallet");
-//
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//            headers.setBearerAuth(accessToken);
-//            HttpEntity<String> request = new HttpEntity<>(objectMapper.writeValueAsString(dto), headers);
-//
-//            ResponseEntity<SingleRechargeResponseDto> responseEntity =
-//                    restTemplate.exchange ("http://localhost:8081/api/v1/auth-recharge", HttpMethod.POST, request, SingleRechargeResponseDto.class);
-//
-//            log.info(responseEntity.getBody());
+            given(rechargeService.finishRecharge(any(AsyncRechargeDto.class))).willReturn(rechargeStatus);
+
+            mockMvc.perform(get("/api/v1/auth-recharge/" + id)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .characterEncoding("UTF-8")
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.length()", is(1)));
+
+            ArgumentCaptor<AsyncRechargeDto> argumentCaptor = ArgumentCaptor.forClass(AsyncRechargeDto.class);
+            verify(rechargeService).finishRecharge(argumentCaptor.capture());
+
+            assertThat(argumentCaptor.getValue().getId()).isEqualTo(id);
         }
-    }
-
-    private String getUserToken(String userId) {
-        String realmToken = getRealmAdminToken();
-
-        if (realmToken == null) {
-            return null;
-        }
-
-        // Now Get the User Token
-        return getUserToken(userId, realmToken);
     }
 
     @Test
-    void getDataPlans() {
+    @WithMockUser(username = "spring", roles = {"Onecard_Admin"})
+    void retryRecharge() throws Exception {
+        final String id = UUID.randomUUID().toString();
+        final String recipient = "08055572307";
+
+        RechargeStatus rechargeStatus = createRechargeStatus();
+
+        given(rechargeService.retryRecharge(anyString(), anyString())).willReturn(rechargeStatus);
+
+        mockMvc.perform(get("/api/v1/auth-recharge/retry/" + id)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding("UTF-8")
+                        .queryParam("recipient", recipient))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()", is(3)));
+
+        ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> recipientCaptor = ArgumentCaptor.forClass(String.class);
+
+        verify(rechargeService).retryRecharge(idCaptor.capture(), recipientCaptor.capture());
+
+        assertThat(idCaptor.getValue()).isEqualTo(id);
+        assertThat(recipientCaptor.getValue()).isEqualTo(recipient);
     }
 
+    @Test
+    void refundRecharge() {
+        final String id = UUID.randomUUID().toString();
+        given(rechargeService.refundRecharge(anyString())).willReturn(new MessageDto("Success"));
 
-    private String getRealmAdminToken() {
-        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
-        requestBody.add("client_id", client_id);
-        requestBody.add("grant_type", "password");
-        requestBody.add("password", realmPassword);
-        requestBody.add("username", realmUser);
-        requestBody.add("scope", "openid");
-
-        // Get the Realm Administrator Token
-        return getToken(requestBody);
+//        public MessageDto refundRecharge(String id) {
+//            return singleRefundRecharge.refundRecharge(id);
+//        }
     }
 
-    private String getUserToken(String userId, String realmToken) {
-        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
-        requestBody.add("client_id", client_id);
-        requestBody.add("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
-        requestBody.add("subject_token", realmToken);
-        requestBody.add("requested_subject", userId);
-
-        return getToken(requestBody);
+    @Test
+    void testRefundRecharge() {
     }
 
-    private String getToken(MultiValueMap<String, String> requestBody) {
-        RestTemplate restTemplate = new RestTemplate();
+    @Test
+    void getUserSingleRecharges() {
+    }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    @Test
+    void testGetUserSingleRecharges() {
+    }
 
-        HttpEntity<MultiValueMap<String, String>> formEntity = new HttpEntity<>(requestBody, headers);
+    @Test
+    void getSingleRequest() {
+    }
 
-        ResponseEntity<TokenResponseDto> response =
-                restTemplate.exchange(authUrl, HttpMethod.POST, formEntity, TokenResponseDto.class);
+    @Test
+    void searchSingle() {
+    }
 
-        TokenResponseDto token = response.getBody();
+    @Test
+    void adminSearchSingle() {
+    }
 
-        if (token == null || token.getAccess_token() == null || token.getAccess_token().length() < 1) {
-            return null;
-        }
+    @Test
+    void adminSearch() {
+    }
 
-        return token.getAccess_token();
+    @Test
+    void getFailedTransactions() {
+    }
+
+    @Test
+    void getFailedUnresolvedTransactions() {
+    }
+
+    @Test
+    void generateExcelFileByUserId() {
+    }
+
+    @Test
+    void generateCombinedExcelFileByUserId() {
+    }
+
+    @Test
+    void generateFailedExcelFile() {
+    }
+
+    @Test
+    void generateDateRangeRecharge() {
+    }
+
+    private SingleRechargeResponseDto createResponseDto() {
+        return SingleRechargeResponseDto.builder()
+                .id(UUID.randomUUID().toString())
+                .status(200)
+                .message("success")
+                .amount(new BigDecimal(1200))
+                .paymentMode("wallet")
+                .build();
+    }
+
+    private SingleRechargeRequestDto createRequestDto() {
+        SingleRechargeRequestDto requestDto = new SingleRechargeRequestDto();
+        requestDto.setPaymentMode("wallet");
+        requestDto.setRecipient("08055572307");
+        requestDto.setServiceCode("GLO-AIRTIME");
+        requestDto.setServiceCost(new BigDecimal(1200));
+
+        return requestDto;
+    }
+
+    private RechargeStatus createRechargeStatus() {
+        return RechargeStatus.builder()
+                .status(HttpStatus.OK)
+                .message("Success")
+                .build();
     }
 }
