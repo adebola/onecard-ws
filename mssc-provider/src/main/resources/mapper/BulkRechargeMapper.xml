@@ -252,6 +252,7 @@
         <include refid="bulk_column_list"/>
         from new_bulk_recharge_requests
         where id = #{id}
+        order by createdAt desc
     </select>
 
     <select id="findBulkRequestByAutoId" parameterType="java.util.Map" resultMap="newBulkRechargeResultMap">
@@ -260,6 +261,7 @@
         from new_bulk_recharge_requests
         where user_id = #{userId}
         and auto_request_id = #{id}
+        order by  createdAt desc
     </select>
 
     <select id="findBulkIndividualRequests"  parameterType="java.lang.String" resultMap="individualRequestResultMap">
@@ -367,6 +369,7 @@
     <select id="findBulkRequestByUserId" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">
         select
         <include refid="bulk_request_by_userid"/>
+        order by createdAt desc
     </select>
 
     <select id = "findBulkByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.CombinedRequestDto" resultMap="newBulkRechargeResultMap">
@@ -379,6 +382,8 @@
         <if test="startDate != null and endDate == null">
             and createdAt &gt; #{startDate}
         </if>
+
+        order by createdAt desc
     </select>
 
 
@@ -400,6 +405,8 @@
                 and createdAt &gt; #{startDate}
             </if>
         </where>
+
+        order by createdAt desc
     </select>
 
     <select id="findByUserIdToday" parameterType="java.util.Map" resultMap="newBulkRechargeResultMap">
@@ -414,6 +421,7 @@
     <select id="findListBulkRequestByUserId" parameterType="java.lang.String" resultMap="newBulkRechargeResultMap">
         select
         <include refid="bulk_request_by_userid"/>
+        order by createdAt desc
     </select>
 
     <select id="searchByDate" parameterType="io.factorialsystems.msscprovider.domain.query.SearchByDate" resultMap="newBulkRechargeResultMap">
@@ -493,7 +501,7 @@
                         and refund_id is NULL
                         and successful_retry_id is NULL
                     </if>
-                     )
+        )
         <if test="searchDate != null">
             and date(createdAt) = date(#{searchDate})
         </if>
@@ -501,6 +509,8 @@
         <if test="searchId != null">
             and id like CONCAT(#{searchId}, '%')
         </if>
+
+        order by createdAt desc
     </select>
 
     <update id="saveBulkRefund" parameterType="java.util.Map">
@@ -531,21 +541,25 @@
     <select id="findFailedUnResolvedRequests" resultMap="newBulkRechargeResultMap">
         select
         <include refid="failed_unresolved_requests"/>
+        order by createdAt desc
     </select>
 
     <select id="findListFailedUnResolvedRequests" resultMap="newBulkRechargeResultMap">
         select
         <include refid="failed_unresolved_requests"/>
+        order by createdAt desc
     </select>
 
     <select id="findFailedRequests" resultMap="newBulkRechargeResultMap">
         select
         <include refid="failed_requests"/>
+        order by createdAt desc
     </select>
 
     <select id="findListFailedRequests" resultMap="newBulkRechargeResultMap">
         select
         <include refid="failed_requests"/>
+        order by createdAt desc
     </select>
 
     <select id="findFailedIndividuals" parameterType="java.lang.String" resultMap="individualRequestResultMap">

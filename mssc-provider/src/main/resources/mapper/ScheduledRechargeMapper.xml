@@ -50,6 +50,7 @@
         <include refid="column_list"/>
         from new_scheduled_recharge_requests
         where user_id = #{id}
+        order by request_created_on desc
     </select>
 
     <select id="findOpenRequests" resultMap="newScheduledRechargeResultMap">

@@ -70,6 +70,7 @@
         from new_auto_recharge_requests
         where user_id = #{id}
         and deleted = false
+        order by created_on desc
     </select>
 
     <select id="findAutoRechargeById" parameterType="java.lang.String" resultMap="autoRechargeResultMap">

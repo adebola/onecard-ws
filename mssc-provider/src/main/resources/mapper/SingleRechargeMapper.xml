@@ -192,6 +192,7 @@
         from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
         inner join provider_services p on r.service_id = p.id
         where r.user_id = #{id}
+        order by r.createdAt desc
     </select>
 
     <update id="setEmailId" parameterType="java.util.Map">
@@ -271,6 +272,7 @@
         and r.refund_id is NULL
         and r.resolve_id is NULL
         and r.successful_retry_id is NULL
+        order by r.createdAt desc
     </select>
 
     <select id="findFailedRequests" resultMap="rechargeResultMap">
@@ -279,6 +281,7 @@
         from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
         inner join provider_services p on r.service_id = p.id
         where r.failed = true
+        order by r.createdAt desc
     </select>
 
     <select id="findListFailedRequests" resultMap="rechargeResultMap">
@@ -287,6 +290,7 @@
         from recharge_requests r left join recharge_providers rp on r.recharge_provider_id = rp.id
         inner join provider_services p on r.service_id = p.id
         where r.failed = true
+        order by r.createdAt desc
     </select>
 
     <select id="findListUnresolvedFailedRequests" resultMap="rechargeResultMap">
@@ -298,6 +302,7 @@
         and refund_id is NULL
         and resolve_id is NULL
         and successful_retry_id is NULL
+        order by r.createdAt desc
     </select>
 
     <select id="findByUserIdAndDateRange" parameterType="io.factorialsystems.msscprovider.dto.DateRangeDto" resultMap="rechargeResultMap">
