@@ -2,6 +2,7 @@ package io.factorialsystems.msscprovider.recharge.factory;
 
 import io.factorialsystems.msscprovider.recharge.*;
 import io.factorialsystems.msscprovider.recharge.onecard.OnecardAirtimeRecharge;
+import io.factorialsystems.msscprovider.recharge.onecard.OnecardDataRecharge;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -9,10 +10,14 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.factorialsystems.msscprovider.utils.Constants.AIRTIME_LABEL;
+import static io.factorialsystems.msscprovider.utils.Constants.DATA_LABEL;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class OnecardRechargeFactory extends AbstractFactory {
+    private final OnecardDataRecharge onecardDataRecharge;
     private final OnecardAirtimeRecharge onecardAirtimeRecharge;
 
     public static final Map<String, String> codeMapper = new HashMap<>();
@@ -37,22 +42,39 @@ public class OnecardRechargeFactory extends AbstractFactory {
 
     @Override
     public Recharge getRecharge(String action) {
-        return onecardAirtimeRecharge;
+
+        switch (action) {
+            case AIRTIME_LABEL:
+               return onecardAirtimeRecharge;
+
+            case DATA_LABEL:
+                return onecardDataRecharge;
+        }
+
+        return null;
     }
 
     @Override
     public DataEnquiry getPlans(String action) {
-        return onecardAirtimeRecharge;
+        return onecardDataRecharge;
     }
 
     @Override
     public ExtraDataEnquiry getExtraPlans(String action) {
-        throw new RuntimeException("Onecard ExtraDataPlane Not Implemented");
+        throw new RuntimeException("Onecard ExtraDataPlan Not Implemented");
     }
 
     @Override
     public ParameterCheck getCheck(String action) {
-        return onecardAirtimeRecharge;
+        switch (action) {
+            case AIRTIME_LABEL:
+                return onecardAirtimeRecharge;
+
+            case DATA_LABEL:
+                return onecardDataRecharge;
+        }
+
+        return null;
     }
 
     @Override

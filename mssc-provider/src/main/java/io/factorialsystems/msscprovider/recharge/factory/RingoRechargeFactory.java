@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.factorialsystems.msscprovider.utils.Constants.*;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -39,22 +41,6 @@ public class RingoRechargeFactory extends AbstractFactory {
         codeMapper.put("SPECTRANET-DATA", "SPECTRANET");
         codeMapper.put("SMILE-DATA", "SMILE");
     }
-
-    public static final String DATA_LABEL = "DATA";
-    public static final String GLO_DATA_LABEL = "GLO-DATA";
-    public static final String MTN_DATA_LABEL = "MTN-DATA";
-    public static final String AIRTEL_DATA_LABEL = "AIRTEL-DATA";
-    public static final String NINEMOBILE_DATA_LABEL = "9MOBILE-DATA";
-    public static final String SPECTRANET_LABEL = "SPECTRANET";
-    public static final String SPECTRANET_DATA_LABEL = "SPECTRANET-DATA";
-    public static final String SMILE_LABEL = "SMILE";
-    public static final String SMILE_DATA_LABEL = "SMILE-DATA";
-    public static final String DSTV_LABEL = "DSTV";
-    public static final String GOTV_LABEL = "GOTV";
-    public static final String STARTIMES_LABEL = "STARTIMES";
-    public static final String AIRTIME_LABEL = "AIRTIME";
-    public static final String ELECTRICITY_LABEL = "ELECTRICITY";
-    public static final String EKEDP_LABEL = "EKEDP";
 
     @Override
     public Recharge getRecharge(String action) {

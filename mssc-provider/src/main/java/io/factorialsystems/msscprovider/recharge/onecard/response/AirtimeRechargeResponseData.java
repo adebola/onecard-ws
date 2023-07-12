@@ -6,19 +6,20 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.List;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AirtimeRechargeResponse {
-    @JsonProperty("RESPONSE")
-    private boolean success;
+public class AirtimeRechargeResponseData {
+    private String product_id;
+    private String mobile;
+    private BigDecimal amount;
 
-    @JsonProperty("RESPONSE_MSG")
-    private String message;
+    @JsonProperty("STATUS")
+    private String status;
 
-    @JsonProperty("RESPONSE_DATA")
-    private List<AirtimeRechargeResponseData> data;
+    @JsonProperty("TXN_ID")
+    private String txId;
 }
