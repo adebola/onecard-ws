@@ -104,6 +104,55 @@ class ReportServiceTest {
     }
 
     @Test
+    void runWalletReport_ProviderShort() throws IOException {
+        WalletReportRequestDto dto = new WalletReportRequestDto();
+        dto.setType("provider-short");
+
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            k.when(K::getAccessToken).thenReturn(token);
+            assertThat(K.getAccessToken()).isEqualTo(token);
+
+            InputStreamResource inputStreamResource = reportService.runWalletReport(dto);
+
+            File targetFile = new File("/Users/adebola/Downloads/short-provider-wallet-report.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
+        }
+    }
+
+    @Test
+    void runWalletReport_ProviderLong() throws IOException {
+        WalletReportRequestDto dto = new WalletReportRequestDto();
+        dto.setType("provider-long");
+
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            k.when(K::getAccessToken).thenReturn(token);
+            assertThat(K.getAccessToken()).isEqualTo(token);
+
+            InputStreamResource inputStreamResource = reportService.runWalletReport(dto);
+
+            File targetFile = new File("/Users/adebola/Downloads/long-provider-wallet-report.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
+        }
+    }
+
+
+    @Test
     void runAuditReport() throws IOException {
 
         //01-07-2023 00:00:00

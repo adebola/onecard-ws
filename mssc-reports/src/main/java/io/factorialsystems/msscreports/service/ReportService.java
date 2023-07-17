@@ -92,14 +92,20 @@ public class ReportService {
 
         if (dto.getType().equals("user")) {
             List<FundWalletRequestDto> requests = accountClient.getWalletFunding(dto);
-            return new InputStreamResource(walletReportGenerator.walletToExcel(requests, dto));
-        } else if (dto.getType().equals("provider")) {
-            // Get Reports From Provider
-            //providerClient.getProviderTransactions(dto);
-            return null;
-        }
+            return new InputStreamResource(walletReportGenerator.userWalletToExcel(requests, dto));
+        } else {
+            RechargeProviderRequestDto requestDto = new RechargeProviderRequestDto();
+            requestDto.setEndDate(dto.getEndDate());
+            requestDto.setStartDate(dto.getStartDate());
 
-        return null;
+            if (dto.getType().equals("provider-short")) {
+                final List<RechargeProviderExpenditure> shortProviderExpenditure = providerClient.getShortProviderExpenditure(requestDto);
+                return new InputStreamResource(walletReportGenerator.providerShortWalletToExcel(shortProviderExpenditure, dto));
+            } else {
+                final List<RechargeProviderExpenditure> longProviderExpenditure = providerClient.getLongProviderExpenditure(requestDto);
+                return new InputStreamResource(walletReportGenerator.providerLongWalletToExcel(longProviderExpenditure, dto));
+            }
+        }
     }
 
     public InputStreamResource runAuditReport(AuditSearchDto auditSearchDto) {
