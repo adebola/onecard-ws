@@ -1,4 +1,4 @@
-package io.factorialsystems.msscprovider.dto.report;
+package io.factorialsystems.msscreports.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;

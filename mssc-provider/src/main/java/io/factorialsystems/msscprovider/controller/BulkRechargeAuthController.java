@@ -3,6 +3,7 @@ package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.DateDto;
 import io.factorialsystems.msscprovider.dto.DateRangeDto;
+import io.factorialsystems.msscprovider.dto.RechargeRequestStatusDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.NewBulkRechargeRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.NewBulkRechargeResponseDto;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -343,5 +345,11 @@ public class BulkRechargeAuthController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(newBulkRechargeService.getRechargeByDateRange(dto));
+    }
+
+    @GetMapping("/status/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<RechargeRequestStatusDto> getRechargeRequestStatus(@PathVariable("id") String id) {
+        return newBulkRechargeService.getRechargeStatus(id);
     }
 }

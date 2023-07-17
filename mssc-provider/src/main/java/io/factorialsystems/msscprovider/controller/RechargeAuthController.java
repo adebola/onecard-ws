@@ -2,6 +2,7 @@ package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.dto.CombinedRequestDto;
 import io.factorialsystems.msscprovider.dto.DateRangeDto;
+import io.factorialsystems.msscprovider.dto.RechargeRequestStatusDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
@@ -235,5 +236,11 @@ public class RechargeAuthController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType(Constants.EXCEL_CONTENT_TYPE))
                 .body(rechargeService.getRechargeByDateRange(dto));
+    }
+
+    @GetMapping("/single/status/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public RechargeRequestStatusDto getRechargeRequestStatus(@PathVariable("id") String id) {
+        return rechargeService.getRechargeStatus(id);
     }
 }

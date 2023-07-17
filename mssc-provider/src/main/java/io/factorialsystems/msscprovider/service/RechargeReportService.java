@@ -5,7 +5,6 @@ import io.factorialsystems.msscprovider.dao.RechargeReportMapper;
 import io.factorialsystems.msscprovider.dao.SingleRechargeMapper;
 import io.factorialsystems.msscprovider.domain.CombinedRechargeList;
 import io.factorialsystems.msscprovider.domain.CombinedRechargeRequest;
-import io.factorialsystems.msscprovider.domain.report.ProviderExpenditure;
 import io.factorialsystems.msscprovider.domain.report.RechargeReportRequest;
 import io.factorialsystems.msscprovider.domain.report.ReportIndividualRequest;
 import io.factorialsystems.msscprovider.dto.*;
@@ -14,7 +13,6 @@ import io.factorialsystems.msscprovider.dto.report.RechargeReportRequestDto;
 import io.factorialsystems.msscprovider.external.client.UserClient;
 import io.factorialsystems.msscprovider.mapper.recharge.CombinedRequestMapstructMapper;
 import io.factorialsystems.msscprovider.mapper.report.RechargeReportMapstructMapper;
-import io.factorialsystems.msscprovider.utils.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,17 +33,12 @@ public class RechargeReportService {
     private final RechargeReportMapstructMapper mapstructMapper;
     private final CombinedRequestMapstructMapper combinedRequestMapstructMapper;
 
-    public ProviderExpenditure getShortRechargeExpenditure(RechargeProviderRequestDto dto) {
-
-        if (dto.getStartDate() != null) {
-            dto.setStartDate(Utility.zeroDateTime(dto.getStartDate()));
-        }
-
-        if (dto.getEndDate() != null) {
-            dto.setEndDate(Utility.maxDateTime(dto.getEndDate()));
-        }
-
+    public List<RechargeProviderExpenditure> getShortRechargeExpenditure(RechargeProviderRequestDto dto) {
         return rechargeReportMapper.findRechargeProviderExpenditure(dto);
+    }
+
+    public List<RechargeProviderExpenditure> getLongRechargeExpenditure(RechargeProviderRequestDto dto) {
+        return rechargeReportMapper.findRechargeProviderExpenditurePerDay(dto);
     }
 
     public CombinedRechargeList runRechargeReport(RechargeReportRequestDto dto) {

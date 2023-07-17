@@ -39,7 +39,7 @@ class RechargeReportServiceTest {
     private RechargeReportService service;
 
     @Test
-    void getShortRechargeExpenditure() throws ParseException {
+    void getShortRechargeTotals() throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-M-yyyy hh:mm:ss a", Locale.ENGLISH);
         String dateInString = "22-01-2015 10:15:55 AM";
         Date date = formatter.parse(dateInString);

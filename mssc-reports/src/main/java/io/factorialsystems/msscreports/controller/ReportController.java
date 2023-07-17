@@ -92,7 +92,7 @@ public class ReportController {
     public ResponseEntity<Resource> runWalletReport(@Valid @RequestBody WalletReportRequestDto dto) {
         final String filename = String.format("wallet-%s.xlsx", UUID.randomUUID());
 
-        log.info("Running Wallet Report Parameters {}", dto);
+        log.info("Running User Wallet Report Parameters {}", dto);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
@@ -124,6 +124,5 @@ public class ReportController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
                 .body(reportService.runUserReport());
-
     }
 }
