@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProviderExpenditure {
+public class RechargeProviderTotal {
     private String provider;
-    private BigDecimal expenditure;
+    private BigDecimal total;
 }

@@ -235,9 +235,17 @@ public class SingleRechargeService {
             sendMail(request, dto, status);
 
             if (status.getStatus() != HttpStatus.OK) {
+                final String message;
+
+                if (status.getMessage().length() > 250) {
+                    message = status.getMessage().substring(0, 250);
+                } else {
+                    message = status.getMessage();
+                }
+
                 Map<String, String> paramMap = new HashMap<>();
                 paramMap.put("id", request.getId());
-                paramMap.put("message", status.getMessage());
+                paramMap.put("message", message);
 
                 singleRechargeMapper.failRequest(paramMap);
                 singleRefundRecharge.asyncRefundRecharge(request);
@@ -420,6 +428,55 @@ public class SingleRechargeService {
 
     public InputStreamResource getFailedRecharges(String type) {
         return singleDownloadRecharge.downloadFailed(type);
+    }
+
+    public RechargeRequestStatusDto getRechargeStatus(String id) {
+        SingleRechargeRequest rechargeRequest = singleRechargeMapper.findById(id);
+
+        if (id == null) {
+            return RechargeRequestStatusDto.builder()
+                    .status(RechargeRequestStatusDto.RECHARGE_REQUEST_NOT_FOUND)
+                    .build();
+        }
+
+        if (rechargeRequest.getUserId() != null && !rechargeRequest.getUserId().equals(ProviderSecurity.getUserId())) {
+            return RechargeRequestStatusDto.builder()
+                    .status(RechargeRequestStatusDto.RECHARGE_REQUEST_NOT_OWNER)
+                    .build();
+        }
+
+        if (rechargeRequest.getFailed()) {
+            if (rechargeRequest.getRetryId() == null) {
+                return RechargeRequestStatusDto.builder()
+                        .status(RechargeRequestStatusDto.RECHARGE_REQUEST_FAILED)
+                        .reason(rechargeRequest.getMessage())
+                        .id(id)
+                        .build();
+            } else if (rechargeRequest.getRefundId() != null){
+                return RechargeRequestStatusDto.builder()
+                        .status(RechargeRequestStatusDto.RECHARGE_REQUEST_FAILED_AND_REFUNDED)
+                        .id(id)
+                        .build();
+            } else {
+                return RechargeRequestStatusDto.builder()
+                        .status(RechargeRequestStatusDto.RECHARGE_REQUEST_SUCCESS)
+                        .id(id)
+                        .build();
+            }
+        }
+
+        if (rechargeRequest.getStatus().equals(200) && rechargeRequest.getRechargeProviderId() != null) {
+            return RechargeRequestStatusDto.builder()
+                    .status(RechargeRequestStatusDto.RECHARGE_REQUEST_SUCCESS)
+                    .id(id)
+                    .build();
+        }
+
+        return RechargeRequestStatusDto.builder()
+                .status(RechargeRequestStatusDto.RECHARGE_REQUEST_FAILED)
+                .reason(rechargeRequest.getMessage())
+                .id(id)
+                .build();
     }
 
     @SneakyThrows

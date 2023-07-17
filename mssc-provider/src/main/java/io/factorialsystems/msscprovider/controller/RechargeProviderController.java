@@ -1,5 +1,6 @@
 package io.factorialsystems.msscprovider.controller;
 
+import io.factorialsystems.msscprovider.dto.PagedDto;
 import io.factorialsystems.msscprovider.dto.provider.RechargeProviderDto;
 import io.factorialsystems.msscprovider.dto.provider.RechargeProviderExDto;
 import io.factorialsystems.msscprovider.service.RechargeProviderService;
@@ -21,8 +22,8 @@ public class RechargeProviderController {
     private final RechargeProviderService rechargeProviderService;
 
     @GetMapping
-    public ResponseEntity<?> getAllRechargeProviders(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
-                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+    public ResponseEntity<PagedDto<RechargeProviderDto>> getAllRechargeProviders(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                                                                 @RequestParam(value = "pageSize", required = false) Integer pageSize) {
 
         if (pageNumber == null || pageNumber < 0) {
             pageNumber = Constants.DEFAULT_PAGE_NUMBER;

@@ -1,9 +1,11 @@
 package io.factorialsystems.msscprovider.controller;
 
 import io.factorialsystems.msscprovider.domain.CombinedRechargeList;
-import io.factorialsystems.msscprovider.dto.RechargeProviderTransactionsDto;
+import io.factorialsystems.msscprovider.dto.RechargeProviderExpenditure;
+import io.factorialsystems.msscprovider.dto.provider.RechargeProviderDto;
 import io.factorialsystems.msscprovider.dto.report.RechargeProviderRequestDto;
 import io.factorialsystems.msscprovider.dto.report.RechargeReportRequestDto;
+import io.factorialsystems.msscprovider.service.RechargeProviderService;
 import io.factorialsystems.msscprovider.service.RechargeReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ import java.util.List;
 @RequestMapping("/api/v1/recharge-report")
 public class RechargeReportController {
     private final RechargeReportService reportService;
+    private final RechargeProviderService rechargeProviderService;
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
@@ -41,17 +44,18 @@ public class RechargeReportController {
     @GetMapping("/provider")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
-    public List<RechargeProviderTransactionsDto> getProviderBalances() {
-        return null;
+    public List<RechargeProviderDto> getProviderBalances() {
+        return rechargeProviderService.findAllWithBalances();
     }
 
     @PostMapping("/short")
-    public ResponseEntity<?> getShortProviderExpenditure(@Valid @RequestBody RechargeProviderRequestDto dto) {
+    @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
+    public ResponseEntity<List<RechargeProviderExpenditure>> getShortProviderExpenditure(@Valid @RequestBody RechargeProviderRequestDto dto) {
         return ResponseEntity.ok(reportService.getShortRechargeExpenditure(dto));
     }
 
     @PostMapping("/long")
-    public ResponseEntity<?> getLongProviderExpenditure(@Valid @RequestBody RechargeProviderRequestDto dto) {
-        return null;
+    public ResponseEntity<List<RechargeProviderExpenditure>> getLongProviderExpenditure(@Valid @RequestBody RechargeProviderRequestDto dto) {
+        return ResponseEntity.ok(reportService.getLongRechargeExpenditure(dto));
     }
 }

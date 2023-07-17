@@ -11,10 +11,7 @@ import io.factorialsystems.msscprovider.domain.query.SearchByDate;
 import io.factorialsystems.msscprovider.domain.rechargerequest.IndividualRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.NewBulkRechargeRequest;
 import io.factorialsystems.msscprovider.domain.rechargerequest.SingleRechargeRequest;
-import io.factorialsystems.msscprovider.dto.DateRangeDto;
-import io.factorialsystems.msscprovider.dto.PagedDto;
-import io.factorialsystems.msscprovider.dto.RequestTransactionDto;
-import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
+import io.factorialsystems.msscprovider.dto.*;
 import io.factorialsystems.msscprovider.dto.payment.PaymentRequestDto;
 import io.factorialsystems.msscprovider.dto.recharge.AsyncRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
@@ -49,6 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -103,7 +101,8 @@ public class NewBulkRechargeService {
                     .build();
         }
 
-        NewBulkRechargeRequest request = mapper.rechargeDtoToRecharge(dto);;
+        NewBulkRechargeRequest request = mapper.rechargeDtoToRecharge(dto);
+        ;
 
         // Auto Recharges will send their UserId, others will not and expect it to be filled by
         // Mapstruct Mapper, in particular NewBulkRechargeMapstructMapperDecorator, it gets the UserId
@@ -429,14 +428,14 @@ public class NewBulkRechargeService {
                 .orElseThrow(() -> new RuntimeException(String.format("Error Resolving Individual Bulk Requests %s, it might have been resolved, refunded or successfully re-tried", id)));
     }
 
-    public PagedDto<NewBulkRechargeRequestDto> getFailedRequests(Integer pageNumber, Integer pageSize){
+    public PagedDto<NewBulkRechargeRequestDto> getFailedRequests(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findFailedRequests();
 
         return createDto(requests);
     }
 
-    public PagedDto<NewBulkRechargeRequestDto> getFailedUnresolvedRequests(Integer pageNumber, Integer pageSize){
+    public PagedDto<NewBulkRechargeRequestDto> getFailedUnresolvedRequests(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<NewBulkRechargeRequest> requests = newBulkRechargeMapper.findFailedUnResolvedRequests();
 
@@ -461,15 +460,76 @@ public class NewBulkRechargeService {
         return bulkDownloadRecharge.failed(type);
     }
 
-    public InputStreamResource failedIndividual(String id, String type) { return bulkDownloadRecharge.failedIndividual(id, type); }
+    public InputStreamResource failedIndividual(String id, String type) {
+        return bulkDownloadRecharge.failedIndividual(id, type);
+    }
 
-    public InputStreamResource downloadUserBulk(String id) { return bulkDownloadRecharge.userBulk(id); }
+    public InputStreamResource downloadUserBulk(String id) {
+        return bulkDownloadRecharge.userBulk(id);
+    }
 
-    public InputStreamResource downloadUserIndividual(String id) { return  bulkDownloadRecharge.userIndividuals(id); }
+    public InputStreamResource downloadUserIndividual(String id) {
+        return bulkDownloadRecharge.userIndividuals(id);
+    }
 
     public InputStreamResource getRechargeByDateRange(DateRangeDto dto) {
         dto.setId(ProviderSecurity.getUserId());
         return bulkDownloadRecharge.downloadRechargeByDateRange(dto);
+    }
+
+    public List<RechargeRequestStatusDto> getRechargeStatus(String id) {
+
+        NewBulkRechargeRequest request = newBulkRechargeMapper.findBulkRechargeById(id);
+
+        if (id == null) {
+            return List.of(RechargeRequestStatusDto.builder()
+                    .status(RechargeRequestStatusDto.RECHARGE_REQUEST_NOT_FOUND)
+                    .build());
+        }
+
+        if (request.getUserId() != null && !request.getUserId().equals(ProviderSecurity.getUserId())) {
+            return List.of(RechargeRequestStatusDto.builder()
+                    .status(RechargeRequestStatusDto.RECHARGE_REQUEST_NOT_OWNER)
+                    .build());
+        }
+
+        List<IndividualRequest> individualRequests = newBulkRechargeMapper.findBulkIndividualRequests(id);
+
+        if (individualRequests == null || individualRequests.size() == 0) {
+            return List.of(RechargeRequestStatusDto.builder()
+                    .id(id)
+                    .status(RechargeRequestStatusDto.NO_BULK_REQUESTS_FOUND)
+                    .build());
+        }
+
+        return individualRequests.stream()
+                .map(i -> {
+                    // Failed is either NULL or False (Did Not Fail)
+                    if (i.getFailed() == null || !i.getFailed()) {
+                        return RechargeRequestStatusDto.builder()
+                                .status(RechargeRequestStatusDto.RECHARGE_REQUEST_SUCCESS)
+                                .id(id)
+                                .build();
+                    } else { // Failed
+                        if (i.getRetryId() != null) { // Successfully Retried
+                            return RechargeRequestStatusDto.builder()
+                                    .status(RechargeRequestStatusDto.RECHARGE_REQUEST_SUCCESS)
+                                    .id(id)
+                                    .build();
+                        } else if (i.getRefundId() != null) { // Successfully Refunded
+                            return RechargeRequestStatusDto.builder()
+                                    .status(RechargeRequestStatusDto.RECHARGE_REQUEST_FAILED_AND_REFUNDED)
+                                    .id(id)
+                                    .build();
+                        } else { // Retry Failed and Refund Failed
+                            return RechargeRequestStatusDto.builder()
+                                    .status(RechargeRequestStatusDto.RECHARGE_REQUEST_FAILED)
+                                    .reason(i.getFailedMessage())
+                                    .id(id)
+                                    .build();
+                        }
+                    }
+                }).collect(Collectors.toList());
     }
 
     private PagedDto<IndividualRequestDto> createIndividualDto(Page<IndividualRequest> requests) {

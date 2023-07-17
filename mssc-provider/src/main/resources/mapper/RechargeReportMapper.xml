@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="io.factorialsystems.msscprovider.dao.RechargeReportMapper">
-
-    <resultMap id="expenditureMap" type="io.factorialsystems.msscprovider.domain.report.ProviderExpenditure">
+    <resultMap id="expenditureMap" type="io.factorialsystems.msscprovider.dto.RechargeProviderExpenditure">
         <result column="provider" property="provider" jdbcType="VARCHAR"/>
         <result column="expenditure" property="expenditure" jdbcType="DECIMAL"/>
+        <result column="day" property="day" jdbcType="DATE"/>
     </resultMap>
 
     <select id="findRechargeProviderExpenditure" parameterType="io.factorialsystems.msscprovider.dto.report.RechargeProviderRequestDto" resultMap="expenditureMap">
@@ -12,7 +12,8 @@
         from (
                 select p.name, sum(r.service_cost) as totals
                 from recharge_requests r, recharge_providers p
-                where r.recharge_provider_id = p.id
+                where r.recharge_provider_id is NOT NULL
+                and r.recharge_provider_id = p.id
 
                 <if test="startDate != null and endDate != null">
                     and r.createdAt between #{startDate} and #{endDate}
@@ -39,5 +40,41 @@
                 group by recharge_provider_id
              ) as ntnt
         group by name;
+    </select>
+    
+    <select id="findRechargeProviderExpenditurePerDay" parameterType="io.factorialsystems.msscprovider.dto.report.RechargeProviderRequestDto" resultMap="expenditureMap">
+
+        select name as provider, date(createdAt) as day, sum(service_cost) as expenditure from (
+            select rp.name, rr.createdAt, rr.service_cost
+            from providerdb.recharge_requests rr, providerdb.recharge_providers rp
+            where rr.recharge_provider_id is NOT NULL
+            and rr.recharge_provider_id = rp.id
+
+            <if test="startDate != null and endDate != null">
+                and rr.createdAt between #{startDate} and #{endDate}
+            </if>
+
+            <if test="startDate != null and endDate == null">
+                and rr.createdAt &gt; #{startDate}
+            </if>
+
+            UNION
+
+            select rp.name, nb.createdAt, br.service_cost
+            from providerdb.recharge_providers rp, providerdb.new_bulk_recharge_requests nb, providerdb.bulk_individual_requests br
+            where br.recharge_provider_id is NOT NULL
+            and br.recharge_provider_id = rp.id
+            and br.bulk_request_id = nb.id
+
+            <if test="startDate != null and endDate != null">
+                and nb.createdAt between #{startDate} and #{endDate}
+            </if>
+
+            <if test="startDate != null and endDate == null">
+                and nb.createdAt &gt; #{startDate}
+            </if>
+        ) as ncAscncAsc
+        group by day, provider
+        order by day
     </select>
 </mapper>
