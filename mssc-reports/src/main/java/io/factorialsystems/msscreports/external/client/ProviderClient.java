@@ -41,4 +41,11 @@ public interface ProviderClient {
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
     List<RechargeProviderExpenditure> getLongProviderExpenditure(@RequestBody RechargeProviderRequestDto dto);
+
+    @RequestMapping(method = RequestMethod.GET,
+            value = "/api/v1/recharge-report/balances",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    List<RechargeProviderDto> getProviderBalances();
 }

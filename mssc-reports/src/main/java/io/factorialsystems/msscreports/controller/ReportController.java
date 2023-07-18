@@ -125,4 +125,18 @@ public class ReportController {
                 .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
                 .body(reportService.runUserReport());
     }
+
+
+    @GetMapping("/provider-balances")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Audit', 'Onecard_Revenue_Assurance')")
+    public ResponseEntity<Resource> runProviderBalanceReport() {
+        final String filename = "provider-balance-report.xlsx";
+        log.info("Running Provider balance Report");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
+                .body(reportService.runProviderWalletBalanceReport());
+    }
 }

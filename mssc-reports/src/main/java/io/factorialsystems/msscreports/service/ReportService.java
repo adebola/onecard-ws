@@ -10,10 +10,7 @@ import io.factorialsystems.msscreports.external.client.AccountClient;
 import io.factorialsystems.msscreports.external.client.AuditClient;
 import io.factorialsystems.msscreports.external.client.ProviderClient;
 import io.factorialsystems.msscreports.external.client.UserClient;
-import io.factorialsystems.msscreports.generate.excel.AuditReportGenerator;
-import io.factorialsystems.msscreports.generate.excel.RechargeReportGenerator;
-import io.factorialsystems.msscreports.generate.excel.UserReportGenerator;
-import io.factorialsystems.msscreports.generate.excel.WalletReportGenerator;
+import io.factorialsystems.msscreports.generate.excel.*;
 import io.factorialsystems.msscreports.mapper.ReportMSMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -38,6 +35,7 @@ public class ReportService {
     private final AuditReportGenerator auditReportGenerator;
     private final WalletReportGenerator walletReportGenerator;
     private final RechargeReportGenerator rechargeReportGenerator;
+    private final ProviderBalanceReportGenerator providerBalanceReportGenerator;
 
     private static final String UPDATE_REPORT = "Report Updated";
     private static final String CREATE_REPORT = "Create Report";
@@ -98,7 +96,7 @@ public class ReportService {
             requestDto.setEndDate(dto.getEndDate());
             requestDto.setStartDate(dto.getStartDate());
 
-            if (dto.getType().equals("provider-short")) {
+            if (dto.getType().equals("short")) {
                 final List<RechargeProviderExpenditure> shortProviderExpenditure = providerClient.getShortProviderExpenditure(requestDto);
                 return new InputStreamResource(walletReportGenerator.providerShortWalletToExcel(shortProviderExpenditure, dto));
             } else {
@@ -106,6 +104,11 @@ public class ReportService {
                 return new InputStreamResource(walletReportGenerator.providerLongWalletToExcel(longProviderExpenditure, dto));
             }
         }
+    }
+
+    public InputStreamResource runProviderWalletBalanceReport() {
+        final List<RechargeProviderDto> providerBalances = providerClient.getProviderBalances();
+        return new InputStreamResource(providerBalanceReportGenerator.providerBalancesToExcel(providerBalances));
     }
 
     public InputStreamResource runAuditReport(AuditSearchDto auditSearchDto) {

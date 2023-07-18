@@ -151,6 +151,27 @@ class ReportServiceTest {
         }
     }
 
+//    @Test
+//    void runProviderBalanceReport() throws IOException {
+//        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
+//            k.when(K::getUserId).thenReturn(id);
+//            assertThat(K.getUserId()).isEqualTo(id);
+//            log.info(K.getUserId());
+//
+//            k.when(K::getAccessToken).thenReturn(token);
+//            assertThat(K.getAccessToken()).isEqualTo(token);
+//
+//            InputStreamResource inputStreamResource = reportService.runProviderWalletBalanceReport();
+//
+//            File targetFile = new File("/Users/adebola/Downloads/provider-balance-report.xlsx");
+//            OutputStream outputStream = new FileOutputStream(targetFile);
+//            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
+//            outputStream.write(buffer);
+//
+//            log.info(targetFile.getAbsolutePath());
+//        }
+//    }
+
 
     @Test
     void runAuditReport() throws IOException {
