@@ -46,10 +46,15 @@ public class RechargeProviderService {
                         AbstractFactory abstractFactory = factoryProducer.getFactory(r.getCode());
 
                         if (abstractFactory != null) {
-                            Balance balance = abstractFactory.getBalance();
+                            try {
+                                Balance balance = abstractFactory.getBalance();
 
-                            if (balance != null) {
-                                rechargeProviderDto.setBalance(balance.getBalance());
+                                if (balance != null) {
+                                    rechargeProviderDto.setBalance(balance.getBalance());
+                                }
+                            } catch (Exception e) {
+                                log.error("Error getting balance for {}", rechargeProviderDto.getCode());
+                                log.error("Error Message {}", e.getMessage());
                             }
                         }
 

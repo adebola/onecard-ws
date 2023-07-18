@@ -17,6 +17,7 @@ public class ImpersonateFeignConfig {
             String token = null;
             Cache cache = cacheManager.getCache(CachingConfig.ALTERNATE_USER_ID);
 
+            // NOT SAFE SHOULD BE SYNCHRONIZED ON SOMETHING
             if (cache != null) {
                 Cache.ValueWrapper valueWrapper = cache.get("user");
 

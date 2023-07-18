@@ -41,7 +41,7 @@ public class RechargeReportController {
                 .body(results);
     }
 
-    @GetMapping("/provider")
+    @GetMapping("/balances")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
     public List<RechargeProviderDto> getProviderBalances() {
