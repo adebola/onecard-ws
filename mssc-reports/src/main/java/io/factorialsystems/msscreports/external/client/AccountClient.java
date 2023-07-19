@@ -3,6 +3,8 @@ package io.factorialsystems.msscreports.external.client;
 
 import io.factorialsystems.msscreports.config.FeignConfig;
 import io.factorialsystems.msscreports.dto.FundWalletRequestDto;
+import io.factorialsystems.msscreports.dto.TransactionDto;
+import io.factorialsystems.msscreports.dto.TransactionSearchRequestDto;
 import io.factorialsystems.msscreports.dto.WalletReportRequestDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -19,4 +21,11 @@ public interface AccountClient {
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
     List<FundWalletRequestDto> getWalletFunding(WalletReportRequestDto dto);
+
+    @RequestMapping(method = RequestMethod.GET,
+            value = "/api/v1/transaction/search",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    List<TransactionDto> getTransactions(TransactionSearchRequestDto dto);
 }

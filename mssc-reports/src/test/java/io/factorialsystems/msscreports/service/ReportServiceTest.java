@@ -172,6 +172,29 @@ class ReportServiceTest {
 //        }
 //    }
 
+    @Test
+    void runTransactionReport() throws IOException {
+        TransactionSearchRequestDto dto = new TransactionSearchRequestDto();
+
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            k.when(K::getAccessToken).thenReturn(token);
+            assertThat(K.getAccessToken()).isEqualTo(token);
+
+            InputStreamResource inputStreamResource = reportService.runTransactionReport(dto);
+
+            File targetFile = new File("/Users/adebola/Downloads/transaction-report.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
+        }
+
+    }
 
     @Test
     void runAuditReport() throws IOException {

@@ -19,6 +19,8 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,6 +37,7 @@ public class ReportService {
     private final AuditReportGenerator auditReportGenerator;
     private final WalletReportGenerator walletReportGenerator;
     private final RechargeReportGenerator rechargeReportGenerator;
+    private final TransactionReportGenerator transactionReportGenerator;
     private final ProviderBalanceReportGenerator providerBalanceReportGenerator;
 
     private static final String UPDATE_REPORT = "Report Updated";
@@ -109,6 +112,35 @@ public class ReportService {
     public InputStreamResource runProviderWalletBalanceReport() {
         final List<RechargeProviderDto> providerBalances = providerClient.getProviderBalances();
         return new InputStreamResource(providerBalanceReportGenerator.providerBalancesToExcel(providerBalances));
+    }
+
+    public InputStreamResource runTransactionReport(TransactionSearchRequestDto dto) {
+        List<TransactionDto> transactions = accountClient.getTransactions(dto);
+        List<String> ids = transactions
+                .stream()
+                .map(TransactionDto::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (!ids.isEmpty()) {
+            UserIdListDto userIdListDto = new UserIdListDto(ids);
+            UserEntryListDto userEntries = userClient.getUserEntries(userIdListDto);
+
+            if (userEntries != null && userEntries.getEntries() != null && userEntries.getEntries().size() > 0) {
+                List<TransactionDto> tx = transactions.stream().peek(t -> {
+                    if (t.getUserId() != null) {
+                        Optional<UserEntryDto> first = userEntries.getEntries()
+                                .stream()
+                                .filter(x -> x.getId().equals(t.getUserId()))
+                                .findFirst();
+
+                        first.ifPresent(userEntryDto -> t.setUserName(userEntryDto.getName()));
+                    }
+                }).collect(Collectors.toList());
+            }
+        }
+
+        return new InputStreamResource(transactionReportGenerator.transactionToExcel(transactions, dto));
     }
 
     public InputStreamResource runAuditReport(AuditSearchDto auditSearchDto) {

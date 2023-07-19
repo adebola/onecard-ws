@@ -139,4 +139,17 @@ public class ReportController {
                 .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
                 .body(reportService.runProviderWalletBalanceReport());
     }
+
+    @PostMapping("/transaction")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Audit', 'Onecard_Revenue_Assurance')")
+    public ResponseEntity<Resource> runTransactionReport(@Valid @RequestBody TransactionSearchRequestDto dto) {
+        final String filename = "transaction-report.xlsx";
+        log.info("Running Transaction Report");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
+                .body(reportService.runTransactionReport(dto));
+    }
 }
