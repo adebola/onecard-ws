@@ -2,6 +2,8 @@ package io.factorialsystems.msscwallet.controller;
 
 import io.factorialsystems.msscwallet.dto.DateRangeDto;
 import io.factorialsystems.msscwallet.dto.MessageDto;
+import io.factorialsystems.msscwallet.dto.TransactionDto;
+import io.factorialsystems.msscwallet.dto.TransactionSearchRequestDto;
 import io.factorialsystems.msscwallet.service.TransactionService;
 import io.factorialsystems.msscwallet.utils.Constants;
 import io.factorialsystems.msscwallet.utils.Security;
@@ -18,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -41,6 +44,13 @@ public class TransactionController {
         }
 
         return new ResponseEntity<>(transactionService.findUserTransactions(id, pageNumber, pageSize), HttpStatus.OK);
+    }
+
+    @PostMapping("/search")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    @ResponseStatus(HttpStatus.OK)
+    public List<TransactionDto> searchTransactions(@Valid @RequestBody TransactionSearchRequestDto dto) {
+        return transactionService.search(dto);
     }
 
     @GetMapping("/{id}")
@@ -85,7 +95,7 @@ public class TransactionController {
     }
 
     @PostMapping("/print")
-    public ResponseEntity<Resource>  printUserTransactions(@Valid @RequestBody DateRangeDto dto) {
+    public ResponseEntity<Resource> printUserTransactions(@Valid @RequestBody DateRangeDto dto) {
         String fileName = String.format("%s.%s", RandomStringUtils.randomAlphanumeric(8), "xlsx");
 
         InputStreamResource file = new InputStreamResource(transactionService.generateExcelTransactionFile(dto));
@@ -93,7 +103,7 @@ public class TransactionController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
-                .contentType(MediaType.parseMediaType("application/vnd.ms-excel"))
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(file);
     }
 }

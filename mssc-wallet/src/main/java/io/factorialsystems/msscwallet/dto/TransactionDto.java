@@ -24,4 +24,5 @@ public class TransactionDto {
     private Date txDate;
     private BigDecimal txAmount;
     private String recipient;
+    private String userId;
 }

@@ -13,8 +13,24 @@
         <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
     </resultMap>
 
+    <resultMap id="transactionWithUserResultMap" type="io.factorialsystems.msscwallet.domain.Transaction">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="account_id" property="accountId" jdbcType="VARCHAR"/>
+        <result column="charge_account_id" property="chargeAccountId" jdbcType="VARCHAR"/>
+        <result column="service_id" property="serviceId" jdbcType="INTEGER"/>
+        <result column="service_name" property="serviceName" jdbcType="VARCHAR"/>
+        <result column="tx_datetime" property="txDate" jdbcType="TIMESTAMP"/>
+        <result column="tx_amount" property="txAmount"  jdbcType="DECIMAL"/>
+        <result column="recipient" property="recipient" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+    </resultMap>
+
     <sql id="column_list">
         t.id, t.account_id, t.charge_account_id, t.service_id, t.service_name, t.tx_datetime, t.tx_amount, t.recipient, t.charge_account_id
+    </sql>
+
+    <sql id="account_column_list">
+        t.id, t.account_id, t.charge_account_id, t.service_id, t.service_name, t.tx_datetime, t.tx_amount, t.recipient, t.charge_account_id, a.user_id
     </sql>
 
     <select id="findUserTransactions" parameterType="java.lang.String" resultMap="transactionResultMap">
@@ -60,4 +76,25 @@
             select LAST_INSERT_ID()
         </selectKey>
     </insert>
+
+    <select id="search" parameterType="io.factorialsystems.msscwallet.dto.TransactionSearchRequestDto" resultMap="transactionWithUserResultMap">
+        select
+        <include refid="account_column_list"/>
+        from transactions t, accounts a
+        where t.account_id = a.id
+
+        <if test="userId != null ">
+            and a.user_id = #{userId}
+        </if>
+
+        <if test="startDate != null and endDate != null">
+            and t.tx_datetime between #{startDate} and #{endDate}
+        </if>
+
+        <if test="startDate != null and endDate == null">
+            and t.tx_datetime &gt; #{startDate}
+        </if>
+
+        order by t.tx_datetime desc
+    </select>
 </mapper>

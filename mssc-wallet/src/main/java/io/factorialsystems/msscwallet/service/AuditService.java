@@ -1,6 +1,5 @@
 package io.factorialsystems.msscwallet.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscwallet.config.JMSConfig;
 import io.factorialsystems.msscwallet.dto.AuditMessageDto;
@@ -37,7 +36,8 @@ public class AuditService {
 
         try {
             jmsTemplate.convertAndSend(JMSConfig.AUDIT_MESSAGE_QUEUE, objectMapper.writeValueAsString(dto));
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
+            log.error("Error Sending Audit Message reason : {}", e.getMessage());
             e.printStackTrace();
         }
     }

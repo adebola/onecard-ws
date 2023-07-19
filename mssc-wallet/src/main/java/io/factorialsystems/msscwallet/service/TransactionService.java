@@ -8,6 +8,7 @@ import io.factorialsystems.msscwallet.domain.query.SearchByDateRange;
 import io.factorialsystems.msscwallet.dto.DateRangeDto;
 import io.factorialsystems.msscwallet.dto.PagedDto;
 import io.factorialsystems.msscwallet.dto.TransactionDto;
+import io.factorialsystems.msscwallet.dto.TransactionSearchRequestDto;
 import io.factorialsystems.msscwallet.mapper.TransactionMapstructMapper;
 import io.factorialsystems.msscwallet.service.file.ExcelWriter;
 import io.factorialsystems.msscwallet.utils.Security;
@@ -20,6 +21,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -70,6 +72,14 @@ public class TransactionService {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public List<TransactionDto> search(TransactionSearchRequestDto dto) {
+        return transactionMapper.search(dto)
+                .stream()
+                .map(transactionMapstructMapper::transactionToTransactionDto)
+                .collect(Collectors.toList());
+
     }
 
     private PagedDto<TransactionDto> createDto(Page<Transaction> transactions) {
