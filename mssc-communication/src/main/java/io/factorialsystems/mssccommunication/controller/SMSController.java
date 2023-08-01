@@ -2,6 +2,7 @@ package io.factorialsystems.mssccommunication.controller;
 
 import io.factorialsystems.mssccommunication.dto.BulkSMSMessageDto;
 import io.factorialsystems.mssccommunication.dto.SMSMessageDto;
+import io.factorialsystems.mssccommunication.dto.SMSResponseDto;
 import io.factorialsystems.mssccommunication.service.sms.SMSMessageService;
 import io.factorialsystems.mssccommunication.utils.K;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,14 @@ public class SMSController {
     private final SMSMessageService smsService;
 
     @PostMapping
-    public ResponseEntity sendSingleSMS(@RequestBody @Valid SMSMessageDto smsDto) {
-        return  smsService.sendMessage(smsDto) ? new ResponseEntity<>(HttpStatus.ACCEPTED) : new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    public ResponseEntity<?> sendSingleSMS(@RequestBody @Valid SMSMessageDto smsDto) {
+        final SMSResponseDto smsResponseDto = smsService.sendMessage(smsDto);
+
+        if (smsResponseDto.getStatus()) {
+            return ResponseEntity.ok(smsDto);
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(smsDto);
     }
 
     @GetMapping
@@ -55,6 +62,6 @@ public class SMSController {
     @PostMapping("/bulk")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void sendBulkSMS(@RequestBody @Valid BulkSMSMessageDto bulkSMSMessageDto) {
-        smsService.sendBulkMessages(bulkSMSMessageDto.getMessages());
+        bulkSMSMessageDto.getMessages().forEach(smsService::sendMessage);
     }
 }

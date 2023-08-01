@@ -1,13 +1,19 @@
 package io.factorialsystems.mssccommunication.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 public class MailMessageDto {
+    @NotEmpty
+    private String secret;
+
     @Null(message = "Id cannot be set")
     private String id;
 

@@ -28,7 +28,6 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(org.springframework.security.config.annotation.web.builders.WebSecurity web)  {
-        web.ignoring()
-                .antMatchers("/api/v1/mail","/api/v1/mail/**");
+        web.ignoring().antMatchers("/api/v1/mail","/api/v1/mail/**");
     }
 }

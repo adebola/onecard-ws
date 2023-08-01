@@ -1,0 +1,6 @@
+1. Create BCrypt Password for Mail Send,  currently sent without Security, this is because mails are sent async hence
+   without a security context affects the following services
+   a. mssc-communication-service (owner)
+   b. mssc-user-service
+   c. mssc-wallet-service
+   d. mssc-user-service

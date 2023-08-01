@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,12 +34,23 @@ public class MailService {
     private final MailMessageRepository mailMessageRepository;
     private final MailConstantsRepository mailConstantsRepository;
 
+    @Value("${mail.secret}")
+    private String mailSecret;
+
     private String mailFooter;
 
     @Value("${user.mail}")
     private String fromAddress;
 
     public String sendMail(MailMessageDto dto, MultipartFile multipartFile)  {
+
+        // Due to the Async nature of other services that send mails, they typically don't have a valid SecurityContext
+        // when invoking the MailController, the fulfillment and mail sending is done on a JMS Thread, not the main thread,
+        // the routes are Authentication free, hence the need for an additional layer, a Mail BCrypted Password
+        if (!mailSecret.equals(dto.getSecret())) {
+            log.error("Invalid Secret {}, sending Mail", dto.getSecret());
+            throw new AccessDeniedException("Invalid Credentials Sending Mail");
+        }
 
         MailMessage mailMessage = mailMessageMapper.dtoToMailMessageTo(dto);
 
