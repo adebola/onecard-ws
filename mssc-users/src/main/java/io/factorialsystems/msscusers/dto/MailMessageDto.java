@@ -9,6 +9,7 @@ import java.util.Date;
 @Builder
 public class MailMessageDto {
     private String id;
+    private String secret;
     private String to;
     private String from;
     private String subject;

@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @CommonsLog
 @SpringBootTest
 class MailServiceTest {
@@ -22,6 +20,7 @@ class MailServiceTest {
                 .to("adeomoboya@gmail.com")
                 .body("test")
                 .subject("test")
+                .secret("secret")
                 .build();
 
         client.sendMailWithoutAttachment(dto);

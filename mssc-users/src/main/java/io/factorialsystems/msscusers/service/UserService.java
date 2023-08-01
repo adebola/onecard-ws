@@ -48,6 +48,9 @@ public class UserService {
     private final UserMapper userMapper;
     private final CommunicationClient communicationClient;
 
+    @Value("${mail.secret}")
+    private String mailSecret;
+
     @Value("${keycloak.onecard}")
     private String onecardRealm;
 
@@ -150,6 +153,7 @@ public class UserService {
                         .subject("User Profile Changed")
                         .to(user.toRepresentation().getEmail())
                         .body(message)
+                        .secret(mailSecret)
                         .build();
 
                 communicationClient.sendMailWithoutAttachment(mailMessageDto);
@@ -176,6 +180,7 @@ public class UserService {
                     .subject("User Password Changed")
                     .to(userRepresentation.getEmail())
                     .body(message)
+                    .secret(mailSecret)
                     .build();
 
             communicationClient.sendMailWithoutAttachment(mailMessageDto);
@@ -256,6 +261,7 @@ public class UserService {
                 .subject("Onecard Login Alert")
                 .to(user.getEmail())
                 .body(message)
+                .secret(mailSecret)
                 .build();
 
         communicationClient.sendMailWithoutAttachment(mailMessageDto);
