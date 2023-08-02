@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -93,6 +95,20 @@ public class UtilsTest {
 //                .map(account -> account.flatMap(Account::getLoan))
 //
 //    }
+
+
+    @Test
+    void dateTest() throws ParseException {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        final Date expiry = simpleDateFormat.parse("2023-07-20 23:45:24");
+        final Date end = simpleDateFormat.parse("2023-07-20 19:00:24");
+
+        final int i = expiry.compareTo(end);
+        log.info("Results");
+        log.info(i);
+
+    }
 
 
     @Test

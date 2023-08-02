@@ -39,7 +39,7 @@ public class OnecardConnect {
     @Value("${onecard.api.salt}")
     private String iVSecret;
 
-    private static final int MINUS_FIVE_MINUTES = -5;
+    private static final int MINUS_TEN_MINUTES = -10;
 
     public String decrypt(String s ) throws Exception {
         return new String(apiCrypt.decryptByte(s)).trim();
@@ -49,17 +49,21 @@ public class OnecardConnect {
         return Base64.getEncoder().encodeToString(apiCrypt.encryptByte(s));
     }
 
-    public void logout() throws Exception {
-        RestTemplate restTemplate = new RestTemplate();
-        MultiValueMap<String, String> headers = getHeaders();
+    public void logout() {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            MultiValueMap<String, String> headers = getHeaders();
 
-        Map<Object, Object> payload = new HashMap<>();
-        HttpEntity<?> request = new HttpEntity<>(payload, headers);
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity(baseUrl + "/logout", request, String.class);
+            Map<Object, Object> payload = new HashMap<>();
+            HttpEntity<?> request = new HttpEntity<>(payload, headers);
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(baseUrl + "/logout", request, String.class);
 
-        final String response = new String(apiCrypt.decryptByte(responseEntity.getBody())).trim();
-        GenericResponse genericResponse = objectMapper.readValue(response, GenericResponse.class);
-        log.info("Logout Response {}", genericResponse);
+            final String response = new String(apiCrypt.decryptByte(responseEntity.getBody())).trim();
+            GenericResponse genericResponse = objectMapper.readValue(response, GenericResponse.class);
+            log.info("Logout Response {}", genericResponse);
+        }  catch (Exception e) {
+            log.error("Exception Thrown Logging out of Onecard API Provider");
+        }
     }
 
     private LoginResponseType login() throws Exception {
@@ -97,7 +101,12 @@ public class OnecardConnect {
             }
 
             apiCrypt = new MCrypt(userToken, split[1]);
-            expiry = new Date(loginResponse.getResponseData().expireAt * 1000);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(new Date(loginResponse.getResponseData().expireAt * 1000));
+            calendar.add(Calendar.MINUTE, MINUS_TEN_MINUTES);
+
+            expiry = calendar.getTime();
 
             log.info("Successful login, token expires at {}", expiry);
 
@@ -109,20 +118,18 @@ public class OnecardConnect {
 
     public synchronized LoginResponseType doLogin() throws Exception {
         if (apiCrypt == null) {
+            log.info("Onecard API logging In for the 1st Time");
             return login();
         } else  {
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(expiry);
-            cal.add(Calendar.MINUTE, MINUS_FIVE_MINUTES);
+            final Date now = new Date();
+            log.info("Onecard API, Logged In, Might have expired, Expiry {} Now {}", expiry, now);
 
-            if (cal.after(new Date())) {
-                log.info("Logging In Again Expiry {}", expiry);
-                logout();
+            if (expiry.compareTo(now) < 0) {
+                log.info("LogIn Expired LogIn Again {}", expiry);
                 return login();
             }
         }
 
-        log.info("Already LoggedIn");
         return LoginResponseType.LOGIN_ALREADY_LOGGED_IN;
     }
 

@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AutoRechargeService {
+    private final ExcelReader excelReader;
     private final ExcelWriter excelWriter;
     private final FileUploader fileUploader;
     private final AuditService auditService;
@@ -77,8 +78,7 @@ public class AutoRechargeService {
         log.info("Uploading AutoRecharge Bulk Excel File...");
 
         UploadFile uploadFile = fileUploader.uploadFile(file);
-        ExcelReader excelReader = new ExcelReader(uploadFile);
-        List<IndividualRequestDto> individualRequests = excelReader.readContents();
+        List<IndividualRequestDto> individualRequests = excelReader.readContents(uploadFile);
         AutoRechargeRequestDto autoRechargeRequestDto = autoRechargeMapstructMapper.uploadToRechargeRequestDto(dto);
         autoRechargeRequestDto.setRecipients(autoRechargeMapstructMapper.listAutoToNonAuto(individualRequests));
         return saveService(autoRechargeRequestDto);

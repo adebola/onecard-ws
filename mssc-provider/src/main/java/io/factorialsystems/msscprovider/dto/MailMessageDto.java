@@ -1,14 +1,17 @@
 package io.factorialsystems.msscprovider.dto;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @Builder
 public class MailMessageDto {
     private String id;
+    private String secret;
     private String to;
     private String from;
     private String subject;

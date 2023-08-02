@@ -71,7 +71,6 @@ public class OnecardAirtimeRecharge implements Recharge, ParameterCheck, Balance
                     int i = response.indexOf('\"');
                     String s = "{\"" + response.substring(i + 1);
 
-
                     OnecardMessageDto messageDto = objectMapper.readValue(s, OnecardMessageDto.class);
                     final String errorMessage = String.format("Error in Balance %s:%s", messageDto.getCode(), messageDto.getMessage());
                     throw new RuntimeException(errorMessage);

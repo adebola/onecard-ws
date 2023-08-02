@@ -15,8 +15,6 @@ import io.factorialsystems.msscprovider.recharge.Recharge;
 import io.factorialsystems.msscprovider.recharge.RechargeStatus;
 import io.factorialsystems.msscprovider.service.bulkrecharge.NewBulkRechargeService;
 import io.factorialsystems.msscprovider.service.bulkrecharge.helper.BulkRechargeExcelGenerator;
-import io.factorialsystems.msscprovider.service.file.ExcelReader;
-import io.factorialsystems.msscprovider.service.file.UploadFile;
 import io.factorialsystems.msscprovider.service.model.IndividualRequestFailureNotification;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
 import lombok.extern.apachecommons.CommonsLog;
@@ -48,11 +46,13 @@ import static org.mockito.ArgumentMatchers.any;
 @CommonsLog
 class BulkRechargeServiceTest {
     @Autowired
-    private NewBulkRechargeService service;
+    NewBulkRechargeService service;
+
     @Autowired
     BulkRechargeMapper newBulkRechargeMapper;
+
     @Autowired
-    private BulkRechargeExcelGenerator excelGenerator;
+    BulkRechargeExcelGenerator excelGenerator;
 
     final String client_id = "public-client";
     final String realmPassword = "password";
@@ -374,7 +374,7 @@ class BulkRechargeServiceTest {
 
             var y = service.getBulkIndividualRequests(id, 1, 20);
             assertNotNull(y);
-            assert (y.getList().size() > 0);
+            assert (!y.getList().isEmpty());
             assert (y.getList().get(0).getFailedMessage().equals("Recharge Failed"));
             assert (y.getList().get(0).getFailed().equals(true));
 
@@ -398,7 +398,7 @@ class BulkRechargeServiceTest {
 
         var y = service.getBulkIndividualRequests(id, 1, 20);
         assertNotNull(y);
-        assert (y.getList().size() > 0);
+        assert (!y.getList().isEmpty());
         assert (y.getList().get(0).getFailedMessage().equals("Recharge Failed"));
         assert (y.getList().get(0).getFailed().equals(true));
 
@@ -407,11 +407,11 @@ class BulkRechargeServiceTest {
 
     @Test
     void uploadFile() {
-        final String fileName = "/Users/adebola/Downloads/Larfarge-2-plus.xlsx";
-        File file = new File(fileName);
-
-        UploadFile uploadFile = new UploadFile(file, fileName);
-        ExcelReader excelReader = new ExcelReader(uploadFile);
+//        final String fileName = "/Users/adebola/Downloads/Larfarge-2-plus.xlsx";
+//        File file = new File(fileName);
+//
+//        UploadFile uploadFile = new UploadFile(file, fileName);
+//        ExcelReader excelReader = new ExcelReader(uploadFile);
     }
 
     @Test

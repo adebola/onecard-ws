@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,8 +29,12 @@ public class MailService {
     private final CommunicationClient communicationClient;
     private final CommunicationJSONClient communicationJSONClient;
 
+    @Value("${mail.secret}")
+    private String mailSecret;
+
     public String sendMailWithOutAttachment(MailMessageDto dto) {
         log.info(String.format("Sending Mail without attachment to %s", dto.getTo()));
+        dto.setSecret(mailSecret);
         return communicationJSONClient.sendMailWithoutAttachment(dto);
     }
 
@@ -41,6 +46,7 @@ public class MailService {
     public String sendMailWithAttachment(File file, MailMessageDto dto, String name, String contentType)  {
         try (FileInputStream input = new FileInputStream(file)) {
             MultipartFile multipartFile = new CustomMultipartFile(IOUtils.toByteArray(input), name, contentType, file.getName());
+            dto.setSecret(mailSecret);
             return communicationClient.sendMailWithAttachment(dto, multipartFile);
         } catch (IOException e) {
             log.error("error sending mail with attachment : {}", e.getMessage());

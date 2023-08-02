@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,23 +27,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
+@Component
 public class ExcelReader {
-    private final UploadFile uploadFile;
 
-    public static final int SERVICE_CODE_COLUMN = 1;
-    public static final String SERVICE_CODE_TITLE = "ServiceCode";
-    public static final int PRODUCT_ID_COLUMN = 2;
-    public static final String PRODUCT_ID_TITLE = "ProductId";
-    public static final int SERVICE_COST_COLUMN = 3;
-    public static final String SERVICE_COST_TITLE = "ServiceCost";
-    public static final int TELEPHONE_COLUMN = 4;
-    public static final String TELEPHONE_TITLE = "Telephone";
-    public static final int RECIPIENT_COLUMN = 5;
-    public static final String RECIPIENT_TITLE = "Recipient";
+    private static final int SERVICE_CODE_COLUMN = 1;
+    private static final String SERVICE_CODE_TITLE = "ServiceCode";
+    private static final int PRODUCT_ID_COLUMN = 2;
+    private static final String PRODUCT_ID_TITLE = "ProductId";
+    private static final int SERVICE_COST_COLUMN = 3;
+    private static final String SERVICE_COST_TITLE = "ServiceCost";
+    private static final int TELEPHONE_COLUMN = 4;
+    private static final String TELEPHONE_TITLE = "Telephone";
+    private static final int RECIPIENT_COLUMN = 5;
+    private static final String RECIPIENT_TITLE = "Recipient";
 
-    public ExcelReader(UploadFile uploadFile) {
-        this.uploadFile = uploadFile;
-    }
 
     private List<IndividualRequestDto> readXLSContents(File file) throws IOException {
         FileInputStream fis = new FileInputStream(file);
@@ -107,7 +105,7 @@ public class ExcelReader {
     }
 
     @SneakyThrows
-    public List<IndividualRequestDto> readContents() {
+    public List<IndividualRequestDto> readContents(UploadFile uploadFile) {
 
         String extension = FilenameUtils.getExtension(uploadFile.getFileName());
 
@@ -153,7 +151,7 @@ public class ExcelReader {
             value = String.valueOf((int) cell.getNumericCellValue());
         }
 
-        if (value != null && value.trim().length() > 0) {
+        if (value != null && !value.trim().isEmpty()) {
             return value.trim();
         } else if (!mandatory) {
             return null;

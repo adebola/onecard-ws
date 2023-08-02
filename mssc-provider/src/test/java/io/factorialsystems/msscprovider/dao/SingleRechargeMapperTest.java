@@ -105,6 +105,30 @@ class SingleRechargeMapperTest {
         log.info("Updated Request {}", updatedRequest);
     }
 
+
+    @Test
+    void closeRequest_NULL_Values() {
+        final String results = "Successful";
+        SingleRechargeRequest request = createRechargeRequest();
+        singleRechargeMapper.save(request);
+
+        SingleRechargeRequest savedRequest = singleRechargeMapper.findById(request.getId());
+        assertThat(savedRequest.getId()).isEqualTo(request.getId());
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("id", savedRequest.getId());
+        //parameters.put("provider", String.valueOf(rechargeProviderId));
+        parameters.put("results", results);
+
+        singleRechargeMapper.closeRequest(parameters);
+
+        final SingleRechargeRequest rechargeRequest = singleRechargeMapper.findById(savedRequest.getId());
+        assertThat(rechargeRequest.getResults()).isEqualTo(results);
+        assertThat(rechargeRequest.getRechargeProviderId()).isNull();
+        log.info("RechargeRequest {}", rechargeRequest);
+
+    }
+
     @Test
     void closeAndFailRequest() {
         final String results = "Failed";
@@ -176,7 +200,7 @@ class SingleRechargeMapperTest {
 
         final Page<SingleRechargeRequest> search = singleRechargeMapper.search(searchSingleRecharge);
         assertThat(search).isNotNull();
-        assertThat(search.getResult().size()).isEqualTo(1);
+        assertThat(search.getResult().size()).isEqualTo(2);
 
         log.info("Size of Search {}", search.size());
         log.info("Search is {}", search);
@@ -353,5 +377,9 @@ class SingleRechargeMapperTest {
                 .id(UUID.randomUUID().toString())
                 .requestId("04c462eb-720c-4c0b-b908-bdbefaf63ec8")
                 .build();
+    }
+
+    @Test
+    void testCloseRequest() {
     }
 }

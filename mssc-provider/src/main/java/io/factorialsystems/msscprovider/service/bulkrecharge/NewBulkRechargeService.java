@@ -53,6 +53,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NewBulkRechargeService {
     private final ServiceHelper helper;
+    private final ExcelReader excelReader;
     private final JmsTemplate messageQueue;
     private final FactoryProducer producer;
     private final ObjectMapper objectMapper;
@@ -72,11 +73,9 @@ public class NewBulkRechargeService {
         log.info("Bulk recharge via File upload");
 
         UploadFile uploadFile = fileUploader.uploadFile(file);
-        ExcelReader excelReader = new ExcelReader(uploadFile);
-
         NewBulkRechargeRequestDto newRequestDto = new NewBulkRechargeRequestDto();
         newRequestDto.setPaymentMode(Constants.WALLET_PAY_MODE);
-        List<IndividualRequestDto> individualRequests = excelReader.readContents();
+        List<IndividualRequestDto> individualRequests = excelReader.readContents(uploadFile);
 
         if (individualRequests == null || individualRequests.isEmpty()) {
             throw new RuntimeException("Empty or Un-Populated Excel file");

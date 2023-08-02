@@ -108,6 +108,11 @@ public class RechargeReportService {
         }
     }
 
+    // NOT Used and Not Complete, the original idea was to combine 3 reports into 1 Provider Wallet Report,
+    // TheReports are namely
+    // 1. Provider Balances
+    // 2. Single Recharges
+    // 3. Bulk Recharges
     public RechargeProviderTransactionsDto runProviderWalletReport(RechargeReportRequestDto dto) {
         RechargeProviderTransactionsDto response = new RechargeProviderTransactionsDto();
 

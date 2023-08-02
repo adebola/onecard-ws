@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class NewScheduledRechargeService {
+    private final ExcelReader excelReader;
     private final FileUploader fileUploader;
     private final ExcelWriter excelWriter;
     private final BulkRechargeMapper newBulkRechargeMapper;
@@ -49,14 +50,13 @@ public class NewScheduledRechargeService {
 
     public void uploadRecharge(MultipartFile file, Date scheduledDate) {
         UploadFile uploadFile = fileUploader.uploadFile(file);
-        ExcelReader excelReader = new ExcelReader(uploadFile);
 
         NewScheduledRechargeRequestDto newRequestDto = new NewScheduledRechargeRequestDto();
         newRequestDto.setRechargeType("bulk");
         newRequestDto.setPaymentMode("wallet");
         newRequestDto.setScheduledDate(scheduledDate);
 
-        List<IndividualRequestDto> individualRequests = excelReader.readContents();
+        List<IndividualRequestDto> individualRequests = excelReader.readContents(uploadFile);
 
         if (individualRequests == null || individualRequests.isEmpty()) {
             throw new RuntimeException("Empty or Un-Populated Excel file");
