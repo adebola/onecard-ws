@@ -187,7 +187,7 @@ public class SingleRechargeService {
         SingleRechargeRequest request = singleRechargeMapper.findById(id);
 
         if (request == null || request.getClosed()) {
-            final String errorMessage = String.format("Recharge Request (%s) is %s", id, request == null ? "NOT AVAILABLE" : "CLOSED");
+            final String errorMessage = String.format("Recharge Request (%s) is %s for User %s", id, request == null ? "NOT AVAILABLE" : "CLOSED", ProviderSecurity.getUserName());
             log.error(errorMessage);
 
             return RechargeStatus.builder()
@@ -204,7 +204,7 @@ public class SingleRechargeService {
         RechargeStatus status = null;
 
         if (request.getPaymentId() != null && !checkPayment(request.getPaymentId())) {
-            final String errorMessage = String.format("Error Fulfilling Single Recharge Request %s, Payment has not been made", request.getId());
+            final String errorMessage = String.format("Error Fulfilling Single Recharge Request %s, Payment has not been made for User %s", request.getId(), ProviderSecurity.getUserName());
             log.error(errorMessage);
 
             return RechargeStatus.builder()

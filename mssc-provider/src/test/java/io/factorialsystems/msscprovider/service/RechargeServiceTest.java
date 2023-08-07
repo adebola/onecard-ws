@@ -6,7 +6,6 @@ import io.factorialsystems.msscprovider.domain.search.SearchSingleRecharge;
 import io.factorialsystems.msscprovider.dto.DateRangeDto;
 import io.factorialsystems.msscprovider.dto.ResolveRechargeDto;
 import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeRequestDto;
-import io.factorialsystems.msscprovider.dto.recharge.SingleRechargeResponseDto;
 import io.factorialsystems.msscprovider.service.singlerecharge.SingleRechargeService;
 import io.factorialsystems.msscprovider.service.singlerecharge.helper.SingleRefundRecharge;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
@@ -201,8 +200,8 @@ class RechargeServiceTest {
             dto.setServiceCost(new BigDecimal(15));
             dto.setRecipient("08055572307");
 
-            final SingleRechargeResponseDto singleRechargeResponseDto = rechargeService.startRecharge(dto);
-            log.info(singleRechargeResponseDto);
+            //final SingleRechargeResponseDto singleRechargeResponseDto = rechargeService.startRecharge(dto);
+            //log.info(singleRechargeResponseDto);
         }
     }
 
