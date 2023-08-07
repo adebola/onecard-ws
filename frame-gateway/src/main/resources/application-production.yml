@@ -1,4 +1,6 @@
 spring:
+  banner:
+    location: classpath:banner.txt
   cloud:
     gateway:
       globalcors:
@@ -7,3 +9,56 @@ spring:
             allowedOrigins: "*"
             allowedMethods: "*"
             allowedHeaders: "*"
+        add-to-simple-url-handler-mapping: true
+      routes:
+        - id: voucher-service
+          uri: lb://voucher-server
+          predicates:
+            - Path=/api/v1/voucher/**, /api/v1/batch/**, /api/v1/cluster/**
+        - id: provider-service
+          uri: lb://provider-server
+          predicates:
+            - Path=/api/v1/provider/**, /api/v1/recharge/**, /api/v1/serviceprovider/**, /api/v1/auth-recharge/**, /api/v1/recharge-report/**
+        - id: user-service
+          uri: lb://user-server
+          predicates:
+            - Path=/api/v1/user/**, /api/v1/role/**, /api/v1/beneficiary/**, /api/v1/organization/**
+        - id: wallet-service
+          uri: lb://wallet-server
+          predicates:
+            - Path=/api/v1/account/**, /api/v1/transaction/**, /api/v1/kyc/**
+        - id: user-service
+          uri: lb://user-server
+          predicates:
+            - Path=/api/v1/user/**, /api/v1/role/**, /api/v1/beneficiary/**, /api/v1/organization/**
+        - id: audit-service
+          uri: lb://audit-server
+          predicates:
+            - Path=/api/v1/audit/**, /api/v1/contact/**, /api/v1/contactus/**
+        - id: report-service
+          uri: lb://report-server
+          predicates:
+            - Path=/api/v1/reports/**
+        - id: payment-service
+          uri: lb://payment-server
+          predicates:
+            - Path=/api/v1/pay/**, /api/v1/payment/**
+        - id: api-user-service
+          uri: lb://api-user-server
+          predicates:
+            - Path=/api/v1/api-user/**, /api/v2/**, /v2/**, /swagger-ui/**, /swagger-resources/**, /favicon.ico
+        - id: communication-service
+          uri: lb://communication-server
+          predicates:
+            - Path=/api/v1/upload/**, /api/v1/sms/**", /api/v1/mail/**
+  application:
+    name: onecard-web-gateway
+server:
+  port: 8081
+
+eureka:
+  client:
+    register-with-eureka: false
+    serviceUrl:
+      defaultZone: http://netflix:eureka@eureka:8761/eureka
+
