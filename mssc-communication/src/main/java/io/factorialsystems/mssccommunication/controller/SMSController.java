@@ -25,10 +25,10 @@ public class SMSController {
         final SMSResponseDto smsResponseDto = smsService.sendMessage(smsDto);
 
         if (smsResponseDto.getStatus()) {
-            return ResponseEntity.ok(smsDto);
+            return ResponseEntity.ok(smsResponseDto);
         }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(smsDto);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(smsResponseDto);
     }
 
     @GetMapping
