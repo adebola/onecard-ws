@@ -1,5 +1,7 @@
 package io.factorialsystems.mssccommunication.service.sms;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.mssccommunication.document.SMSMessage;
 import io.factorialsystems.mssccommunication.dto.PagedDto;
 import io.factorialsystems.mssccommunication.dto.SMSMessageDto;
@@ -16,11 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
@@ -29,24 +28,19 @@ import java.util.Date;
 @Service
 @RequiredArgsConstructor
 public class SMSMessageService {
-    @Value("${SMS_URL}")
+    @Value("${sms.url}")
     private String smsUrl;
 
-    @Value("${SMS_USER}")
-    private String smsUser;
+    @Value("${sms.api.key}")
+    private String apiKey;
 
-    @Value("${SMS_PASSWORD}")
-    private String smsPassword;
-
-    public static final String SMS_TAG = "ONECARD";
-
+    private final ObjectMapper objectMapper;
     private final SMSMessageMapper smsMessageMapper;
     private final SMSMessageRepository smsMessageRepository;
 
     @Transactional
     public SMSResponseDto sendMessage(SMSMessageDto dto) {
         SMSMessage message = smsMessageMapper.smsDtoToSMS(dto);
-        RestTemplate restTemplate = new RestTemplate();
 
         String newTo = null;
         final String to = message.getTo();
@@ -77,46 +71,44 @@ public class SMSMessageService {
         log.info(String.format("Sending Message to %s", newTo));
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        MultiValueMap<String, String> param = new LinkedMultiValueMap<>();
-        param.add("user", smsUser);
-        param.add("pass", smsPassword);
-        param.add("from", SMS_TAG);
-        param.add("to", newTo);
-        param.add("msg", dto.getMessage());
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(param, headers);
-
-        message.setUserId(K.getUserId());
-        message.setCreatedDate(new Date());
-        message.setSentBy(K.getEmail());
-
-        String responseMessage = null;
+        SMSRequest sms = new SMSRequest(dto.getMessage(), newTo, apiKey);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity( smsUrl, request , String.class );
-            responseMessage =  response.getBody();
-            final boolean status = "sent".equals(responseMessage);
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(sms), headers);
+            final SMSResponse smsResponse = restTemplate.postForObject(smsUrl, entity, SMSResponse.class);
 
-            log.info(String.format("SMS Response is %s", response.getBody()));
+            message.setUserId(K.getUserId());
+            message.setCreatedDate(new Date());
+            message.setSentBy(K.getEmail());
 
-            message.setResponse(responseMessage);
-            message.setStatus(status);
-            final SMSMessage save = smsMessageRepository.save(message);
+            if (smsResponse != null) {
+                final boolean status = "ok".equals(smsResponse.getCode());
+                log.info(String.format("SMS Response is %s", smsResponse.getCode()));
 
-            return SMSResponseDto.builder()
-                    .id(save.getId())
-                    .status(status)
-                    .message(status ? "Message Sent Successfully" : "Message Send Failed")
-                    .build();
-        } catch (Exception ex) {
-            log.error(String.format("Error sending sms to %s Reason: %s", message.getTo(), ex.getMessage()));
+                message.setResponse(smsResponse.getMessage());
+                message.setStatus(status);
+                final SMSMessage save = smsMessageRepository.save(message);
+
+                return SMSResponseDto.builder()
+                        .id(save.getId())
+                        .status(status)
+                        .message(status ? "Message Sent Successfully" : "Message Send Failed")
+                        .build();
+            } else {
+                message.setStatus(false);
+                smsMessageRepository.save(message);
+            }
+
+        } catch (JsonProcessingException e) {
+            log.error("Error Processing {}", e.getMessage());
         }
 
         return SMSResponseDto.builder()
                 .status(false)
-                .message(String.format("Error sending SMS to %s", message.getTo()))
+                .message("Message Send Failed")
                 .build();
     }
 

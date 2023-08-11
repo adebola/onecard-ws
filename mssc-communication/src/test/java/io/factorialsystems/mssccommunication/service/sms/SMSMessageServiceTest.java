@@ -18,7 +18,7 @@ class SMSMessageServiceTest {
     void sendMessage() {
         SMSMessageDto dto = new SMSMessageDto();
 
-        dto.setMessage("Hello test");
+        dto.setMessage("Hello hello helloxxxxxxxx");
         dto.setTo("2348055572307");
         final SMSResponseDto smsResponseDto = messageService.sendMessage(dto);
         log.info(smsResponseDto);
