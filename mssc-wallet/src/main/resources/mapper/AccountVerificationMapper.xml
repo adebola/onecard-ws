@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscwallet.dao.AccountVerificationMapper">
+    <resultMap id="resultMap" type="io.factorialsystems.msscwallet.domain.AccountVerification">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="account_id" property="accountId" jdbcType="VARCHAR"/>
+        <result column="sms_verification_id" property="smsVerificationId" jdbcType="VARCHAR"/>
+        <result column="bvn_verification_id" property="bvnVerificationId" jdbcType="VARCHAR"/>
+        <result column="verified_by" property="verifiedBy" jdbcType="VARCHAR"/>
+        <result column="verified_on" property="verifiedOn" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="column_list">
+        id, account_id, sms_verification_id, bvn_verification_id, verified_by, verified_on
+    </sql>
+
+    <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.AccountVerification">
+        insert into account_verification_log(account_id, sms_verification_id, bvn_verification_id, verified_by)
+        values(#{accountId, jdbcType=VARCHAR}, #{smsVerificationId, jdbcType=VARCHAR}, #{bvnVerificationId, jdbcType=VARCHAR}, #{verifiedBy, jdbcType=VARCHAR})
+    </insert>
+
+    <select id="findByUserId" parameterType="java.lang.String" resultMap="resultMap">
+        select avl.id, avl.account_id, avl.sms_verification_id, avl.bvn_verification_id, avl.verified_by, avl.verified_on
+        from account_verification_log avl, accounts a
+        where a.user_id = #{id}
+        and a.id = avl.account_id
+    </select>
+</mapper>

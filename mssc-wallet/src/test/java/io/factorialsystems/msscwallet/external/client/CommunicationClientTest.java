@@ -20,14 +20,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CommonsLog
-class MailClientTest {
+class CommunicationClientTest {
     final String client_id = "public-client";
     final String realmPassword = "password";
     final String realmUser = "realm-admin";
     final String authUrl = "http://localhost:8080/auth/realms/onecard/protocol/openid-connect/token";
 
     @Autowired
-    private MailClient mailClient;
+    private CommunicationClient communicationClient;
 
     @Test
     void sendMailWithoutAttachment() {
@@ -46,9 +46,10 @@ class MailClientTest {
                     .body("Jesus Is Lord test")
                     .to("adeomoboya@gmail.com")
                     .subject("test")
+                    .secret("secret")
                     .build();
 
-            String s = mailClient.sendMailWithoutAttachment(dto);
+            String s = communicationClient.sendMailWithoutAttachment(dto);
             log.info(s);
         }
     }

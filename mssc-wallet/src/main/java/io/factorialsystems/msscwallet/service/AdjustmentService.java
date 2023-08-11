@@ -1,8 +1,10 @@
 package io.factorialsystems.msscwallet.service;
 
+import io.factorialsystems.msscwallet.dao.AccountLedgerMapper;
 import io.factorialsystems.msscwallet.dao.AccountMapper;
 import io.factorialsystems.msscwallet.dao.AdjustmentMapper;
 import io.factorialsystems.msscwallet.domain.Account;
+import io.factorialsystems.msscwallet.domain.AccountLedgerEntry;
 import io.factorialsystems.msscwallet.domain.Adjustment;
 import io.factorialsystems.msscwallet.dto.AdjustmentRequestDto;
 import io.factorialsystems.msscwallet.dto.AdjustmentResponseDto;
@@ -13,6 +15,7 @@ import io.factorialsystems.msscwallet.utils.Constants;
 import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,10 @@ public class AdjustmentService {
     private final AuditService auditService;
     private final AccountMapper accountMapper;
     private final AdjustmentMapper adjustmentMapper;
+    private final AccountLedgerMapper accountLedgerMapper;
+
+    @Value("${mail.secret}")
+    private String mailSecret;
 
     @Transactional
     public AdjustmentResponseDto adjustBalance(AdjustmentRequestDto dto) {
@@ -43,8 +50,11 @@ public class AdjustmentService {
             BigDecimal delta = dto.getAmount().subtract(oldBalance);
 
             // Save the corresponding FundWallet request
-            final String requestId = AccountService.saveFundWalletRequest(delta, Constants.WALLET_ONECARD_ADJUSTED, account.getUserId(),
-                    Security.getUserName(), dto.getNarrative());
+            final String requestId = AccountService.saveFundWalletRequest(delta,
+                    Constants.WALLET_ONECARD_ADJUSTED,
+                    account.getUserId(),
+                    Security.getUserName(),
+                    dto.getNarrative());
 
             final String id = UUID.randomUUID().toString();
 
@@ -61,6 +71,25 @@ public class AdjustmentService {
 
             adjustmentMapper.save(adjustment);
 
+            int status;
+            final String ledgerMessage = String.format("User Account Adjusted by %.2f by %s", delta, Security.getUserName());
+
+            if (delta.compareTo(BigDecimal.ZERO) < 0) {
+                status = AccountService.LEDGER_OPERATION_SYSTEM_DEBIT;
+            } else {
+                status = AccountService.LEDGER_OPERATION_SYSTEM_CREDIT;
+            }
+
+            AccountLedgerEntry entry = AccountLedgerEntry.builder()
+                    .id(UUID.randomUUID().toString())
+                    .accountId(account.getId())
+                    .operation(status)
+                    .amount(delta.abs())
+                    .description(ledgerMessage)
+                    .build();
+
+            accountLedgerMapper.save(entry);
+
             SimpleUserDto simpleUserDto = userClient.getUserById(account.getUserId());
 
             // Send the Mail
@@ -72,6 +101,7 @@ public class AdjustmentService {
                         .subject("Wallet Adjustment")
                         .to(simpleUserDto.getEmail())
                         .body(message)
+                        .secret(mailSecret)
                         .build();
 
                 mailService.pushMailMessage(mailMessageDto);

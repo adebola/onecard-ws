@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscwallet.dao.AccountSettingMapper">
+    <resultMap id="settingResultMap" type="io.factorialsystems.msscwallet.domain.AccountSetting">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="short_name" property="shortName" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="value" property="value" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="column_list">
+       id, name, short_name, value
+    </sql>
+
+    <select id="findAll" resultMap="settingResultMap">
+        select
+        <include refid="column_list"/>
+        from account_settings
+        order by id
+    </select>
+
+    <select id="findById" parameterType="java.lang.Integer" resultMap="settingResultMap">
+        select
+        <include refid="column_list"/>
+        from account_settings
+        where id = #{id}
+    </select>
+
+    <insert id="create" parameterType="io.factorialsystems.msscwallet.domain.AccountSetting">
+        insert into account_settings(id, name, short_name, value)
+        values(#{id}, #{name}, #{shortName}, #{value});
+    </insert>
+
+    <update id="update" parameterType="io.factorialsystems.msscwallet.domain.AccountSetting">
+        update account_settings
+        <set>
+            <if test="name != null">name=#{name},</if>
+            <if test="shortName != null ">short_name=#{shortName},</if>
+            <if test="value != null">value=#{value},</if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

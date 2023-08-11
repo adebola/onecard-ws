@@ -1,14 +1,12 @@
 package io.factorialsystems.msscwallet.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,4 +21,6 @@ public class Account {
     private String createdBy;
     private String chargeAccountId;
     private String webHook;
+    private Boolean kycVerified;
+    private BigDecimal dailyLimit;
 }

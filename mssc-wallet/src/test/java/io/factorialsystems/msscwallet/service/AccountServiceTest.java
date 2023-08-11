@@ -27,8 +27,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-@SpringBootTest
 @CommonsLog
+@SpringBootTest
 class AccountServiceTest {
     @Autowired
     AccountService accountService;
@@ -233,7 +233,7 @@ class AccountServiceTest {
     @Transactional
     void chargeAccount() {
         final String id = "e33b6988-e636-44d8-894d-c03c982d8fa5";
-        final int amount = 200;
+        final int amount = 2000;
 
         try (MockedStatic<Security> k  = Mockito.mockStatic(Security.class)) {
             k.when(Security::getUserId).thenReturn(id);

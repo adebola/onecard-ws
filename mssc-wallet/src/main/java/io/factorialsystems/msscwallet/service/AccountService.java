@@ -5,12 +5,12 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import io.factorialsystems.msscwallet.config.ApplicationContextProvider;
 import io.factorialsystems.msscwallet.config.JMSConfig;
+import io.factorialsystems.msscwallet.dao.AccountLedgerMapper;
 import io.factorialsystems.msscwallet.dao.AccountMapper;
 import io.factorialsystems.msscwallet.dao.FundWalletMapper;
 import io.factorialsystems.msscwallet.dao.TransactionMapper;
-import io.factorialsystems.msscwallet.domain.Account;
-import io.factorialsystems.msscwallet.domain.FundWalletRequest;
-import io.factorialsystems.msscwallet.domain.Transaction;
+import io.factorialsystems.msscwallet.domain.*;
+import io.factorialsystems.msscwallet.domain.query.AccountLedgerSearch;
 import io.factorialsystems.msscwallet.dto.*;
 import io.factorialsystems.msscwallet.exception.ResourceNotFoundException;
 import io.factorialsystems.msscwallet.external.client.PaymentClient;
@@ -22,6 +22,7 @@ import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -32,9 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -49,15 +49,31 @@ public class AccountService {
     private final PaymentClient paymentClient;
     private final AccountMapper accountMapper;
     private final FundWalletMapper fundWalletMapper;
+    private final AccountLedgerMapper accountLedgerMapper;
+    private final AccountSettingService accountSettingService;
     private final AccountMapstructMapper accountMapstructMapper;
     private final FundWalletMapstructMapper fundWalletMapstructMapper;
 
+    @Value("${mail.secret}")
+    private String mailSecret;
+
     private static final BigDecimal FIFTY_NAIRA = new BigDecimal(50);
+    private static final String AUDIT_ACCOUNT_VERIFY = "Account Verified";
+    private static final String AUDIT_ACCOUNT_DEVERIFY = "Account De-Verified";
+
+    public static final int LEDGER_OPERATION_USER_DEBIT = 1;
+    public static final int LEDGER_OPERATION_SYSTEM_DEBIT = 2;
+    public static final int LEDGER_OPERATION_USER_CREDIT = 3;
+    public static final int LEDGER_OPERATION_SYSTEM_CREDIT = 4;
+
+    public static final Integer USER_ACCOUNT = 1;
+    public static final Integer CORPORATE_ACCOUNT = 2;
+    public static final Integer PROVIDER_ACCOUNT = 3;
+
 
     public PagedDto<AccountDto> findAccounts(Integer pageNumber, Integer pageSize) {
         PageHelper.startPage(pageNumber, pageSize);
         Page<Account> accounts = accountMapper.findAccounts();
-
         return createDto(accounts);
     }
 
@@ -84,8 +100,101 @@ public class AccountService {
         return accountMapstructMapper.accountToAccountDto(account);
     }
 
+    public void asyncDeleteAccount(DeleteAccountDto dto) {
+        log.info("Deleting Account: {}, Action By {}", dto.getId(), dto.getDeletedBy());
+
+        HashMap<String, String> parameters = new HashMap<>();
+        parameters.put("id", dto.getId());
+        parameters.put("deletedBy", dto.getDeletedBy());
+
+        accountMapper.deleteAccount(parameters);
+    }
+
+    public void asyncRemoveUserFromOrganization(UserOrganizationAmendDto dto) {
+        if (dto == null || dto.getUserId() == null) {
+            log.error("Error Removing Organization Wallet from User, Null Values Found");
+            return;
+        }
+
+        log.info(String.format("De-linking User Account %s from Organization", dto.getUserId()));
+
+        accountMapper.removeOrganizationWallet(dto.getUserId());
+    }
+
+    public void asyncAddUserToOrganization(UserOrganizationAmendDto dto) {
+        if (dto == null || dto.getOrganizationId() == null || dto.getUserId() == null) {
+            log.error("Error Adding Organization Wallet to User, Null Values received");
+            return;
+        }
+
+        // Get Organization Account
+        Account orgAccount = accountMapper.findAccountByUserId(dto.getOrganizationId());
+
+        if (orgAccount == null || orgAccount.getId() == null) {
+            log.error(String.format("Error Adding Organization Wallet (%s) to User (%s), Organization Not Found", dto.getUserId(), dto.getOrganizationId()));
+            return;
+        }
+
+        // Get User Account
+        Account userAccount = accountMapper.findAccountByUserId(dto.getUserId());
+
+        if (userAccount == null) {
+            log.error(String.format("Error Adding Organization Wallet (%s) to User (%s), User Not Found", dto.getUserId(), dto.getOrganizationId()));
+            return;
+        }
+
+        log.info(String.format("linking User Account %s with Organization %s", userAccount.getName(), orgAccount.getName()));
+
+        HashMap<String, String> parameters = new HashMap<>();
+        parameters.put("organizationId", orgAccount.getId());
+        parameters.put("id", userAccount.getId());
+
+        accountMapper.addOrganizationWallet(parameters);
+    }
+
+    @SneakyThrows
+    public void asyncCreateUserAccount(User user) {
+        final AccountSetting accountSetting = accountSettingService.getAccountSetting(AccountSettingService.SETTINGS_DAILY_BALANCE_USER);
+        final BigDecimal dailyLimit = new BigDecimal(accountSetting.getValue());
+
+        Account account = Account.builder()
+                .id(UUID.randomUUID().toString())
+                .userId(user.getId())
+                .accountType(USER_ACCOUNT)
+                .createdBy(user.getUsername())
+                .name(user.getUsername())
+                .dailyLimit(dailyLimit)
+                .activated(true)
+                .build();
+
+        accountMapper.save(account);
+
+        UserWallet userWallet = UserWallet.builder()
+                .userId(user.getId())
+                .walletId(account.getId())
+                .build();
+
+        jmsTemplate.convertAndSend(JMSConfig.UPDATE_USER_WALLET_QUEUE, objectMapper.writeValueAsString(userWallet));
+
+        log.info(String.format("Created Wallet for User (%s)/(%s)", user.getId(), user.getUsername()));
+    }
+
+    @Transactional
     public AccountDto createAccount(CreateAccountDto dto) {
         String id = UUID.randomUUID().toString();
+
+        AccountSetting accountSetting = null;
+        final Integer accountType = dto.getAccountType();
+
+        if (accountType.equals(USER_ACCOUNT)) {
+            accountSetting = accountSettingService.getAccountSetting(AccountSettingService.SETTINGS_DAILY_BALANCE_USER);
+        } else if (accountType.equals(CORPORATE_ACCOUNT)) {
+            accountSetting = accountSettingService.getAccountSetting(AccountSettingService.SETTINGS_DAILY_BALANCE_ORGANIZATION);
+        } else {
+            throw new RuntimeException(String.format("Invalid Account Type %d", accountType));
+        }
+
+        final BigDecimal dailyLimit = new BigDecimal(accountSetting.getValue());
 
         Account account = Account.builder()
                 .id(id)
@@ -94,6 +203,7 @@ public class AccountService {
                 .createdBy(Security.getUserName())
                 .name(dto.getUserName())
                 .activated(true)
+                .dailyLimit(dailyLimit)
                 .build();
 
         accountMapper.save(account);
@@ -106,6 +216,7 @@ public class AccountService {
     }
 
     // 1st Leg of a Self Wallet Funding Request
+    @Transactional
     public FundWalletResponseDto initializeFundWallet(FundWalletRequestDto dto) {
         final String id = UUID.randomUUID().toString();
         final String userId = Security.getUserId();
@@ -192,6 +303,16 @@ public class AccountService {
             saveTransaction(request.getAmount(), account.getId(), Constants.ACCOUNT_WALLET_SELF_FUNDED);
             saveFundWalletRequest(request.getAmount(), Constants.WALLET_SELF_FUNDED, request.getUserId(), account.getName(), "User Self Funded Wallet");
 
+            AccountLedgerEntry entry = AccountLedgerEntry.builder()
+                    .accountId(account.getId())
+                    .id(UUID.randomUUID().toString())
+                    .operation(LEDGER_OPERATION_USER_CREDIT)
+                    .amount(request.getAmount())
+                    .description(String.format("Wallet self-funded for UserId %s amount %.2f", userId, request.getAmount()))
+                    .build();
+
+            accountLedgerMapper.save(entry);
+
             final String auditMessage =
                         String.format("Account (%s / %s) Successfully Self-Funded By %.2f", account.getId(), account.getName(), request.getAmount().doubleValue());
             log.info(auditMessage);
@@ -204,6 +325,7 @@ public class AccountService {
                     .body(message)
                     .to(Security.getEmail())
                     .subject("Fund Wallet report")
+                    .secret(mailSecret)
                     .build();
 
             mailService.pushMailMessage(mailMessageDto);
@@ -251,15 +373,7 @@ public class AccountService {
             }
 
             BigDecimal newFromBalance = fromAccount.getBalance().subtract(dto.getAmount());
-            BigDecimal newToBalance = toAccount.getBalance().add(dto.getAmount());
-
-            if (newFromBalance.compareTo(BigDecimal.ZERO) < 0 ) {
-                throw new RuntimeException(String.format("Transfer Funds From Account Balance cannot be less than 0 : %.2f", newFromBalance));
-            }
-
-            if (newToBalance.compareTo(BigDecimal.ZERO) < 0) {
-                throw new RuntimeException(String.format("Transfer Funds To Account Balance cannot be less than 0 : %.2f", newFromBalance));
-            }
+            final BigDecimal newToBalance = getNewToBalance(dto, toAccount, newFromBalance);
 
             fromAccount.setBalance(newFromBalance);
             toAccount.setBalance(newToBalance);
@@ -268,6 +382,27 @@ public class AccountService {
             accountMapper.changeBalance(toAccount);
 
             final String message = String.format("Funds Transfer from %s to %s in the sum of %.2f", fromSimpleDto.getUserName(), toSimpleDto.getUserName(), dto.getAmount());
+
+            AccountLedgerEntry toEntry = AccountLedgerEntry.builder()
+                    .id(UUID.randomUUID().toString())
+                    .accountId(toAccount.getId())
+                    .operation(LEDGER_OPERATION_USER_CREDIT)
+                    .amount(dto.getAmount())
+                    .description(message)
+                    .build();
+
+            accountLedgerMapper.save(toEntry);
+
+            AccountLedgerEntry fromEntry = AccountLedgerEntry.builder()
+                    .id(UUID.randomUUID().toString())
+                    .accountId(fromAccount.getId())
+                    .operation(LEDGER_OPERATION_USER_DEBIT)
+                    .amount(dto.getAmount())
+                    .description(message)
+                    .build();
+
+            accountLedgerMapper.save(fromEntry);
+
             log.info(message);
             auditService.auditEvent(message, Constants.ACCOUNT_WALLET_USER_FUNDED);
 
@@ -283,12 +418,14 @@ public class AccountService {
                     .subject("Wallet Funding")
                     .body(String.format("Your account has been funded By %s in the sum of %.2f, your new balance is %.2f", fromSimpleDto.getUserName(),dto.getAmount(), newToBalance))
                     .to(toSimpleDto.getEmail())
+                    .secret(mailSecret)
                     .build();
 
             MailMessageDto fromDto = MailMessageDto.builder()
                     .subject("Wallet Funding")
                     .to(fromSimpleDto.getEmail())
                     .body(String.format("You have successfully funded %s by %.2f, your new Balance is %.2f", toSimpleDto.getUserName(), dto.getAmount(), newFromBalance))
+                    .secret(mailSecret)
                     .build();
 
             mailService.pushMailMessage(toDto);
@@ -311,7 +448,7 @@ public class AccountService {
     }
 
     // Refund Wallet request sent via JMS for Automatic Refunds when a Recharge Fails and the Money
-    // already been taken
+    // has already been taken called from the JMS Service Class
     @SneakyThrows
     @Transactional
     public void asyncRefundWallet(AsyncRefundRequestDto request) {
@@ -325,7 +462,18 @@ public class AccountService {
         String auditMessage =
                 String.format("Account (%s / %s) Refunded by %.2f to %.2f by (%s)", account.getId(), account.getName(), request.getAmount(), account.getBalance(), Security.getUserName());
         log.info(auditMessage);
+
         auditService.auditEvent(auditMessage, Constants.ACCOUNT_BALANCE_REFUNDED);
+
+        AccountLedgerEntry entry = AccountLedgerEntry.builder()
+                .id(UUID.randomUUID().toString())
+                .accountId(account.getId())
+                .operation(LEDGER_OPERATION_SYSTEM_CREDIT)
+                .amount(request.getAmount())
+                .description(auditMessage.length() > 255 ? auditMessage.substring(0, 255) : auditMessage)
+                .build();
+
+        accountLedgerMapper.save(entry);
 
         saveTransaction(request.getAmount(), account.getId(), Constants.ACCOUNT_WALLET_ADMIN_REFUNDED);
         final String refundWalletId = saveFundWalletRequest(request.getAmount(), Constants.WALLET_ONECARD_REFUNDED, request.getUserId(),
@@ -372,6 +520,16 @@ public class AccountService {
         log.info(auditMessage);
         auditService.auditEvent(auditMessage, Constants.ACCOUNT_BALANCE_REFUNDED);
 
+        AccountLedgerEntry entry = AccountLedgerEntry.builder()
+                .id(UUID.randomUUID().toString())
+                .accountId(account.getId())
+                .operation(LEDGER_OPERATION_SYSTEM_CREDIT)
+                .amount(dto.getAmount())
+                .description(auditMessage.length() > 255 ? auditMessage.substring(0, 255) : auditMessage)
+                .build();
+
+        accountLedgerMapper.save(entry);
+
         saveTransaction(dto.getAmount(), account.getId(), Constants.ACCOUNT_WALLET_ADMIN_REFUNDED);
         final String refundWalletId = saveFundWalletRequest(dto.getAmount(), Constants.WALLET_ONECARD_REFUNDED, id,
                 Security.getUserName(), String.format("Wallet Refunded By %s", Security.getUserName()));
@@ -389,6 +547,7 @@ public class AccountService {
                 .subject("Wallet Refund")
                 .body(message)
                 .to(simpleUserDto.getEmail())
+                .secret(mailSecret)
                 .build();
 
         mailService.pushMailMessage(mailMessageDto);
@@ -464,6 +623,7 @@ public class AccountService {
                     .to(simpleUserDto.getEmail())
                     .body(message)
                     .subject("Wallet Funded")
+                    .secret(mailSecret)
                     .build();
 
             mailService.pushMailMessage(mailMessageDto);
@@ -472,6 +632,16 @@ public class AccountService {
 
         final String auditMessage =
                 String.format("Account (%s / %s) Balance increased by %.2f to %.2f by (%s)", account.getId(), account.getName(), dto.getBalance(), account.getBalance(), Security.getUserName());
+
+        AccountLedgerEntry entry = AccountLedgerEntry.builder()
+                .id(UUID.randomUUID().toString())
+                .accountId(account.getId())
+                .operation(LEDGER_OPERATION_SYSTEM_CREDIT)
+                .amount(request.getAmount())
+                .description(auditMessage.length() > 255 ? auditMessage.substring(0, 255) : auditMessage)
+                .build();
+
+        accountLedgerMapper.save(entry);
         log.info(auditMessage);
         auditService.auditEvent(auditMessage, Constants.ACCOUNT_BALANCE_UPDATED);
         saveTransaction(dto.getBalance(), account.getId(), Constants.ACCOUNT_WALLET_ADMIN_FUNDED);
@@ -491,13 +661,53 @@ public class AccountService {
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "UserId", userId));
 
         if (account.getBalance().compareTo(dto.getAmount()) >= 0)  {
+
+            // If the User is Not KYC Verified Impose Limit on Daily Spend
+            if (!account.getKycVerified() && accountSettingService.isLimitEnabled()) {
+                AccountLedgerSearch ledgerSearch = new AccountLedgerSearch();
+                ledgerSearch.setDate(new Date());
+                ledgerSearch.setId(account.getId());
+
+                BigDecimal runningTotal = accountLedgerMapper.findTotalExpenditureByDay(ledgerSearch);
+
+                // if there are no records for spend for the day, then compare with the actual amount
+                // submitted, it should not be more than the spend limit - 1st half of the IF statement
+                // The second half, is where there is where we have a valid running total and then
+                // add intended spend before comparing with daily limit, could have combined both if
+                // statements using the OR(||) operator but for the sake clarity choose to use
+                // if - else-if construct
+                if (runningTotal == null && dto.getAmount().compareTo(account.getDailyLimit()) > 0) {
+                    return WalletResponseDto.builder()
+                            .message("Daily Limit Exceeded")
+                            .balance(account.getBalance())
+                            .status(400)
+                            .build();
+                } else if (runningTotal != null && runningTotal.add(dto.getAmount()).compareTo(account.getDailyLimit()) > 0) {
+                    return WalletResponseDto.builder()
+                            .message("Daily Limit Exceeded")
+                            .balance(account.getBalance())
+                            .status(400)
+                            .build();
+                }
+            }
+
             BigDecimal newValue = account.getBalance().subtract(dto.getAmount());
             account.setBalance(newValue);
             accountMapper.changeBalance(account);
 
-            final String successMsg = String.format("Updated Balance for Account %s is %.2f", account.getId(), newValue);
+            AccountLedgerEntry entry = AccountLedgerEntry.builder()
+                    .id(UUID.randomUUID().toString())
+                    .accountId(account.getId())
+                    .operation(LEDGER_OPERATION_USER_DEBIT)
+                    .amount(dto.getAmount())
+                    .description(String.format("Account charged by %.2f for Service %s", dto.getAmount(), dto.getServiceId()))
+                    .build();
 
+            accountLedgerMapper.save(entry);
+
+            final String successMsg = String.format("Updated Balance for Account %s is %.2f", account.getId(), newValue);
             log.info(successMsg);
+
             auditService.auditEvent(successMsg, Constants.ACCOUNT_CHARGED);
 
             return WalletResponseDto.builder()
@@ -531,7 +741,7 @@ public class AccountService {
     public Optional<List<FundWalletRequestDto>> findWalletRequestReport(WalletReportRequestDto dto) {
         List<FundWalletRequest> requests = fundWalletMapper.findByCriteria(dto);
 
-        if (requests.size() > 0) {
+        if (!requests.isEmpty()) {
             List<String> ids = requests.stream()
                     .map(FundWalletRequest::getUserId)
                     .distinct()
@@ -541,7 +751,7 @@ public class AccountService {
                 UserIdListDto userIdListDto = new UserIdListDto(ids);
                 UserEntryListDto userEntries = userClient.getUserEntries(userIdListDto);
 
-                if (userEntries != null && userEntries.getEntries() != null && userEntries.getEntries().size() > 0) {
+                if (userEntries != null && userEntries.getEntries() != null && !userEntries.getEntries().isEmpty()) {
                     List<FundWalletRequestDto> response = requests.stream()
                             .map(m -> {
                                 final FundWalletRequestDto fundWalletRequestDto = fundWalletMapstructMapper.requestToRequestDto(m);
@@ -571,6 +781,47 @@ public class AccountService {
         return Optional.empty();
     }
 
+    @Transactional
+    public void adjustDailyLimit(String id, BalanceDto balanceDto) {
+        Account account = Optional.ofNullable(accountMapper.findAccountById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
+
+        final String message = String.format("Daily Limit changed From %.2f to %.2f for %s narrative: %s", account.getDailyLimit(), balanceDto.getBalance(), id, balanceDto.getNarrative());
+
+        account.setDailyLimit(balanceDto.getBalance());
+        accountMapper.changeDailyLimit(account);
+
+        log.info(message);
+        auditService.auditEvent(message, "Daily Limit Change");
+    }
+
+    @Transactional
+    public void verifyAccount(String id) {
+        final String userName = Security.getUserName();
+        final String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
+        final String message = String.format("Account %s Verified by %s at %s", id, userName, s);
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("id", id);
+        parameters.put("verifiedBy", userName);
+        accountMapper.verifyAccount(parameters);
+
+        auditService.auditEvent(message, AUDIT_ACCOUNT_VERIFY);
+        log.info(message);
+    }
+
+    @Transactional
+    public void unVerifyAccount(String id) {
+        final String userName = Security.getUserName();
+        final String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(new Date());
+        final String message = String.format("Account %s De-Verified by %s at %s", id, userName, s);
+
+        accountMapper.unVerifyAccount(id);
+        auditService.auditEvent(message, AUDIT_ACCOUNT_DEVERIFY);
+
+        log.info(message);
+    }
+
     public static String saveFundWalletRequest(BigDecimal amount, Integer fundType, String userId,
                                                String actionedBy, String narrative) {
 
@@ -593,6 +844,19 @@ public class AccountService {
         walletMapper.saveClosedAndVerified(request);
 
         return id;
+    }
+
+    private BigDecimal getNewToBalance(TransferFundsDto dto, Account toAccount, BigDecimal newFromBalance) {
+        BigDecimal newToBalance = toAccount.getBalance().add(dto.getAmount());
+
+        if (newFromBalance.compareTo(BigDecimal.ZERO) < 0 ) {
+            throw new RuntimeException(String.format("Transfer Funds From Account Balance cannot be less than 0 : %.2f", newFromBalance));
+        }
+
+        if (newToBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException(String.format("Transfer Funds To Account Balance cannot be less than 0 : %.2f", newFromBalance));
+        }
+        return newToBalance;
     }
 
     public static void saveTransaction(BigDecimal amount, String accountId, String narrative) {
@@ -646,7 +910,6 @@ public class AccountService {
         PaymentRequestDto dto = paymentClient.checkPayment(id);
         return dto != null ? dto.getVerified() : false;
     }
-
 
     private PagedDto<FundWalletRequestDto> createFundDto(Page<FundWalletRequest> requests) {
         PagedDto<FundWalletRequestDto> pagedDto = new PagedDto<>();

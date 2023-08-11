@@ -24,6 +24,20 @@ public class AccountController {
     private final AccountService accountService;
     private final AdjustmentService adjustmentService;
 
+    @GetMapping("/verify/{id}")
+    @PreAuthorize("hasAnyRole('Onecard_Admin')")
+    @ResponseStatus(HttpStatus.OK)
+    public void verifyAccount(@PathVariable("id") String id) {
+        accountService.verifyAccount(id);
+    }
+
+    @GetMapping("/unverify/{id}")
+    @PreAuthorize("hasAnyRole('Onecard_Admin')")
+    @ResponseStatus(HttpStatus.OK)
+    public void unVerifyAccount(@PathVariable("id") String id) {
+        accountService.unVerifyAccount(id);
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('Onecard_Admin')")
     public ResponseEntity<?> findAccounts(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
@@ -135,5 +149,12 @@ public class AccountController {
     @PreAuthorize("hasRole('Onecard_Admin')")
     public ResponseEntity<?> adjustAccount(@Valid @RequestBody AdjustmentRequestDto adjustmentRequestDto) {
         return  new ResponseEntity<>(adjustmentService.adjustBalance(adjustmentRequestDto), HttpStatus.OK);
+    }
+
+    @PutMapping("/limit/{id}")
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void updateDailyLimit(@PathVariable("id") String id, @Valid @RequestBody BalanceDto balanceDto) {
+        accountService.adjustDailyLimit(id, balanceDto);
     }
 }

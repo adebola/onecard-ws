@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscwallet.dao.AccountLedgerMapper">
+    <resultMap id="resultMap" type="io.factorialsystems.msscwallet.domain.AccountLedgerEntry">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="account_id" property="accountId" jdbcType="VARCHAR"/>
+        <result column="amount" property="amount" jdbcType="DECIMAL"/>
+        <result column="created_on" property="createdOn" jdbcType="TIMESTAMP"/>
+        <result column="operation" property="operation" jdbcType="INTEGER"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="column_list">
+        id, account_id, amount, created_on, operation, description
+    </sql>
+
+    <select id="findAll" resultMap="resultMap">
+        select
+        <include refid="column_list"/>
+        from account_ledger
+        order by created_on desc
+    </select>
+
+    <select id="findById" parameterType="java.lang.String" resultMap="resultMap">
+        select
+        <include refid="column_list"/>
+        from account_ledger
+        where id = #{id}
+    </select>
+
+    <select id="findByAccountId" parameterType="java.lang.String" resultMap="resultMap">
+        select
+        <include refid="column_list"/>
+        from account_ledger
+        where account_id = #{id}
+    </select>
+
+    <select id="findTotalExpenditureByDay" parameterType="io.factorialsystems.msscwallet.domain.query.AccountLedgerSearch" resultType="java.math.BigDecimal">
+        select sum(amount) from account_ledger
+        where account_id = #{id}
+        and operation = 1
+        and date(created_on) = date(#{date})
+    </select>
+
+    <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.AccountLedgerEntry">
+        insert into account_ledger(id, account_id, amount, operation, description)
+        values(#{id}, #{accountId}, #{amount}, #{operation}, #{description})
+    </insert>
+</mapper>

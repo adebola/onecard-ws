@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="io.factorialsystems.msscwallet.dao.SMSVerificationMapper">
+    <resultMap id="resultMap" type="io.factorialsystems.msscwallet.domain.SMSVerification">
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="account_id" property="accountId" jdbcType="VARCHAR"/>
+        <result column="msisdn" property="msisdn" jdbcType="VARCHAR"/>
+        <result column="expiry" property="expiry" jdbcType="TIMESTAMP"/>
+        <result column="verified" property="verified" jdbcType="BOOLEAN"/>
+        <result column="verified_on" property="verifiedOn" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="column_list">
+        id, account_id, code, expiry, msisdn, verified, verified_on
+    </sql>
+
+    <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.SMSVerification">
+        insert into sms_verification(id, code, account_id, expiry, msisdn)
+        values(#{id}, #{code}, #{accountId}, #{expiry}, #{msisdn})
+    </insert>
+
+    <update id="verify" parameterType="java.lang.String">
+        update sms_verification
+        set verified = true, verified_on = now()
+        where id = #{id}
+    </update>
+
+    <select id="findByAccountIdVerified" resultMap="resultMap">
+        select
+        <include refid="column_list"/>
+        from sms_verification
+        where account_id = #{id}
+        and verified = true;
+    </select>
+
+    <select id="findById" resultMap="resultMap">
+        select
+        <include refid="column_list"/>
+        from sms_verification
+        where id = #{id}
+    </select>
+
+    <select id="checkVerifiedExistsById" parameterType="java.lang.String" resultType="java.lang.Boolean">
+        select exists(select 1 from sms_verification where id  =#{id} and verified = true)
+    </select>
+
+    <select id="checkVerifiedExistsByUserId" parameterType="java.lang.String" resultType="java.lang.Boolean">
+        select exists(select 1
+              from sms_verification sv, accounts a
+              where a.user_id = #{id}
+                and a.id = sv.account_id
+                and sv.verified = true);
+    </select>
+</mapper>

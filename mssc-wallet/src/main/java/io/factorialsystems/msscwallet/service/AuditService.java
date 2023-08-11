@@ -5,6 +5,7 @@ import io.factorialsystems.msscwallet.config.JMSConfig;
 import io.factorialsystems.msscwallet.dto.AuditMessageDto;
 import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
@@ -23,6 +24,7 @@ public class AuditService {
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
 
+    @SneakyThrows
     public void auditEvent(String message, String action) {
 
         AuditMessageDto dto = AuditMessageDto
@@ -34,11 +36,6 @@ public class AuditService {
                 .userName(Security.getUserName())
                 .build();
 
-        try {
-            jmsTemplate.convertAndSend(JMSConfig.AUDIT_MESSAGE_QUEUE, objectMapper.writeValueAsString(dto));
-        } catch (Exception e) {
-            log.error("Error Sending Audit Message reason : {}", e.getMessage());
-            e.printStackTrace();
-        }
+        jmsTemplate.convertAndSend(JMSConfig.AUDIT_MESSAGE_QUEUE, objectMapper.writeValueAsString(dto));
     }
 }

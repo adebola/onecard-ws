@@ -2,13 +2,13 @@ package io.factorialsystems.msscwallet.service;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import io.factorialsystems.msscwallet.dao.AccountMapper;
 import io.factorialsystems.msscwallet.dao.TransactionMapper;
+import io.factorialsystems.msscwallet.domain.Account;
 import io.factorialsystems.msscwallet.domain.Transaction;
 import io.factorialsystems.msscwallet.domain.query.SearchByDateRange;
-import io.factorialsystems.msscwallet.dto.DateRangeDto;
-import io.factorialsystems.msscwallet.dto.PagedDto;
-import io.factorialsystems.msscwallet.dto.TransactionDto;
-import io.factorialsystems.msscwallet.dto.TransactionSearchRequestDto;
+import io.factorialsystems.msscwallet.dto.*;
+import io.factorialsystems.msscwallet.external.client.ProviderClient;
 import io.factorialsystems.msscwallet.mapper.TransactionMapstructMapper;
 import io.factorialsystems.msscwallet.service.file.ExcelWriter;
 import io.factorialsystems.msscwallet.utils.Security;
@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TransactionService {
     private final ExcelWriter excelWriter;
+    private final AccountMapper accountMapper;
+    private final ProviderClient providerClient;
     private final TransactionMapper transactionMapper;
     private final TransactionMapstructMapper transactionMapstructMapper;
 
@@ -79,7 +81,55 @@ public class TransactionService {
                 .stream()
                 .map(transactionMapstructMapper::transactionToTransactionDto)
                 .collect(Collectors.toList());
+    }
 
+    public void asyncSaveTransaction(RequestTransactionDto dto) {
+        Account account =
+                dto.getUserId() == null ? accountMapper.findAnonymousAccount() : accountMapper.findAccountByUserId(dto.getUserId());
+
+        if (account == null) {
+            final String message = String.format("Error saving New Transaction, Unable to find Account for User (%s)", dto.getUserId());
+            log.error(message);
+
+            return;
+        }
+
+        log.info("Retrieved Account for Transaction ID {}, UserName {}", account.getId(), account.getName());
+
+        String action = null;
+        int serviceId = 0;
+
+        if (dto.getServiceId() != null) {
+
+            ServiceActionDto actionDto = providerClient.getService(dto.getServiceId());
+
+            if (actionDto == null) {
+                final String message = "Error Retrieving Service Action for Service Id " + dto.getServiceId();
+                log.error(message);
+                return;
+            }
+
+            action = actionDto.getServiceName();
+            serviceId = dto.getServiceId();
+        } else {
+            action = "Bulk Recharge";
+        }
+
+        log.info("Retrieved ServiceAction for Transaction {}", account.getId());
+
+        Transaction transaction = Transaction.builder()
+                .serviceId(serviceId)
+                .serviceName(action)
+                .accountId(account.getId())
+                .chargeAccountId(account.getChargeAccountId())
+                .txAmount(dto.getServiceCost())
+                .requestId(dto.getRequestId())
+                .recipient(dto.getRecipient())
+                .build();
+
+        transactionMapper.save(transaction);
+
+        log.info("Transaction Saved Successfully {}", transaction.getId());
     }
 
     private PagedDto<TransactionDto> createDto(Page<Transaction> transactions) {

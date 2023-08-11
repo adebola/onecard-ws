@@ -5,7 +5,6 @@ import io.factorialsystems.msscwallet.domain.Account;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -22,11 +21,7 @@ public class ScheduledTasks {
 
     private final AccountMapper accountMapper;
 
-    private static final Integer USER_ACCOUNT = 1;
-    private static final Integer CORPORATE_ACCOUNT = 2;
-    private static final Integer PROVIDER_ACCOUNT = 3;
-
-    @Scheduled(fixedRate = 3600000)
+//    @Scheduled(fixedRate = 3600000)
     public void reportThresholds() {
         log.info("Running ReportThreshold............");
 

@@ -3,7 +3,7 @@ package io.factorialsystems.msscwallet.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.msscwallet.config.JMSConfig;
 import io.factorialsystems.msscwallet.dto.MailMessageDto;
-import io.factorialsystems.msscwallet.external.client.MailClient;
+import io.factorialsystems.msscwallet.external.client.CommunicationClient;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -14,13 +14,13 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class MailService {
-    private final MailClient mailClient;
+    private final CommunicationClient communicationClient;
     private final JmsTemplate jmsTemplate;
     private final ObjectMapper objectMapper;
 
     public void sendMailWithOutAttachment(MailMessageDto dto) {
         log.info(String.format("Sending Mail without attachment to %s", dto.getTo()));
-        mailClient.sendMailWithoutAttachment(dto);
+        communicationClient.sendMailWithoutAttachment(dto);
     }
 
     @SneakyThrows

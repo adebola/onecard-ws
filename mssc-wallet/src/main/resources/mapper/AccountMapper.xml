@@ -13,10 +13,12 @@
         <result column="createdBy" property="createdBy" jdbcType="VARCHAR"/>
         <result column="charge_account" property="chargeAccountId" jdbcType="VARCHAR"/>
         <result column="web_hook" property="webHook" jdbcType="VARCHAR"/>
+        <result column="kyc_verified" property="kycVerified" jdbcType="BOOLEAN"/>
+        <result column="daily_limit" property="dailyLimit" jdbcType="DECIMAL"/>
     </resultMap>
 
     <sql id="Column_List">
-        id, name, balance, user_id, account_type, activated, createdAt, createdBy, charge_account, web_hook
+        id, name, balance, user_id, account_type, activated, createdAt, createdBy, charge_account, web_hook, kyc_verified, daily_limit
     </sql>
 
     <select id="findAccounts" resultMap="accountResultMap">
@@ -80,13 +82,15 @@
         (#{id, jdbcType=VARCHAR}, #{name, jdbcType=VARCHAR}, #{createdBy, jdbcType=VARCHAR}, #{userId, jdbcType=VARCHAR}, #{accountType, jdbcType=INTEGER})
     </insert>
 
-    <update id="update" parameterType="io.factorialsystems.msscwallet.domain.Account">
+    <update id="verifyAccount" parameterType="java.util.Map">
         update accounts
-        <set>
-            <if test="name != null">name=#{name},</if>
-            <if test="activated != null">activated=#{activated},</if>
-        </set>
-        where id = #{id}
+        set kyc_verified = true,
+        telephone = #{telephone}
+        where id = #{id};
+    </update>
+
+    <update id="unVerifyAccount" parameterType="java.lang.String">
+        update accounts set kyc_verified = false where id = #{id}
     </update>
 
     <update id="changeBalance" parameterType="io.factorialsystems.msscwallet.domain.Account">
@@ -107,5 +111,9 @@
 
     <update id="removeOrganizationWallet" parameterType="java.lang.String">
         update accounts set charge_account = null where user_id = #{id}
+    </update>
+
+    <update id="changeDailyLimit" parameterType="io.factorialsystems.msscwallet.domain.Account">
+        update accounts set daily_limit = #{dailyLimit} where id = #{id}
     </update>
 </mapper>
