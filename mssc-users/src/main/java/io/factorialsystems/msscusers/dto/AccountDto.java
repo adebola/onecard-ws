@@ -1,21 +1,18 @@
 package io.factorialsystems.msscusers.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.validation.constraints.Null;
 import java.math.BigDecimal;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountDto {
-
     @Null(message = "Account Id cannot be set it is generated")
     private String id;
 
@@ -24,7 +21,8 @@ public class AccountDto {
     private String accountType;
     private Boolean activated;
     private BigDecimal balance;
-
+    private BigDecimal dailyLimit;
+    private Boolean kycVerified;
 
     @Null(message = "Account creation Date cannot be set it is generated")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ", shape = JsonFormat.Shape.STRING)

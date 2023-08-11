@@ -20,7 +20,6 @@ public class KeycloakUserDto {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ", shape = JsonFormat.Shape.STRING)
     private Date createdDate;
 
-
     private String username;
 
     private Boolean enabled;
