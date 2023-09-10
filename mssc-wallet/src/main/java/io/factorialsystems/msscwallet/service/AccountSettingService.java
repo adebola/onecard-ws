@@ -59,23 +59,19 @@ public class AccountSettingService {
     public void changeKycSettings(KycSettingDto dto) {
         boolean reload = false;
 
+        log.info("Change KYC Settings {}", dto);
+
         if (dto.getEnable() != null) {
             AccountSetting setting = new AccountSetting();
             setting.setId(SETTINGS_DAILY_BALANCE_LIMIT_ENABLED);
 
-            if (dto.getEnable().equals("1")) {
-                setting.setValue("1");
-                limitEnabled = true;
-            } else {
-                setting.setValue("0");
-                limitEnabled = false;
-            }
-
+            setting.setValue(dto.getEnable());
             accountSettingMapper.update(setting);
 
             final String value = dto.getEnable().equals("1") ? "true" : "false";
             final String auditMessage = String.format("KYC Enabled changed to %s", value);
             auditService.auditEvent(auditMessage, AUDIT_ACTION_CHANGE_KYC);
+            log.info(auditMessage);
             reload = true;
         }
 
@@ -88,7 +84,7 @@ public class AccountSettingService {
 
             final String auditMessage = String.format("KYC User Limit changed to %.2f", dto.getUserLimit());
             auditService.auditEvent(auditMessage, AUDIT_ACTION_CHANGE_KYC);
-
+            log.info(auditMessage);
             reload = true;
         }
 
@@ -101,6 +97,7 @@ public class AccountSettingService {
 
             final String auditMessage = String.format("KYC Corporate Limit changed to %.2f", dto.getCorporateLimit());
             auditService.auditEvent(auditMessage, AUDIT_ACTION_CHANGE_KYC);
+            log.info(auditMessage);
             reload = true;
         }
 
@@ -113,6 +110,7 @@ public class AccountSettingService {
             final String value = dto.getFirstName().equals("1") ? "true" : "false";
             final String auditMessage = String.format("KYC Search by First Name changed %s", value);
             auditService.auditEvent(auditMessage, AUDIT_ACTION_CHANGE_KYC);
+            log.info(auditMessage);
             reload = true;
         }
 
@@ -125,6 +123,7 @@ public class AccountSettingService {
             final String value = dto.getLastName().equals("1") ? "true" : "false";
             final String auditMessage = String.format("KYC Search by Last Name changed %s", value);
             auditService.auditEvent(auditMessage, AUDIT_ACTION_CHANGE_KYC);
+            log.info(auditMessage);
             reload = true;
         }
 
@@ -137,6 +136,7 @@ public class AccountSettingService {
             final String value = dto.getTelephone().equals("1") ? "true" : "false";
             final String auditMessage = String.format("KYC Search by Telephone Number changed %s", value);
             auditService.auditEvent(auditMessage, AUDIT_ACTION_CHANGE_KYC);
+            log.info(auditMessage);
             reload = true;
         }
 

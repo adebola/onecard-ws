@@ -661,7 +661,6 @@ public class AccountService {
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "UserId", userId));
 
         if (account.getBalance().compareTo(dto.getAmount()) >= 0)  {
-
             // If the User is Not KYC Verified Impose Limit on Daily Spend
             if (!account.getKycVerified() && accountSettingService.isLimitEnabled()) {
                 AccountLedgerSearch ledgerSearch = new AccountLedgerSearch();
@@ -689,6 +688,8 @@ public class AccountService {
                             .status(400)
                             .build();
                 }
+
+                log.info("Limit Checking, Today's Running Total {} Amount {} Limit {}", runningTotal == null ? 0 : runningTotal, dto.getAmount(), account.getDailyLimit());
             }
 
             BigDecimal newValue = account.getBalance().subtract(dto.getAmount());

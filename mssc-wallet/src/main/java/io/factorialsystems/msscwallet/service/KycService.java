@@ -3,6 +3,7 @@ package io.factorialsystems.msscwallet.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.factorialsystems.msscwallet.config.JMSConfig;
 import io.factorialsystems.msscwallet.dao.AccountMapper;
 import io.factorialsystems.msscwallet.dao.AccountVerificationMapper;
 import io.factorialsystems.msscwallet.dao.BVNVerificationMapper;
@@ -11,19 +12,21 @@ import io.factorialsystems.msscwallet.domain.Account;
 import io.factorialsystems.msscwallet.domain.AccountVerification;
 import io.factorialsystems.msscwallet.domain.BVNVerification;
 import io.factorialsystems.msscwallet.domain.SMSVerification;
-import io.factorialsystems.msscwallet.dto.SMSMessageDto;
-import io.factorialsystems.msscwallet.dto.SMSResponseDto;
+import io.factorialsystems.msscwallet.dto.AsyncSMSMessageDto;
 import io.factorialsystems.msscwallet.dto.SMSVerificationRequestDto;
 import io.factorialsystems.msscwallet.dto.SimpleUserDto;
 import io.factorialsystems.msscwallet.dto.kyc.BVNVerificationResponseDto;
 import io.factorialsystems.msscwallet.exception.ResourceNotFoundException;
-import io.factorialsystems.msscwallet.external.client.CommunicationClient;
 import io.factorialsystems.msscwallet.external.client.UserClient;
 import io.factorialsystems.msscwallet.utils.Security;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,13 +43,15 @@ import java.util.*;
 @RequiredArgsConstructor
 public class KycService {
     private final UserClient userClient;
+    private final JmsTemplate messageSender;
     private final ObjectMapper objectMapper;
     private final AccountMapper accountMapper;
-    private final CommunicationClient communicationClient;
     private final SMSVerificationMapper smsVerificationMapper;
     private final BVNVerificationMapper bvnVerificationMapper;
-    private final AccountVerificationMapper accountVerificationMapper;
     private final AccountSettingService accountSettingService;
+    private final AccountVerificationMapper accountVerificationMapper;
+
+    private final Random random = new Random();
 
     @Value("${verification.appid}")
     private String verificationAppId;
@@ -59,9 +64,10 @@ public class KycService {
 
     // Generate and Send SMS for Verification
     @Transactional
+    @SneakyThrows
     public Map<String, String> startSMSVerification(String msisdn) {
         final String id = UUID.randomUUID().toString();
-        final String code = String.format("%06d", new Random().nextInt(10000));
+        final String code = String.format("%06d", random.nextInt(1_000_000));
 
         final Account account = accountMapper.findAccountByUserId(Security.getUserId());
 
@@ -69,7 +75,7 @@ public class KycService {
             throw new RuntimeException(String.format("Unable to find Account for User %s", Security.getUserId()));
         }
 
-        if (!Objects.equals(account.getAccountType(), AccountService.USER_ACCOUNT))  {
+        if (!Objects.equals(account.getAccountType(), AccountService.USER_ACCOUNT)) {
             throw new RuntimeException(
                     String.format("SMS verification can only be applied to USER Accounts, please contact support, %s is a User", Security.getUserId())
             );
@@ -79,13 +85,14 @@ public class KycService {
             throw new RuntimeException("This Account has already been SMS Verified");
         }
 
-        SMSMessageDto dto = SMSMessageDto.builder()
+        AsyncSMSMessageDto dto = AsyncSMSMessageDto.builder()
                 .to(msisdn)
                 .message(String.format("Please use this code for Verification %s", code))
+                .userId(Security.getUserId())
+                .email(Security.getEmail())
                 .build();
 
-        // This should be converted to async, using JMS Queue
-        final SMSResponseDto smsResponseDto = communicationClient.sendSMS(dto);
+        messageSender.convertAndSend(JMSConfig.SEND_SMS_QUEUE, objectMapper.writeValueAsString(dto));
 
         SMSVerification smsVerification = SMSVerification.builder()
                 .id(id)
@@ -96,9 +103,10 @@ public class KycService {
                 .build();
 
         smsVerificationMapper.save(smsVerification);
-        return getSMSVerificationMap(id, smsVerification.getExpiry(), smsResponseDto.getStatus());
+        return getSMSVerificationMap(id, smsVerification.getExpiry());
     }
 
+    @Transactional
     public Map<String, String> finalizeSMSVerification(SMSVerificationRequestDto dto) {
         final OffsetDateTime now = OffsetDateTime.now();
 
@@ -110,9 +118,9 @@ public class KycService {
 
         Account account = accountMapper.findAccountById(smsVerification.getAccountId());
 
-       if (account == null) {
-           throw new ResourceNotFoundException("Account", "id", smsVerification.getAccountId());
-       }
+        if (account == null) {
+            throw new ResourceNotFoundException("Account", "id", smsVerification.getAccountId());
+        }
 
         if (Objects.equals(account.getAccountType(), AccountService.USER_ACCOUNT)) {
             if (!account.getUserId().equals(Security.getUserId())) {
@@ -156,8 +164,8 @@ public class KycService {
         final SMSVerification smsVerification = smsVerificationMapper.findByAccountIdVerified(account.getId());
 
         if (smsVerification == null) {
-           throw new RuntimeException("Please do SMS Verification before BVN Verification");
-       }
+            throw new RuntimeException("Please do SMS Verification before BVN Verification");
+        }
 
         Map<String, String> map = new HashMap<>();
 
@@ -168,26 +176,29 @@ public class KycService {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
         headers.set("x-api-key", verificationKey);
         headers.set("app-id", verificationAppId);
 
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
         requestBody.add("number", bvn);
 
-        HttpEntity<MultiValueMap<String, String>> formEntity = new HttpEntity<>(requestBody, headers);
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
-        ResponseEntity<String> response =
-                restTemplate.exchange(verificationUrl, HttpMethod.POST, formEntity, String.class);
+        final String response =
+                restTemplate.postForObject(verificationUrl, entity, String.class);
+
+        log.info(response);
 
         JsonNode apiNode = null;
 
         try {
-            apiNode = objectMapper.readTree(response.getBody()).path("status");
+            apiNode = objectMapper.readTree(response).path("status");
             Boolean status = objectMapper.readValue(apiNode.toString(), Boolean.class);
 
             if (status) {
                 final String verificationId = UUID.randomUUID().toString();
-                BVNVerificationResponseDto responseDto = objectMapper.readValue(response.getBody(), BVNVerificationResponseDto.class);
+                BVNVerificationResponseDto responseDto = objectMapper.readValue(response, BVNVerificationResponseDto.class);
                 BVNVerification bvnVerification = BVNVerification.builder()
                         .id(verificationId)
                         .accountId(account.getId())
@@ -239,7 +250,7 @@ public class KycService {
                         .build();
 
                 map.put("status", "FAILED");
-                apiNode = objectMapper.readTree(response.getBody()).path("message");
+                apiNode = objectMapper.readTree(response).path("message");
 
                 if (apiNode == null) {
                     final String s = "Verification Failed";
@@ -254,11 +265,11 @@ public class KycService {
                 bvnVerificationMapper.save(bvnVerification);
             }
         } catch (JsonProcessingException e) {
-            log.error("Error Processing JSON {}", response.getBody());
+            log.error("Error Processing JSON {}", response);
             log.error(e.getMessage());
 
             map.put("status", "FAILED");
-            map.put("message", "Parse Error contact, Please contact Onecard Support");
+            map.put("message", "Parse Error, Please contact Onecard Support");
         }
 
         return map;
@@ -313,7 +324,7 @@ public class KycService {
                 .getAccountSetting(AccountSettingService.SETTINGS_FIRST_NAME_COMPARE)
                 .getValue().equals("1");
 
-        if (matchByFirstName  && !user.getFirstName().equalsIgnoreCase(bvnVerification.getFirstName())) {
+        if (matchByFirstName && !user.getFirstName().equalsIgnoreCase(bvnVerification.getFirstName())) {
             return false;
         }
 
@@ -321,7 +332,7 @@ public class KycService {
                 .getAccountSetting(AccountSettingService.SETTINGS_LAST_NAME_COMPARE)
                 .getValue().equals("1");
 
-        if (matchByLastName  && !user.getLastName().equalsIgnoreCase(bvnVerification.getLastName())) {
+        if (matchByLastName && !user.getLastName().equalsIgnoreCase(bvnVerification.getLastName())) {
             return false;
         }
 
@@ -332,17 +343,13 @@ public class KycService {
         return !matchByTelephone || smsVerification.getMsisdn().equalsIgnoreCase(bvnVerification.getPhoneNumber());
     }
 
-    private Map<String, String> getSMSVerificationMap(String id, OffsetDateTime expiry, boolean status) {
+    private Map<String, String> getSMSVerificationMap(String id, OffsetDateTime expiry) {
         Map<String, String> value = new HashMap<>();
 
-        if (status) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-            value.put("verificationId", id);
-            value.put("status", "Success");
-            value.put("Expiry", formatter.format(expiry));
-        } else {
-            value.put("status", "Failed");
-        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        value.put("verificationId", id);
+        value.put("status", "Success");
+        value.put("Expiry", formatter.format(expiry));
 
         return value;
     }

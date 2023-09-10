@@ -53,6 +53,13 @@ public class UtilityTest {
         log.info(formatter.format(OffsetDateTime.now()));
     }
 
+    @Test
+    void random() {
+        Random random = new Random();
 
-
+        for (int i=0; i<100; i++) {
+            int r = random.nextInt(1_000_000);
+            log.info(String.format("%06d %d",r, r));
+        }
+    }
 }
