@@ -1,12 +1,11 @@
 package io.factorialsystems.mssccommunication.mapper;
 
 import io.factorialsystems.mssccommunication.document.SMSMessage;
+import io.factorialsystems.mssccommunication.dto.AsyncSMSMessageDto;
 import io.factorialsystems.mssccommunication.dto.SMSMessageDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
-
-import java.util.List;
 
 @Mapper
 public interface SMSMessageMapper {
@@ -21,14 +20,19 @@ public interface SMSMessageMapper {
 
     @Mappings({
             @Mapping(target = "id" , ignore = true),
-            @Mapping(source = "to", target = "to"),
+            @Mapping(target = "to", ignore = true),
             @Mapping(source = "message", target = "message"),
             @Mapping(source = "userId", target = "userId"),
             @Mapping(target = "createdDate", ignore = true),
             @Mapping(target = "response", ignore = true)
     })
     SMSMessage smsDtoToSMS(SMSMessageDto dto);
-    List<SMSMessageDto> listSMSToSMSDto(List<SMSMessage> messages);
 
-
+    @Mappings({
+            @Mapping(target = "to", ignore = true),
+            @Mapping(source = "message", target = "message"),
+            @Mapping(source = "userId", target = "userId"),
+            @Mapping(source = "email", target = "sentBy")
+    })
+    SMSMessage asyncSMSDtoToSMS(AsyncSMSMessageDto dto);
 }

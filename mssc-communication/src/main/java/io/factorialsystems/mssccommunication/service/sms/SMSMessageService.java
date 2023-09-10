@@ -3,6 +3,7 @@ package io.factorialsystems.mssccommunication.service.sms;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.mssccommunication.document.SMSMessage;
+import io.factorialsystems.mssccommunication.dto.AsyncSMSMessageDto;
 import io.factorialsystems.mssccommunication.dto.PagedDto;
 import io.factorialsystems.mssccommunication.dto.SMSMessageDto;
 import io.factorialsystems.mssccommunication.dto.SMSResponseDto;
@@ -22,7 +23,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import javax.validation.Valid;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,50 +44,72 @@ public class SMSMessageService {
     private final SMSMessageRepository smsMessageRepository;
 
     @Transactional
+    public void asyncSendMessage(@Valid AsyncSMSMessageDto dto) {
+        SMSMessage message = smsMessageMapper.asyncSMSDtoToSMS(dto);
+        Optional<String> parseTo = parseTo(dto.getTo());
+
+        if (parseTo.isEmpty()) {
+            final String s = String.format("Invalid msisdn format %s",message.getTo());
+            log.error(s);
+            return;
+        }
+
+        final String newTo = parseTo.get();
+
+        log.info(String.format("Sending SMS Message asynchronously to %s", newTo));
+        message.setCreatedDate(new Date());
+        message.setTo(newTo);
+        send(message);
+    }
+
+    @Transactional
     public SMSResponseDto sendMessage(SMSMessageDto dto) {
         SMSMessage message = smsMessageMapper.smsDtoToSMS(dto);
+        Optional<String> parseTo = parseTo(dto.getTo());
 
-        String newTo = null;
-        final String to = message.getTo();
+        if (parseTo.isEmpty()) {
+            final String s = String.format("Invalid msisdn format %s", message.getTo());
+            log.error(s);
 
-        try {
-            if (to.indexOf('0') == 0) {
-                newTo = "234" + to.substring(1);
-            } else if (to.indexOf("+") == 0) {
-                newTo = to.substring(1);
-            } else if (to.substring(0, 3).compareTo("234") == 0) {
-                newTo = to;
-            } else {
-                final String s = String.format("Invalid msisdn format %s", to);
-                log.error(s);
-                return SMSResponseDto.builder()
-                        .status(false)
-                        .message(s)
-                        .build();
-            }
-        } catch (Exception ex) {
-            log.error("Invalid msisdn format exception {}", ex.getMessage());
             return SMSResponseDto.builder()
                     .status(false)
-                    .message(String.format("Invalid msisdn format %s", to))
+                    .message(s)
                     .build();
         }
 
-        log.info(String.format("Sending Message to %s", newTo));
+        final String newTo = parseTo.get();
+        log.info(String.format("Sending SMS Message synchronously to %s", newTo));
 
+        message.setUserId(K.getUserId());
+        message.setCreatedDate(new Date());
+        message.setSentBy(K.getEmail());
+        message.setTo(newTo);
+
+        return send(message);
+    }
+
+    public PagedDto<SMSMessageDto> findAll(Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<SMSMessage> messages = smsMessageRepository.findAll(pageable);
+        return createdDtos(messages);
+    }
+
+    public PagedDto<SMSMessageDto> findByUserId(String userId, Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<SMSMessage> messages = smsMessageRepository.findByUserId(pageable, userId);
+        return createdDtos(messages);
+    }
+
+    private SMSResponseDto send(SMSMessage message) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        SMSRequest sms = new SMSRequest(dto.getMessage(), newTo, apiKey);
+        SMSRequest sms = new SMSRequest(message.getMessage(), message.getTo(), apiKey);
 
         try {
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(sms), headers);
             final SMSResponse smsResponse = restTemplate.postForObject(smsUrl, entity, SMSResponse.class);
-
-            message.setUserId(K.getUserId());
-            message.setCreatedDate(new Date());
-            message.setSentBy(K.getEmail());
 
             if (smsResponse != null) {
                 final boolean status = "ok".equals(smsResponse.getCode());
@@ -112,22 +139,36 @@ public class SMSMessageService {
                 .build();
     }
 
-    public PagedDto<SMSMessageDto> findAll(Integer pageNumber, Integer pageSize) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<SMSMessage> messages = smsMessageRepository.findAll(pageable);
-        return createdDtos(messages);
-    }
+    private Optional<String> parseTo(String to) {
+        String newTo = null;
 
-    public PagedDto<SMSMessageDto> findByUserId(String userId, Integer pageNumber, Integer pageSize) {
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<SMSMessage> messages = smsMessageRepository.findByUserId(pageable, userId);
-        return createdDtos(messages);
+        try {
+            if (to.indexOf('0') == 0) {
+                newTo = "234" + to.substring(1);
+            } else if (to.indexOf("+") == 0) {
+                newTo = to.substring(1);
+            } else if (to.substring(0, 3).compareTo("234") == 0) {
+                newTo = to;
+            } else {
+                final String s = String.format("Invalid msisdn format %s", to);
+                log.error(s);
+            }
+        } catch (Exception ex) {
+            log.error("Invalid msisdn format exception {}", ex.getMessage());
+        }
+
+        return Optional.ofNullable(newTo);
     }
 
     private PagedDto<SMSMessageDto> createdDtos(Page<SMSMessage> messages) {
         PagedDto<SMSMessageDto> pagedDto = new PagedDto<>();
 
-        pagedDto.setList(smsMessageMapper.listSMSToSMSDto(messages.toList()));
+        final List<SMSMessageDto> collect = messages.toList()
+                .stream()
+                .map(smsMessageMapper::smsToSMSDto)
+                .collect(Collectors.toList());
+
+        pagedDto.setList(collect);
         pagedDto.setPages(messages.getTotalPages());
         pagedDto.setPageNumber(messages.getNumber());
         pagedDto.setPageSize(messages.getSize());

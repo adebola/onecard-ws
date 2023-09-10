@@ -1,12 +1,16 @@
 package io.factorialsystems.mssccommunication.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Null;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
+@ToString
 public class SMSMessageDto {
 
     @Null(message = "Id cannot be set")

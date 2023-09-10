@@ -2,8 +2,8 @@ package io.factorialsystems.mssccommunication.service.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.factorialsystems.mssccommunication.config.JMSConfig;
+import io.factorialsystems.mssccommunication.dto.AsyncSMSMessageDto;
 import io.factorialsystems.mssccommunication.dto.MailMessageDto;
-import io.factorialsystems.mssccommunication.dto.SMSMessageDto;
 import io.factorialsystems.mssccommunication.service.mail.MailService;
 import io.factorialsystems.mssccommunication.service.sms.SMSMessageService;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +34,9 @@ public class CommunicationListener {
     @JmsListener(destination = JMSConfig.SEND_SMS_QUEUE)
     public void listenForSMS(String jsonData) throws IOException {
         if (jsonData != null) {
-            SMSMessageDto smsMessageDto = objectMapper.readValue(jsonData, SMSMessageDto.class);
+            AsyncSMSMessageDto smsMessageDto = objectMapper.readValue(jsonData, AsyncSMSMessageDto.class);
             log.info(String.format("Received Asynchronous Request to send SMS to %s", smsMessageDto.getTo()));
-            smsMessageService.sendMessage(smsMessageDto);
+            smsMessageService.asyncSendMessage(smsMessageDto);
         }
     }
 }
