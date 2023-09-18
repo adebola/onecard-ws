@@ -188,7 +188,7 @@ public class KycService {
         final String response =
                 restTemplate.postForObject(verificationUrl, entity, String.class);
 
-        log.info(response);
+        log.info("BVN Response : {}", response);
 
         JsonNode apiNode = null;
 
@@ -209,6 +209,8 @@ public class KycService {
                         .middleName(responseDto.getData().getMiddleName())
                         .phoneNumber(responseDto.getData().getPhoneNumber())
                         .build();
+
+                log.info("Upstream BVN Verification Success {}", response );
 
                 if (compareBVNDetails(smsVerification, bvnVerification)) {
                     bvnVerification.setStatus("SUCCESS");
@@ -234,12 +236,16 @@ public class KycService {
 
                     map.put("status", "SUCCESS");
                     map.put("message", "BVN and Account Verification Successful");
+
+                    log.info("BVN Verification Successful, Client fully Verified");
                 } else {
                     bvnVerification.setStatus("FAILED_COMPARISON");
 
                     map.put("status", "FAILED");
                     map.put("message", "Inconsistent bio-data");
                     bvnVerificationMapper.save(bvnVerification);
+
+                    log.info("BVN Verification Comparison Not Successful, Client Not Verified");
                 }
             } else {
                 BVNVerification bvnVerification = BVNVerification.builder()
@@ -252,17 +258,19 @@ public class KycService {
                 map.put("status", "FAILED");
                 apiNode = objectMapper.readTree(response).path("message");
 
+                final String s;
+
                 if (apiNode == null) {
-                    final String s = "Verification Failed";
-                    log.error(s);
-                    map.put("message", s);
+                    s = "Verification Failed";
                 } else {
-                    final String x = String.format("Verification Failed Reason : %s", apiNode);
-                    log.error(x);
-                    map.put("message", x);
+                    s = String.format("Verification Failed Reason : %s", apiNode);
                 }
 
+                log.error(s);
+                map.put("message", s);
+
                 bvnVerificationMapper.save(bvnVerification);
+                log.info("BVN Verification Failed, Client Not Verified");
             }
         } catch (JsonProcessingException e) {
             log.error("Error Processing JSON {}", response);
@@ -324,23 +332,36 @@ public class KycService {
                 .getAccountSetting(AccountSettingService.SETTINGS_FIRST_NAME_COMPARE)
                 .getValue().equals("1");
 
-        if (matchByFirstName && !user.getFirstName().equalsIgnoreCase(bvnVerification.getFirstName())) {
-            return false;
+        if (matchByFirstName) {
+            if (!user.getFirstName().equalsIgnoreCase(bvnVerification.getFirstName())) {
+                log.error("BVN First Name Mismatch OnSystem {}, BVN {}", user.getFirstName(), bvnVerification.getFirstName());
+                return false;
+            }
         }
 
         boolean matchByLastName = accountSettingService
                 .getAccountSetting(AccountSettingService.SETTINGS_LAST_NAME_COMPARE)
                 .getValue().equals("1");
 
-        if (matchByLastName && !user.getLastName().equalsIgnoreCase(bvnVerification.getLastName())) {
-            return false;
+        if (matchByLastName) {
+            if (!user.getLastName().equalsIgnoreCase(bvnVerification.getLastName())) {
+                log.error("BVN Last Name Mismatch OnSystem {}, BVN {}", user.getLastName(), bvnVerification.getLastName());
+                return false;
+            }
         }
 
         boolean matchByTelephone = accountSettingService
                 .getAccountSetting(AccountSettingService.SETTINGS_TELEPHONE_COMPARE)
                 .getValue().equals("1");
 
-        return !matchByTelephone || smsVerification.getMsisdn().equalsIgnoreCase(bvnVerification.getPhoneNumber());
+        if (matchByTelephone) {
+            if (!smsVerification.getMsisdn().equalsIgnoreCase(bvnVerification.getPhoneNumber())) {
+                log.error("BVN Telephone Number Mismatch SMS Verified {}, BVN {}", smsVerification.getMsisdn(), bvnVerification.getPhoneNumber());
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private Map<String, String> getSMSVerificationMap(String id, OffsetDateTime expiry) {

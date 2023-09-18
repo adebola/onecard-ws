@@ -20,8 +20,8 @@
     </sql>
 
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.BVNVerification">
-        insert into bvn_verification(id, bvn, account_id, first_name, last_name, middle_name, date_of_birth, phone_number)
-        values(#{id}, #{bvn}, #{accountId}, #{firstName}, #{lastName}, #{middleName}, #{dateOfBirth}, #{phoneNumber})
+        insert into bvn_verification(id, bvn, account_id, first_name, last_name, middle_name, date_of_birth, phone_number, verified)
+        values(#{id}, #{bvn}, #{accountId}, #{firstName}, #{lastName}, #{middleName}, #{dateOfBirth}, #{phoneNumber}, #{verified})
     </insert>
 
     <update id="verify" parameterType="java.lang.String">

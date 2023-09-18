@@ -516,7 +516,7 @@ public class AccountService {
         accountMapper.changeBalance(account);
 
         String auditMessage =
-                String.format("Account (%s / %s) Refunded by %.2f to %.2f by (%s)", account.getId(), account.getName(), dto.getAmount(), account.getBalance(), Security.getUserName());
+                String.format("Account (%s / %s) Refunded by %.2f to %.2f by System", account.getId(), account.getName(), dto.getAmount(), account.getBalance());
         log.info(auditMessage);
         auditService.auditEvent(auditMessage, Constants.ACCOUNT_BALANCE_REFUNDED);
 
@@ -701,7 +701,7 @@ public class AccountService {
                     .accountId(account.getId())
                     .operation(LEDGER_OPERATION_USER_DEBIT)
                     .amount(dto.getAmount())
-                    .description(String.format("Account charged by %.2f for Service %s", dto.getAmount(), dto.getServiceId()))
+                    .description(String.format("Account charged by %.2f for Service", dto.getAmount()))
                     .build();
 
             accountLedgerMapper.save(entry);

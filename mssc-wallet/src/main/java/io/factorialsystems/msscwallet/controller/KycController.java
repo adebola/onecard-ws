@@ -32,7 +32,14 @@ public class KycController {
 
     @GetMapping("/bvn/{id}")
     public ResponseEntity<?> bvnVerify(@PathVariable("id") String bvn) {
-        return ResponseEntity.ok(kycService.bvnVerification(bvn));
+        var map = kycService.bvnVerification(bvn);
+        String status = map.get("status");
+
+        if ("SUCCESS".equals(status)) {
+            return ResponseEntity.ok(map);
+        }
+
+        return ResponseEntity.badRequest().body(map);
     }
 
     @GetMapping("/user-status")
