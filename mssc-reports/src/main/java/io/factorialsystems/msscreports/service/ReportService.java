@@ -150,9 +150,20 @@ public class ReportService {
     }
 
     public InputStreamResource runUserReport() {
-        List<SimpleUserDto> users = userClient.getAllUsers();
-        log.info("Run User Report size {}", users.size());
-        return new InputStreamResource(userReportGenerator.reportToExcel(users));
+        PagedDto<UserDto> users = userClient.getUsers(1, 10_000);
+        List<AccountBalanceDto> balances = accountClient.getUserBalances();
+        log.info("Run User Report size {}", users.getTotalSize());
+
+        List<UserDto> collect = users.getList().stream().peek(u -> {
+            final Optional<AccountBalanceDto> first = balances
+                    .stream()
+                    .filter(x -> x.getUserId().equals(u.getId()))
+                    .findFirst();
+
+            first.ifPresent(a -> u.setBalance(a.getBalance()));
+        }).collect(Collectors.toList());
+
+        return new InputStreamResource(userReportGenerator.reportToExcel(collect));
     }
 
     private PagedDto<ReportDto> createDto(Page<Report> reports) {
