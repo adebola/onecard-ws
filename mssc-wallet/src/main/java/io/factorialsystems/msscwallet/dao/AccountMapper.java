@@ -2,6 +2,7 @@ package io.factorialsystems.msscwallet.dao;
 
 import com.github.pagehelper.Page;
 import io.factorialsystems.msscwallet.domain.Account;
+import io.factorialsystems.msscwallet.dto.AccountBalanceDto;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -41,5 +42,7 @@ public interface AccountMapper {
     void unVerifyAccount(String id);
 
     void changeDailyLimit(Account account);
+
+    List<AccountBalanceDto> findUserBalances();
 }
 

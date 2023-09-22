@@ -860,6 +860,10 @@ public class AccountService {
         return newToBalance;
     }
 
+    public List<AccountBalanceDto> getUserBalances() {
+        return accountMapper.findUserBalances();
+    }
+
     public static void saveTransaction(BigDecimal amount, String accountId, String narrative) {
         Transaction transaction = Transaction.builder()
                 .accountId(accountId)

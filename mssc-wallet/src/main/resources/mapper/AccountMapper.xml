@@ -17,8 +17,18 @@
         <result column="daily_limit" property="dailyLimit" jdbcType="DECIMAL"/>
     </resultMap>
 
+    <resultMap id="shortAccountResultMap" type="io.factorialsystems.msscwallet.dto.AccountBalanceDto">
+        <id column="id" property="accountId" jdbcType="VARCHAR" />
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="balance" property="balance" jdbcType="DECIMAL"/>
+    </resultMap>
+
     <sql id="Column_List">
         id, name, balance, user_id, account_type, activated, createdAt, createdBy, charge_account, web_hook, kyc_verified, daily_limit
+    </sql>
+
+    <sql id="short_column_list">
+        id, user_id, balance
     </sql>
 
     <select id="findAccounts" resultMap="accountResultMap">
@@ -26,6 +36,12 @@
         <include refid="Column_List"/>
         from accounts
         where anonymous = false
+    </select>
+
+    <select id="findUserBalances" resultMap="shortAccountResultMap">
+        select
+        <include refid="short_column_list"/>
+        from accounts
     </select>
 
     <select id="findAccountById" parameterType="java.lang.String" resultMap="accountResultMap">

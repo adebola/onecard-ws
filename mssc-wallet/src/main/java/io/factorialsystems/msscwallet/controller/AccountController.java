@@ -66,6 +66,13 @@ public class AccountController {
         return new ResponseEntity<>( accountService.fundWallet(id, balanceDto), HttpStatus.OK);
     }
 
+    @GetMapping("/balances")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<List<AccountBalanceDto>> getUsersBalances() {
+        return ResponseEntity.ok(accountService.getUserBalances());
+    }
+
     @PutMapping("/refund/{id}")
     @PreAuthorize("hasRole('Onecard_Admin')")
     public ResponseEntity<RefundResponseDto> refundWallet(@PathVariable("id") String id, @Valid @RequestBody RefundRequestDto refundRequestDto) {
