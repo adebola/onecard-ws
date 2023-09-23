@@ -247,6 +247,28 @@ class ReportServiceTest {
 
     }
 
+    @Test
+    void runCorporateUserReport() throws IOException {
+        try (MockedStatic<K> k = Mockito.mockStatic(K.class)) {
+            k.when(K::getUserId).thenReturn(id);
+            assertThat(K.getUserId()).isEqualTo(id);
+            log.info(K.getUserId());
+
+            k.when(K::getAccessToken).thenReturn(token);
+            assertThat(K.getAccessToken()).isEqualTo(token);
+
+            InputStreamResource inputStreamResource = reportService.runCorporateUserReport();
+
+
+            File targetFile = new File("/Users/adebola/Downloads/corporate-user-report.xlsx");
+            OutputStream outputStream = new FileOutputStream(targetFile);
+            byte[] buffer = inputStreamResource.getInputStream().readAllBytes();
+            outputStream.write(buffer);
+
+            log.info(targetFile.getAbsolutePath());
+        }
+    }
+
     private static String getUserToken(String userId) {
 
         String realmToken = getRealmAdminToken();

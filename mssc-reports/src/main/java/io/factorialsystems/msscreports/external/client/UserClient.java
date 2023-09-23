@@ -34,4 +34,12 @@ public interface UserClient {
     )
     UserEntryListDto getUserEntries (UserIdListDto dto);
 
+    @RequestMapping(method = RequestMethod.GET,
+            value = "/api/v1/organization",
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    PagedDto<OrganizationDto> getOrganizations(@RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+                                               @RequestParam(value = "pageSize", required = false) Integer pageSize);
+
 }

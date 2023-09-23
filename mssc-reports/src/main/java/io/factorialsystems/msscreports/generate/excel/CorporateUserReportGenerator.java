@@ -1,6 +1,6 @@
 package io.factorialsystems.msscreports.generate.excel;
 
-import io.factorialsystems.msscreports.dto.UserDto;
+import io.factorialsystems.msscreports.dto.OrganizationDto;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -15,33 +15,26 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 @Component
-public class UserReportGenerator {
-
+public class CorporateUserReportGenerator {
     private static final int COLUMN_LINE_NUMBER = 0;
     private static final int COLUMN_ID = 1;
     private static final int COLUMN_CREATED = 2;
-    private static final int COLUMN_USERNAME = 3;
-    private static final int COLUMN_FIRSTNAME = 4;
-    private static final int COLUMN_LASTNAME = 5;
-    private static final int COLUMN_EMAIL = 6;
-    private static final int COLUMN_BALANCE = 7;
+    private static final int COLUMN_ORGANIZATION_NAME = 3;
+    private static final int COLUMN_BALANCE = 4;
 
     private static final String[] REPORT_HEADERS = {
             "#",
             "ID",
             "Created",
-            "UserName",
-            "FirstName",
-            "LastName",
-            "E-Mail",
+            "Organization Name",
             "Balance",
     };
 
-    public ByteArrayInputStream reportToExcel(List<UserDto> users) {
+    public ByteArrayInputStream reportToExcel(List<OrganizationDto> organizations) {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("users");
+            Sheet sheet = workbook.createSheet("organizations");
 
-            final String title = "Admin User Report";
+            final String title = "Admin Corporate Report";
 
             // Title
             Row titleRow = sheet.createRow(0);
@@ -57,36 +50,27 @@ public class UserReportGenerator {
 
             int rowIdx = 2;
 
-            for (UserDto user : users) {
+            for (OrganizationDto organization : organizations) {
                 Row row = sheet.createRow(rowIdx);
 
                 // # Number
                 row.createCell(COLUMN_LINE_NUMBER).setCellValue(rowIdx - 1);
 
                 //  Id
-                row.createCell(COLUMN_ID).setCellValue(user.getId());
+                row.createCell(COLUMN_ID).setCellValue(organization.getId());
 
                 //  Date
-                String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(user.getCreatedDate());
+                String s = new SimpleDateFormat("dd-MMM-yyyy HH:mm").format(organization.getCreatedDate());
                 row.createCell(COLUMN_CREATED).setCellValue(s);
 
-                // UserName
-                row.createCell(COLUMN_USERNAME).setCellValue(user.getUsername());
-
-                // First Name
-                row.createCell(COLUMN_FIRSTNAME).setCellValue(user.getFirstName());
-
-                // Last Name
-                row.createCell(COLUMN_LASTNAME).setCellValue(user.getLastName());
-
-                // E-Mail
-                row.createCell(COLUMN_EMAIL).setCellValue(user.getEmail());
+                // Organization Name
+                row.createCell(COLUMN_ORGANIZATION_NAME).setCellValue(organization.getOrganizationName());
 
                 // Balance
-                if (user.getBalance() == null) {
+                if (organization.getBalance() == null) {
                     row.createCell(COLUMN_BALANCE).setCellValue(0);
                 } else {
-                    row.createCell(COLUMN_BALANCE).setCellValue(user.getBalance().doubleValue());
+                    row.createCell(COLUMN_BALANCE).setCellValue(organization.getBalance().doubleValue());
                 }
 
                 rowIdx++;

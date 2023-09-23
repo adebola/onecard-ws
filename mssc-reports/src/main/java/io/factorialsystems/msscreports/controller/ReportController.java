@@ -3,7 +3,6 @@ package io.factorialsystems.msscreports.controller;
 import io.factorialsystems.msscreports.dto.*;
 import io.factorialsystems.msscreports.service.ReportService;
 import io.factorialsystems.msscreports.utils.K;
-import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -77,7 +76,6 @@ public class ReportController {
 
     @PostMapping("/recharge")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
-    @Timed(value = "recharge_report", description = "Time to run Recharge Report")
     public ResponseEntity<Resource> runRechargeReport(@Valid @RequestBody RechargeReportRequestDto dto) {
         final String filename = String.format("recharge-%s.xlsx", UUID.randomUUID());
 
@@ -91,7 +89,6 @@ public class ReportController {
 
     @PostMapping("/wallet")
     @PreAuthorize("hasRole('ROLE_Onecard_Admin')")
-    @Timed(value = "wallet_report", description = "Time to run Wallet Report")
     public ResponseEntity<Resource> runWalletReport(@Valid @RequestBody WalletReportRequestDto dto) {
         final String filename = String.format("wallet-%s.xlsx", UUID.randomUUID());
 
@@ -105,7 +102,6 @@ public class ReportController {
 
     @PostMapping("/audit")
     @ResponseStatus(HttpStatus.OK)
-    @Timed(value = "audit_report", description = "Time to run Audit Report")
     @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Audit', 'Onecard_Revenue_Assurance')")
     public ResponseEntity<Resource> runAuditReport(@Valid @RequestBody AuditSearchDto auditSearchDto) {
         final String filename = String.format("audit-%s.xlsx", UUID.randomUUID());
@@ -119,7 +115,6 @@ public class ReportController {
 
     @GetMapping("/users")
     @ResponseStatus(HttpStatus.OK)
-    @Timed(value = "ruser_report", description = "Time to run User Report")
     @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Audit', 'Onecard_Revenue_Assurance')")
     public ResponseEntity<Resource> runUserReport() {
         final String filename = "all-user-report.xlsx";
@@ -131,10 +126,22 @@ public class ReportController {
                 .body(reportService.runUserReport());
     }
 
+    @GetMapping("/corporates")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Audit', 'Onecard_Revenue_Assurance')")
+    public ResponseEntity<Resource> runCorporateUserReport() {
+        final String filename = "all-corporate-report.xlsx";
+        log.info("Running All Corporate Report");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType(EXCEL_MEDIA_TYPE))
+                .body(reportService.runCorporateUserReport());
+    }
+
 
     @GetMapping("/provider-balances")
     @ResponseStatus(HttpStatus.OK)
-    @Timed(value = "provider_balance_report", description = "Time to run Provider Balance Report")
     @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Audit', 'Onecard_Revenue_Assurance')")
     public ResponseEntity<Resource> runProviderBalanceReport() {
         final String filename = "provider-balance-report.xlsx";
@@ -148,7 +155,6 @@ public class ReportController {
 
     @PostMapping("/transaction")
     @ResponseStatus(HttpStatus.OK)
-    @Timed(value = "transaction_report", description = "Time to run Transaction Report")
     @PreAuthorize("hasAnyRole('Onecard_Admin', 'Onecard_Audit', 'Onecard_Revenue_Assurance')")
     public ResponseEntity<Resource> runTransactionReport(@Valid @RequestBody TransactionSearchRequestDto dto) {
         final String filename = "transaction-report.xlsx";

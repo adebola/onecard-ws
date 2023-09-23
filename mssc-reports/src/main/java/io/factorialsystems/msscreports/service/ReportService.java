@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,6 +37,7 @@ public class ReportService {
     private final UserReportGenerator userReportGenerator;
     private final AuditReportGenerator auditReportGenerator;
     private final WalletReportGenerator walletReportGenerator;
+    private final CorporateUserReportGenerator corporateUserReportGenerator;
     private final RechargeReportGenerator rechargeReportGenerator;
     private final TransactionReportGenerator transactionReportGenerator;
     private final ProviderBalanceReportGenerator providerBalanceReportGenerator;
@@ -164,6 +166,34 @@ public class ReportService {
         }).collect(Collectors.toList());
 
         return new InputStreamResource(userReportGenerator.reportToExcel(collect));
+    }
+
+    public InputStreamResource runCorporateUserReport() {
+        final PagedDto<OrganizationDto> organizations = userClient.getOrganizations(1, 10_000);
+        if (organizations != null && organizations.getTotalSize() > 0) {
+
+            final List<String> ids = organizations.getList()
+                    .stream()
+                    .map(OrganizationDto::getId)
+                    .collect(Collectors.toList());
+
+            final List<AccountBalanceDto> balances = accountClient.getBalances(ids);
+
+            final List<OrganizationDto> collect = organizations.getList()
+                    .stream()
+                    .peek(o -> {
+                        final Optional<AccountBalanceDto> first = balances
+                                .stream()
+                                .filter(x -> x.getUserId().equals(o.getId()))
+                                .findFirst();
+
+                        first.ifPresent(a -> o.setBalance(a.getBalance()));
+                    }).collect(Collectors.toList());
+
+            return new InputStreamResource(corporateUserReportGenerator.reportToExcel(collect));
+        }
+
+        return new InputStreamResource(new ByteArrayInputStream(new byte[0]));
     }
 
     private PagedDto<ReportDto> createDto(Page<Report> reports) {
