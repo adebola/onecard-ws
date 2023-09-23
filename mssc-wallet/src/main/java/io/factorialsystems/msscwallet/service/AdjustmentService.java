@@ -132,7 +132,7 @@ public class AdjustmentService {
             return AdjustmentResponseDto.builder()
                     .id(id)
                     .status(200)
-                    .balance(dto.getAmount())
+                    .balance(newBalance)
                     .message("Success")
                     .build();
         }

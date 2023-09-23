@@ -66,7 +66,7 @@ class AdjustmentServiceTest {
         final String accountId = "275745a4-8fb9-46f6-ac80-ff245bc62fcb";
         final String userName = "debug_test";
         final String accessToken = getUserToken(id);
-        final BigDecimal modify = new BigDecimal(41);
+        final BigDecimal modify = new BigDecimal(10);
 
         try (MockedStatic<Security> security = Mockito.mockStatic(Security.class)) {
             security.when(Security::getUserId).thenReturn(id);
