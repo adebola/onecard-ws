@@ -14,7 +14,7 @@
     </resultMap>
 
     <sql id="column_List">
-      id, adjustment_value, fund_wallet_request_id, adjusted_on, adjusted_by, account_id, adjustment_narrative
+      id, adjusted_value, previous_value, fund_wallet_request_id, adjusted_on, adjusted_by, account_id, narrative
     </sql>
 
     <insert id="save" parameterType="io.factorialsystems.msscwallet.domain.Adjustment">
@@ -22,4 +22,10 @@
             (#{id, jdbcType=VARCHAR}, #{fundWalletRequestId, jdbcType=VARCHAR},  #{adjustedValue, jdbcType=DECIMAL}, #{previousValue, jdbcType=DECIMAL},
              #{adjustedBy, jdbcType=VARCHAR}, #{accountId, jdbcType=VARCHAR}, #{narrative, jdbcType=VARCHAR})
     </insert>
+
+    <select id="findAll" resultMap="adjustResultMap">
+        select
+        <include refid="column_List"/>
+        from adjustments
+    </select>
 </mapper>

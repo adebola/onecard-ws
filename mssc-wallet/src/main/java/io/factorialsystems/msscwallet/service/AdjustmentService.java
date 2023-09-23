@@ -38,19 +38,30 @@ public class AdjustmentService {
 
     @Transactional
     public AdjustmentResponseDto adjustBalance(AdjustmentRequestDto dto) {
+
+        if (dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException(String.format("Adjustment Amount must be greater than Zero, Value submitted %.2f", dto.getAmount()));
+        }
+
         Account account = accountMapper.findAccountById(dto.getAccountId());
 
         if (account != null) {
             BigDecimal oldBalance = account.getBalance();
 
             // Change the Account Balance
-            account.setBalance(dto.getAmount());
+            final BigDecimal newBalance = oldBalance.subtract(dto.getAmount());
+
+            if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+                throw new RuntimeException("Adjustment will take User Account Balance into negative");
+            }
+
+            account.setBalance(newBalance);
             accountMapper.changeBalance(account);
 
-            BigDecimal delta = dto.getAmount().subtract(oldBalance);
+            //BigDecimal delta = dto.getAmount().subtract(oldBalance);
 
             // Save the corresponding FundWallet request
-            final String requestId = AccountService.saveFundWalletRequest(delta,
+            final String requestId = AccountService.saveFundWalletRequest(dto.getAmount(),
                     Constants.WALLET_ONECARD_ADJUSTED,
                     account.getUserId(),
                     Security.getUserName(),
@@ -71,20 +82,20 @@ public class AdjustmentService {
 
             adjustmentMapper.save(adjustment);
 
-            int status;
-            final String ledgerMessage = String.format("User Account Adjusted by %.2f by %s", delta, Security.getUserName());
+//            int status;
+            final String ledgerMessage = String.format("User Account Adjusted by %.2f by %s", dto.getAmount(), Security.getUserName());
 
-            if (delta.compareTo(BigDecimal.ZERO) < 0) {
-                status = AccountService.LEDGER_OPERATION_SYSTEM_DEBIT;
-            } else {
-                status = AccountService.LEDGER_OPERATION_SYSTEM_CREDIT;
-            }
+//            if (delta.compareTo(BigDecimal.ZERO) < 0) {
+//                status = AccountService.LEDGER_OPERATION_SYSTEM_DEBIT;
+//            } else {
+//                status = AccountService.LEDGER_OPERATION_SYSTEM_CREDIT;
+//            }
 
             AccountLedgerEntry entry = AccountLedgerEntry.builder()
                     .id(UUID.randomUUID().toString())
                     .accountId(account.getId())
-                    .operation(status)
-                    .amount(delta.abs())
+                    .operation(AccountService.LEDGER_OPERATION_SYSTEM_DEBIT)
+                    .amount(dto.getAmount())
                     .description(ledgerMessage)
                     .build();
 
@@ -108,7 +119,11 @@ public class AdjustmentService {
             }
 
             // Save the Transaction
-            AccountService.saveTransaction(delta, dto.getAccountId(), Constants.ACCOUNT_BALANCE_ADJUSTED);
+            AccountService.saveTransaction(
+                    dto.getAmount().multiply(BigDecimal.valueOf(-1)),
+                    dto.getAccountId(),
+                    Constants.ACCOUNT_BALANCE_ADJUSTED
+            );
 
             // Save Audit
             final String auditMessage = String.format("Account Balance adjusted from %.2f to %.2f by %s", oldBalance, dto.getAmount(), Security.getUserName());

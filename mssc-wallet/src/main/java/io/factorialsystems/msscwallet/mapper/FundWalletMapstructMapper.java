@@ -16,7 +16,7 @@ public interface FundWalletMapstructMapper {
 
     @Mappings({
             @Mapping(source = "amount", target = "amount"),
-            @Mapping(source = "redirectUrl", target = "redirectUrl")
+            @Mapping(source = "redirectUrl", target = "redirectUrl"),
     })
     FundWalletRequest dtoToWalletRequest(FundWalletRequestDto dto);
 

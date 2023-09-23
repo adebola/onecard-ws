@@ -828,9 +828,17 @@ public class AccountService {
 
         final String id = UUID.randomUUID().toString();
 
+        final BigDecimal value;
+
+        if (fundType == Constants.WALLET_ONECARD_ADJUSTED) {
+            value = amount.multiply(new BigDecimal(-1));
+        } else {
+            value = amount;
+        }
+
         FundWalletRequest request = FundWalletRequest.builder()
                 .id(id)
-                .amount(amount)
+                .amount(value)
                 .fundType(fundType)
                 .paymentVerified(true)
                 .closed(true)
