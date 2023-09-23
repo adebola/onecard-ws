@@ -44,6 +44,19 @@
         from accounts
     </select>
 
+
+    <select id="findBalances" resultMap="shortAccountResultMap">
+        select
+        <include refid="short_column_list"/>
+        from accounts
+        <if test="ids != null and ids.size > 0">
+            where user_id in
+            <foreach item="item" index="index" collection="ids" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
     <select id="findAccountById" parameterType="java.lang.String" resultMap="accountResultMap">
         select
         <include refid="Column_List"/>

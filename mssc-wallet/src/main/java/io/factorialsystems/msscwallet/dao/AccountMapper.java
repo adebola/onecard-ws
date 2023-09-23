@@ -4,6 +4,7 @@ import com.github.pagehelper.Page;
 import io.factorialsystems.msscwallet.domain.Account;
 import io.factorialsystems.msscwallet.dto.AccountBalanceDto;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
@@ -44,5 +45,7 @@ public interface AccountMapper {
     void changeDailyLimit(Account account);
 
     List<AccountBalanceDto> findUserBalances();
+
+    List<AccountBalanceDto> findBalances(@Param("ids") List<String> ids);
 }
 

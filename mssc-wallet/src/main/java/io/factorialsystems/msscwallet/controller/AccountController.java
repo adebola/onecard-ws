@@ -67,10 +67,17 @@ public class AccountController {
     }
 
     @GetMapping("/balances")
-    @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('Onecard_Admin')")
     public ResponseEntity<List<AccountBalanceDto>> getUsersBalances() {
         return ResponseEntity.ok(accountService.getUserBalances());
+    }
+
+
+    @PostMapping("/balances")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasRole('Onecard_Admin')")
+    public ResponseEntity<List<AccountBalanceDto>> getBalances(@RequestBody List<String> ids) {
+        return ResponseEntity.ok(accountService.getBalances(ids));
     }
 
     @PutMapping("/refund/{id}")

@@ -872,6 +872,10 @@ public class AccountService {
         return accountMapper.findUserBalances();
     }
 
+    public List<AccountBalanceDto> getBalances(List<String> ids) {
+        return accountMapper.findBalances(ids);
+    }
+
     public static void saveTransaction(BigDecimal amount, String accountId, String narrative) {
         Transaction transaction = Transaction.builder()
                 .accountId(accountId)
