@@ -1,12 +1,12 @@
 package io.factorialsystems.msscprovider.service.file;
 
-import io.factorialsystems.msscprovider.config.ApplicationContextProvider;
 import io.factorialsystems.msscprovider.dto.MailMessageDto;
 import io.factorialsystems.msscprovider.dto.recharge.IndividualRequestDto;
 import io.factorialsystems.msscprovider.exception.FileFormatException;
 import io.factorialsystems.msscprovider.service.MailService;
 import io.factorialsystems.msscprovider.utils.Constants;
 import io.factorialsystems.msscprovider.utils.ProviderSecurity;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -29,7 +29,9 @@ import java.util.List;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ExcelReader {
+    private final MailService mailService;
 
     private static final int SERVICE_CODE_COLUMN = 1;
     private static final String SERVICE_CODE_TITLE = "ServiceCode";
@@ -69,7 +71,7 @@ public class ExcelReader {
             if (index > 0) { // Ignore the Header
                 // Check for Empty Cell
                 if (row == null || row.getCell(0) == null || row.getCell(0).getCellType() == CellType.BLANK) {
-                    log.warn("Recharge Upload File Premature Read Exit after NULL Row/Cell encountered, {} rows read", index);
+                    log.warn("Recharge Upload File Premature Read Exit after NULL Row/Cell encountered, {} rows read", index - 1);
                     break;
                 }
 
@@ -133,7 +135,7 @@ public class ExcelReader {
             log.error(errorMessage);
 
             //FileSystemResource fileSystemResource = new FileSystemResource(uploadFile.getFile());
-            MailService mailService = ApplicationContextProvider.getBean(MailService.class);
+            //MailService mailService = ApplicationContextProvider.getBean(MailService.class);
 
             MailMessageDto mailMessageDto = MailMessageDto.builder()
                     .body(errorMessage)
