@@ -32,9 +32,9 @@ public interface NewBulkRechargeMapstructMapper {
             @Mapping(source = "autoRequestId", target = "autoRequestId"),
             @Mapping(target = "recipients", ignore = true)
     })
-    NewBulkRechargeRequestDto rechargeToRechargDto(NewBulkRechargeRequest request);
+    NewBulkRechargeRequestDto rechargeToRechargeDto(NewBulkRechargeRequest request);
 
-    List<NewBulkRechargeRequestDto> listRechargeToRechargDto(List<NewBulkRechargeRequest> requests);
+    List<NewBulkRechargeRequestDto> listRechargeToRechargeDto(List<NewBulkRechargeRequest> requests);
 
     @Mappings({
             @Mapping(source = "productId", target = "productId"),

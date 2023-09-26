@@ -74,6 +74,26 @@ public class UtilsTest {
         log.info(String.format("Month of Year %d", monthOfYear));
     }
 
+    @Test
+    void flipBits() {
+        long x = 3L;
+
+        log.info(x>>1);
+        log.info(x<<1);
+        log.info(x & 1);
+        log.info(~x);
+
+        long b = 0L;
+        while (x!=0){
+            b|=( x &1);
+            x>>>=1;
+            b<<=1;
+        }
+
+        log.info(b);
+
+    }
+
 //    @Test
 //    public void mapTest() {
 //        Student student = new Student();

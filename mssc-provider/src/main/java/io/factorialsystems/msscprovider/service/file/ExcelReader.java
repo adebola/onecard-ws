@@ -13,6 +13,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -60,12 +61,18 @@ public class ExcelReader {
 
     private List<IndividualRequestDto> processSheet(Sheet sheet) {
 
-        List<IndividualRequestDto> individualRequestDtos = new ArrayList<>();
+        List<IndividualRequestDto> individualRequests = new ArrayList<>();
 
         int index = 0;
 
         for (Row row : sheet) {
             if (index > 0) { // Ignore the Header
+                // Check for Empty Cell
+                if (row == null || row.getCell(0) == null || row.getCell(0).getCellType() == CellType.BLANK) {
+                    log.warn("Recharge Upload File Premature Read Exit after NULL Row/Cell encountered, {} rows read", index);
+                    break;
+                }
+
                 IndividualRequestDto dto = new IndividualRequestDto();
 
                 for (Cell cell : row) {
@@ -95,13 +102,13 @@ public class ExcelReader {
                     }
                 }
 
-                individualRequestDtos.add(dto);
+                individualRequests.add(dto);
             }
 
             index++;
         }
 
-        return individualRequestDtos;
+        return individualRequests;
     }
 
     @SneakyThrows
@@ -134,10 +141,10 @@ public class ExcelReader {
                     .subject("Bulk Recharge File Upload Error")
                     .build();
 
-            mailService.sendMailWithAttachment(uploadFile.getFile(), mailMessageDto, Constants.MULTIPART_REQUESTPART_NAME,  Constants.EXCEL_CONTENT_TYPE);
+            mailService.sendMailWithAttachment(uploadFile.getFile(), mailMessageDto, Constants.MULTIPART_REQUESTPART_NAME, Constants.EXCEL_CONTENT_TYPE);
             throw new FileFormatException(errorMessage);
         } finally {
-             uploadFile.getFile().delete();
+            uploadFile.getFile().delete();
         }
     }
 
@@ -174,7 +181,7 @@ public class ExcelReader {
 
         if (cost > 0) {
             return BigDecimal.valueOf(cost);
-        } else if (!mandatory){
+        } else if (!mandatory) {
             return null;
         } else {
             throw new RuntimeException("Invalid or No Value in Numeric Field");

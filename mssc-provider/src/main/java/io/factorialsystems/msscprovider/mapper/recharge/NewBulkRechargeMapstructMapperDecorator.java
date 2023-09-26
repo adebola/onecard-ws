@@ -43,13 +43,13 @@ public class NewBulkRechargeMapstructMapperDecorator implements NewBulkRechargeM
     }
 
     @Override
-    public NewBulkRechargeRequestDto rechargeToRechargDto(NewBulkRechargeRequest request) {
-        return newBulkRechargeMapstructMapper.rechargeToRechargDto(request);
+    public NewBulkRechargeRequestDto rechargeToRechargeDto(NewBulkRechargeRequest request) {
+        return newBulkRechargeMapstructMapper.rechargeToRechargeDto(request);
     }
 
     @Override
-    public List<NewBulkRechargeRequestDto> listRechargeToRechargDto(List<NewBulkRechargeRequest> requests) {
-        return newBulkRechargeMapstructMapper.listRechargeToRechargDto(requests);
+    public List<NewBulkRechargeRequestDto> listRechargeToRechargeDto(List<NewBulkRechargeRequest> requests) {
+        return newBulkRechargeMapstructMapper.listRechargeToRechargeDto(requests);
     }
 
     @Override

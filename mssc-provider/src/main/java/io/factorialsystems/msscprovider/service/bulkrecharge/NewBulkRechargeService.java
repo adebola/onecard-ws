@@ -547,7 +547,7 @@ public class NewBulkRechargeService {
         pagedDto.setPageNumber(requests.getPageNum());
         pagedDto.setPageSize(requests.getPageSize());
         pagedDto.setPages(requests.getPages());
-        pagedDto.setList(mapper.listRechargeToRechargDto(requests.getResult()));
+        pagedDto.setList(mapper.listRechargeToRechargeDto(requests.getResult()));
         return pagedDto;
     }
 
