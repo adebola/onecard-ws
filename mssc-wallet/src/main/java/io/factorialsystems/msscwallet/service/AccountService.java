@@ -301,7 +301,7 @@ public class AccountService {
             fundWalletMapper.update(request);
 
             saveTransaction(request.getAmount(), account.getId(), Constants.ACCOUNT_WALLET_SELF_FUNDED);
-            saveFundWalletRequest(request.getAmount(), Constants.WALLET_SELF_FUNDED, request.getUserId(), account.getName(), "User Self Funded Wallet");
+            //saveFundWalletRequest(request.getAmount(), Constants.WALLET_SELF_FUNDED, request.getUserId(), account.getName(), "User Self Funded Wallet");
 
             AccountLedgerEntry entry = AccountLedgerEntry.builder()
                     .accountId(account.getId())
@@ -638,7 +638,7 @@ public class AccountService {
                 .accountId(account.getId())
                 .operation(LEDGER_OPERATION_SYSTEM_CREDIT)
                 .amount(request.getAmount())
-                .description(auditMessage.length() > 255 ? auditMessage.substring(0, 255) : auditMessage)
+                .description(auditMessage.length() > 250 ? auditMessage.substring(0, 250) : auditMessage)
                 .build();
 
         accountLedgerMapper.save(entry);
