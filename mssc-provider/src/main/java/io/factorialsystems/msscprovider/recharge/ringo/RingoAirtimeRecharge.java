@@ -64,6 +64,9 @@ public class RingoAirtimeRecharge implements Recharge, ParameterCheck, Balance, 
 
             String errorMessage = null;
 
+            final String prettyJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(airtimeRequest);
+            log.error("\n{}", prettyJson);
+
             if (response != null && response.getMessage() != null) {
                 errorMessage = String.format("Ringo Airtime Recharge failure for %s cost %d, Reason: %s", airtimeRequest.getMsisdn(), cost, response.getMessage());
                 log.error(errorMessage);

@@ -1,5 +1,8 @@
 package io.factorialsystems.msscprovider.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.factorialsystems.msscprovider.recharge.ringo.request.RingoAirtimeRequest;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
 
@@ -15,11 +18,31 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.UUID;
+import java.util.logging.Logger;
 
 @CommonsLog
+//@Slf4j
 public class UtilsTest {
     final String ALGORITHM = "PBEWithMD5AndDES";
     final int ITERATION_COUNT = 1000;
+
+    @Test
+    public void prettyPrint() throws JsonProcessingException {
+        Logger logger = Logger.getLogger(UtilsTest.class.getName());
+        RingoAirtimeRequest airtimeRequest = RingoAirtimeRequest.builder()
+                .amount(String.valueOf("1000"))
+                .request_id(UUID.randomUUID().toString())
+                .msisdn("08012345678")
+                .serviceCode("ADA")
+                .product_id("MD1")
+                .build();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        final String prettyJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(airtimeRequest);
+        final String s = String.format("\n%s", prettyJson);
+        logger.info(s);
+    }
 
     @Test
     public void testDate() {

@@ -74,6 +74,9 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
                         .build();
             }
 
+            final String prettyJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataRequest);
+            log.error("\n{}", prettyJson);
+
             if (response != null && response.getMessage() != null) {
                 log.error(String.format("Ringo data Recharge for (%s) failure Plan (%s) Message (%s)",
                         request.getRecipient(), request.getProductId(), response.getMessage()));

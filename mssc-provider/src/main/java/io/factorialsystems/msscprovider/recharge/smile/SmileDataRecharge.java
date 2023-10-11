@@ -74,8 +74,8 @@ public class SmileDataRecharge implements Recharge, ParameterCheck, Balance, Dat
         long accountNumber = 0;
 
         try {
-            accountNumber = Long.parseLong(request.getRecipient());
-            productCode = Integer.parseInt(request.getProductId());
+            accountNumber = Long.parseLong(request.getRecipient().trim());
+            productCode = Integer.parseInt(request.getProductId().trim());
         } catch (NumberFormatException nfe) {
             log.error(nfe.getMessage());
             log.error("Invalid Type for Smile Account {} of Product {} for Request {}", request.getRecipient(), request.getProductId(), request.getId());

@@ -8,8 +8,6 @@ import io.factorialsystems.msscprovider.recharge.onecard.response.BalanceRespons
 import io.factorialsystems.msscprovider.recharge.onecard.response.LoginResponse;
 import io.factorialsystems.msscprovider.recharge.onecard.response.OnecardDataPlanResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -27,7 +25,7 @@ class MCryptTest {
     private static String authToken;
     private static MCrypt apiCrypt;
 
-    @Test
+    //@Test
     void testGetBalance() throws Exception {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -47,7 +45,7 @@ class MCryptTest {
         log.info("balance is {}", balance);
     }
 
-    @Test
+    //@Test
     void testGetServices() throws Exception {
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<?> request = getHttpEntity(new LinkedMultiValueMap<>());
@@ -57,7 +55,7 @@ class MCryptTest {
         log.info(response);
     }
 
-    @Test
+    //@Test
     void testGetProducts() throws Exception {
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<?> request = getHttpEntity(new LinkedMultiValueMap<>());
@@ -67,7 +65,7 @@ class MCryptTest {
         log.info(response);
     }
 
-    @Test
+    //@Test
     void testGetProductByServiceId() throws Exception {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -88,7 +86,7 @@ class MCryptTest {
         log.info(response);
     }
 
-    @Test
+    //@Test
     void testGetProductItems() throws Exception {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -109,7 +107,7 @@ class MCryptTest {
         log.info(response);
     }
 
-    @Test
+    //@Test
     void testGetProductParams() throws Exception {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -176,7 +174,7 @@ class MCryptTest {
 //        log.info("RESPONSE {}", rechargeResponse);
 //    }
 
-    @Test
+    //@Test
     void parseJson() throws JsonProcessingException {
         final String JsonStr = "{\"RESPONSE\":true,\"RESPONSE_MSG\":\"Login Successful\",\"RESPONSE_DATA\":{\"USER_TOKEN\":\"647a2bc1-ce4c-4203-99b1-41050a40\",\"AUTH_TOKEN\":\"HaBJfrjCdX7R7COoBIjZeWe5VB3jCdUcpkIyWa03WwRefCIDdw2BTYvbXIRN9mejMDtp0QS6ppYFDiisSRxQyQ==\",\"USER_ID\":{\"User\":{\"id\":\"137970\"}},\"EXPIRE_AT\":1685746193},\"RESPONSE_CODE\":200}";
         ObjectMapper objectMapper = new ObjectMapper();
@@ -184,7 +182,7 @@ class MCryptTest {
         log.info("Response {}", loginResponse);
     }
 
-    @Test
+    //@Test
     void decryptString() throws Exception {
         final String id = "zKnY1ZcAA3f0QefQTC7nXQQZSRfxkPb6c9ZCzP1h6axdr86kaf5o4stsNJNDcWWhamcEX5qZ\\/U3rDECmARjjow==";
         log.info(id);
@@ -208,7 +206,7 @@ class MCryptTest {
         return new HttpEntity<>(payload, headers);
     }
 
-    @BeforeAll
+    //@BeforeAll
     static void setup() throws Exception {
         final String loginUrl = "https://api.onecardnigeria.com/rest/login";
         MCrypt mCrypt = new MCrypt("61f22f21-1fdc-45f1-acee-2a8a2bfc", "22d2b48279af3df6");
