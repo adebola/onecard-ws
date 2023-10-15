@@ -1,3 +1,28 @@
+DELIMITER $$
+CREATE PROCEDURE sp_GetActiveAccountByUserIdForUpdate(IN userId varchar(64))
+BEGIN
+    DECLARE chargeAccount varchar(64);
+
+    IF EXISTS(SELECT 1 from accounts where user_id = userId and deleted = FALSE)  THEN
+        select charge_account from accounts where user_id = userId and deleted = FALSE into chargeAccount;
+        IF (chargeAccount IS NULL) THEN
+            SELECT id, name, balance, user_id, account_type, activated, createdAt, createdBy, charge_account, web_hook, kyc_verified, daily_limit
+            FROM accounts
+            WHERE user_id = userId
+              AND deleted = FALSE
+                FOR UPDATE;
+        ELSE
+            SELECT id, name, balance, user_id, account_type, activated, createdAt, createdBy, charge_account, web_hook, kyc_verified, daily_limit
+            FROM accounts
+            WHERE id = chargeAccount
+                FOR UPDATE;
+        END IF;
+    ELSE
+        SELECT 1 from dual WHERE false;
+    END IF;
+END$$
+DELIMITER ;
+
 create table accounts (
     id VARCHAR(64) NOT NULL,
     name VARCHAR(128) NOT NULL,

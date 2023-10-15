@@ -1,5 +1,6 @@
 package io.factorialsystems.msscwallet.dao;
 
+import io.factorialsystems.msscwallet.domain.Account;
 import io.factorialsystems.msscwallet.dto.AccountBalanceDto;
 import lombok.extern.apachecommons.CommonsLog;
 import org.junit.jupiter.api.Test;
@@ -7,9 +8,11 @@ import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @MybatisTest
@@ -50,4 +53,52 @@ class AccountMapperTest {
         assertFalse(balances.isEmpty());
         log.info(balances.size());
     }
+
+    @Test
+    void findActiveAccountByUserIdForUpdate_InvalidUser() {
+        final Account account = accountMapper.findActiveAccountByUserIdForUpdate("InvalidUser");
+        assertNull(account);
+    }
+
+    @Test
+    void findActiveAccountByUserIdForUpdate_NoChargeAccountUser() {
+        final String userId = "91b1d158-01fa-4f9f-9634-23fcfe72f76a";
+        final Account account = accountMapper.findActiveAccountByUserIdForUpdate(userId);
+        assertNotNull(account);
+
+        assertThat(account.getName()).isEqualTo("foluke");
+        log.info(account);
+
+        final BigDecimal balance = account.getBalance();
+        final BigDecimal add = balance.add(BigDecimal.valueOf(1000));
+        account.setBalance(add);
+        accountMapper.changeBalance(account);
+
+        final Account accountByUserId = accountMapper.findAccountByUserId(userId);
+
+        log.info(accountByUserId);
+        assertThat(accountByUserId.getBalance()).isEqualTo(add);
+    }
+
+    @Test
+    void findActiveAccountByUserIdForUpdate_ChargeAccountUser() {
+        final String id = "275745a4-8fb9-46f6-ac80-ff245bc62fcb";
+        final String userId = "3ad67afe-77e7-11ec-825f-5c5181925b12";
+        final Account account = accountMapper.findActiveAccountByUserIdForUpdate(userId);
+        assertNotNull(account);
+
+        assertThat(account.getId()).isEqualTo(id);
+        assertThat(account.getName()).isEqualTo("foluke");
+        log.info(account);
+    }
+
+    @Test
+    void lockAccount() {
+        final String accountId = "275745a4-8fb9-46f6-ac80-ff245bc62fcb";
+        final Account account = accountMapper.findAccountByIdForUpdate(accountId);
+        assertNotNull(account);
+        log.info(account);
+    }
+
+
 }

@@ -263,24 +263,24 @@ public class AccountService {
     // 2nd Leg of Self Wallet Funding Request after the Payment has been made
     // through the Payment Gateway
     @Transactional
-    public MessageDto fundWallet(String id) {
-        FundWalletRequest request = fundWalletMapper.findById(id);
+    public MessageDto fundWallet(String txId) {
+        FundWalletRequest request = fundWalletMapper.findById(txId);
 
         if (request == null) {
             log.info("Unable to find FundWalletRequest Sleeping...........");
 
             try {
                 Thread.sleep(500);
-                request = Optional.ofNullable(fundWalletMapper.findById(id))
-                        .orElseThrow(() -> new ResourceNotFoundException("FundWalletRequest", "id",id ));
+                request = Optional.ofNullable(fundWalletMapper.findById(txId))
+                        .orElseThrow(() -> new ResourceNotFoundException("FundWalletRequest", "id",txId ));
             } catch (InterruptedException ie) {
                 log.error(ie.getMessage());
-                return new MessageDto(String.format("Unknown Error Funding Wallet: %s", id));
+                return new MessageDto(String.format("Unknown Error Funding Wallet: %s", txId));
             }
         }
 
         if (request.getClosed()) {
-            final String errorMessage = String.format("Request (%s) has been fulfilled", id);
+            final String errorMessage = String.format("Request (%s) has been fulfilled", txId);
             log.error(errorMessage);
             return new MessageDto(errorMessage);
         }
@@ -288,20 +288,19 @@ public class AccountService {
         if (request.getPaymentId() != null && checkPayment(request.getPaymentId())) {
             final String userId = request.getUserId();
 
-            Account account = Optional.ofNullable(getActiveUserAccount(userId))
+            Account account = Optional.ofNullable(accountMapper.findActiveAccountByUserIdForUpdate(userId))
                     .orElseThrow(() -> new ResourceNotFoundException("ActiveUserAccountByUserId", "id", userId));
 
             BigDecimal newBalance = account.getBalance().add(request.getAmount());
             account.setBalance(newBalance);
             accountMapper.changeBalance(account);
-            log.info(String.format("Completing Fund Wallet Request %s Added %.2f, New Balance %.2f", id, request.getAmount(), account.getBalance()));
+            log.info(String.format("Completing Fund Wallet Request %s Added %.2f, New Balance %.2f", txId, request.getAmount(), account.getBalance()));
 
             request.setClosed(true);
             request.setPaymentVerified(true);
             fundWalletMapper.update(request);
 
             saveTransaction(request.getAmount(), account.getId(), Constants.ACCOUNT_WALLET_SELF_FUNDED);
-            //saveFundWalletRequest(request.getAmount(), Constants.WALLET_SELF_FUNDED, request.getUserId(), account.getName(), "User Self Funded Wallet");
 
             AccountLedgerEntry entry = AccountLedgerEntry.builder()
                     .accountId(account.getId())
@@ -333,7 +332,7 @@ public class AccountService {
             return new MessageDto("Wallet Successfully Funded");
         }
 
-        final String errorMessage = String.format("Request (%s) No Payment Made User %s", id, Security.getUserName());
+        final String errorMessage = String.format("Request (%s) No Payment Made User %s", txId, Security.getUserName());
         log.error(errorMessage);
 
         return new MessageDto(errorMessage);
@@ -347,19 +346,18 @@ public class AccountService {
             throw new RuntimeException(String.format("Unable to Transfer Amount <= 50 : %.2f", dto.getAmount()));
         }
 
-        if (dto.getRecipient().equals(Security.getUserId())) {
+        Account toAccount = Optional.ofNullable(accountMapper.findAccountByUserIdForUpdate(dto.getRecipient()))
+                .orElseThrow(() -> new ResourceNotFoundException("To Account", "id", dto.getRecipient()));
+
+        Account fromAccount = Optional.ofNullable(accountMapper.findAccountByUserIdForUpdate(Security.getUserId()))
+                .orElseThrow(() -> new ResourceNotFoundException("From Account", "id", Security.getUserId()));
+
+        if (toAccount.getId().equals(fromAccount.getId())) {
             throw new RuntimeException(String.format("Cannot transfer from self to Self, From %s to %s", Security.getUserId(), dto.getRecipient()));
         }
 
-        Account toAccount = Optional.ofNullable(accountMapper.findAccountByUserIdOrUserName(dto.getRecipient()))
-                .orElseThrow(() -> new ResourceNotFoundException("To Account", "id", dto.getRecipient()));
-
-        Account fromAccount = Optional.ofNullable(accountMapper.findAccountByUserId(Security.getUserId()))
-                .orElseThrow(() -> new ResourceNotFoundException("From Account", "id", Security.getUserId()));
-
         if (fromAccount.getBalance().compareTo(dto.getAmount()) > 0) {
             // Load Accounts from User Module
-
             SimpleUserDto toSimpleDto = userClient.getUserById(toAccount.getUserId());
 
             if (toSimpleDto == null) {
@@ -437,7 +435,7 @@ public class AccountService {
                     .message(message)
                     .build();
         } else {
-            final String errorMessage = String.format("Insufficient Funds to transfer %.2f current balance %.2f", dto.getAmount(), fromAccount.getBalance());
+            final String errorMessage = String.format("Insufficient Funds to transfer %.2f current balance %.2f, Please note that if your are linked to Corporate account, your personal account will be deducted", dto.getAmount(), fromAccount.getBalance());
             log.error(errorMessage);
 
             return WalletResponseDto.builder()
@@ -452,7 +450,7 @@ public class AccountService {
     @SneakyThrows
     @Transactional
     public void asyncRefundWallet(AsyncRefundRequestDto request) {
-        Account account = Optional.ofNullable(accountMapper.findAccountByUserId(request.getUserId()))
+        Account account = Optional.ofNullable(accountMapper.findActiveAccountByUserIdForUpdate(request.getUserId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", request.getUserId()));
 
         BigDecimal newBalance = account.getBalance().add(request.getAmount());
@@ -507,7 +505,7 @@ public class AccountService {
     // Admin initiated manual Wallet refund request
     @Transactional
     public RefundResponseDto refundWallet(String id, RefundRequestDto dto) {
-        Account account = Optional.ofNullable(accountMapper.findAccountByUserId(id))
+        Account account = Optional.ofNullable(accountMapper.findActiveAccountByUserIdForUpdate(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
 
         BigDecimal newBalance = account.getBalance().add(dto.getAmount());
@@ -565,7 +563,7 @@ public class AccountService {
     @Transactional
     public NewBalanceDto fundWallet(String id, BalanceDto dto) {
 
-        Account account = Optional.ofNullable(accountMapper.findAccountById(id))
+        Account account = Optional.ofNullable(accountMapper.findAccountByIdForUpdate(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
 
         if (dto.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
@@ -657,7 +655,7 @@ public class AccountService {
     public WalletResponseDto chargeAccount(WalletRequestDto dto) {
         final String userId = Security.getUserId();
 
-        Account account = Optional.ofNullable(getActiveUserAccount(userId))
+        Account account = Optional.ofNullable(accountMapper.findActiveAccountByUserIdForUpdate(userId))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "UserId", userId));
 
         if (account.getBalance().compareTo(dto.getAmount()) >= 0)  {
@@ -784,7 +782,7 @@ public class AccountService {
 
     @Transactional
     public void adjustDailyLimit(String id, BalanceDto balanceDto) {
-        Account account = Optional.ofNullable(accountMapper.findAccountById(id))
+        Account account = Optional.ofNullable(accountMapper.findAccountByIdForUpdate(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Account", "id", id));
 
         final String message = String.format("Daily Limit changed From %.2f to %.2f for %s narrative: %s", account.getDailyLimit(), balanceDto.getBalance(), id, balanceDto.getNarrative());
@@ -865,6 +863,7 @@ public class AccountService {
         if (newToBalance.compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException(String.format("Transfer Funds To Account Balance cannot be less than 0 : %.2f", newFromBalance));
         }
+
         return newToBalance;
     }
 

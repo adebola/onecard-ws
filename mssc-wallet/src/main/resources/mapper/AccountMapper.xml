@@ -63,6 +63,12 @@
         from accounts where id = #{id}
     </select>
 
+    <select id="findAccountByIdForUpdate" parameterType="java.lang.String" resultMap="accountResultMap">
+        select
+        <include refid="Column_List"/>
+        from accounts where id = #{id} for update
+    </select>
+
     <select id="findAccountByUserId" parameterType="java.lang.String" resultMap="accountResultMap">
         select
         <include refid="Column_List"/>
@@ -70,14 +76,16 @@
         where user_id = #{id} and account_type = 1
     </select>
 
-    <select id="findAccountByUserIdOrUserName" parameterType="java.lang.String" resultMap="accountResultMap">
+    <select id="findAccountByUserIdForUpdate" parameterType="java.lang.String" resultMap="accountResultMap">
         select
         <include refid="Column_List"/>
         from accounts
-        where user_id = #{id} or name = #{id}
-        and account_type = 1
+        where user_id = #{id} and account_type = 1 for update
     </select>
 
+    <select id="findActiveAccountByUserIdForUpdate" parameterType="java.lang.String" resultMap="accountResultMap">
+        {call sp_GetActiveAccountByUserIdForUpdate(#{id})}
+    </select>
     <select id="findAnonymousAccount"  resultMap="accountResultMap">
         select
         <include refid="Column_List"/>

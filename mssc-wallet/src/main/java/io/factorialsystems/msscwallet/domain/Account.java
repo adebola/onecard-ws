@@ -8,6 +8,7 @@ import java.util.Date;
 @Getter
 @Setter
 @Builder
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class Account {

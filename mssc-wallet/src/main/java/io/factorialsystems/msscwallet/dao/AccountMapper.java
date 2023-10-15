@@ -15,9 +15,11 @@ public interface AccountMapper {
 
     Account findAccountById(String id);
 
+    Account findAccountByIdForUpdate(String id);
+
     Account findAccountByUserId(String id);
 
-    Account findAccountByUserIdOrUserName(String id);
+    Account findAccountByUserIdForUpdate(String id);
 
     Account findAccountByCorporateId(String id);
 
@@ -29,7 +31,6 @@ public interface AccountMapper {
 
     void save(Account account);
 
-    //    void update(Account account);
     void changeBalance(Account account);
 
     void deleteAccount(Map<String, String> params);
@@ -47,5 +48,7 @@ public interface AccountMapper {
     List<AccountBalanceDto> findUserBalances();
 
     List<AccountBalanceDto> findBalances(@Param("ids") List<String> ids);
+
+    Account findActiveAccountByUserIdForUpdate(String id);
 }
 
