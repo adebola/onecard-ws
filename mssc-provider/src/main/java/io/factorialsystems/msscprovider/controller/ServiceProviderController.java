@@ -25,6 +25,7 @@ public class ServiceProviderController {
 
     @GetMapping("/{type}")
     ResponseEntity<List<ProviderDto>> getProviderByCategory(@PathVariable("type") String type) {
+        log.info("ServiceProvider Controller Get Provider By Category: for type {}", type);
         return new ResponseEntity<>(providerService.findByCategory(type), HttpStatus.OK);
     }
 
@@ -41,11 +42,13 @@ public class ServiceProviderController {
             pageSize = Constants.DEFAULT_PAGE_SIZE;
         }
 
+        log.info("ServiceProvider Controller Get Provider Services: for code {}", code);
         return new ResponseEntity<>(actionService.getProviderActions(code, pageNumber, pageSize), HttpStatus.OK);
     }
 
     @GetMapping("/service/{id}")
     public ResponseEntity<?> getService(@PathVariable("id") Integer id) {
+        log.info("ServiceProvider Controller Get Service: for id {}", id);
         return new ResponseEntity<>(actionService.getProviderAction(id), HttpStatus.OK);
     }
 }

@@ -24,11 +24,13 @@ public class RechargeController {
 
     @PostMapping
     public ResponseEntity<SingleRechargeResponseDto> startRecharge(@Valid @RequestBody SingleRechargeRequestDto dto) {
+        log.info("Recharge Controller Start Recharge: for {}", dto);
         return new ResponseEntity<>(rechargeService.startRecharge(dto), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<MessageDto> finishRecharge(@PathVariable("id") String id) {
+        log.info("Recharge Controller Finish Recharge: for id {}", id);
         RechargeStatus status = rechargeService.finishRecharge(
                 AsyncRechargeDto.builder()
                         .id(id)
@@ -44,11 +46,13 @@ public class RechargeController {
 
     @GetMapping("/plans/{code}")
     public ResponseEntity<?> getDataPlans(@PathVariable("code") String code) {
+        log.info("Recharge Controller Get Data Plans: for code {}", code);
         return new ResponseEntity<>(rechargeService.getDataPlans(code), HttpStatus.OK);
     }
 
     @PostMapping("/plans")
     public ResponseEntity<?> getExtraDataPlans(@Valid @RequestBody ExtraPlanRequestDto dto) {
+        log.info("Recharge Controller Get Extra Data Plans: for {}", dto);
         return new ResponseEntity<>(rechargeService.getExtraDataPlans(dto), HttpStatus.ACCEPTED);
     }
 }

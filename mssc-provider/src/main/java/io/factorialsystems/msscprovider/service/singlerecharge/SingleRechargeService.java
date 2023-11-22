@@ -103,7 +103,13 @@ public class SingleRechargeService {
                 request.setAsyncRequest(true);
             }
 
-            singleRechargeMapper.save(request);
+            try {
+                singleRechargeMapper.save(request);
+            } catch (Exception e) {
+                log.error("Error Saving Single Recharge Request {}", e.getMessage());
+                log.error("Single Recharge Request {}", request);
+                throw new RuntimeException("Error Saving Single Recharge Request");
+            }
 
             if (request.getPaymentMode().equals("wallet") && request.getAsyncRequest()) {
                 try {
@@ -143,6 +149,12 @@ public class SingleRechargeService {
             // If it is a Scheduled or Bulk Request it also will run Asynchronously automatically
 
             if (request.getPaymentMode().equals("paystack")) {
+                Map<String, String> map = new HashMap<>();
+                map.put("id", request.getId());
+                map.put("results", "Paystack Payment Pending");
+
+                singleRechargeMapper.saveResults(map);
+
                 return SingleRechargeResponseDto.builder()
                         .id(request.getId())
                         .authorizationUrl(request.getAuthorizationUrl())
@@ -191,7 +203,7 @@ public class SingleRechargeService {
             log.error(errorMessage);
 
             return RechargeStatus.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .status(HttpStatus.BAD_REQUEST)
                     .message(errorMessage)
                     .build();
         }
@@ -202,10 +214,19 @@ public class SingleRechargeService {
     private RechargeStatus finishLocalRecharge(SingleRechargeRequest request, AsyncRechargeDto dto) {
 
         RechargeStatus status = null;
+        final String paymentId = request.getPaymentId();
 
-        if (request.getPaymentId() != null && !checkPayment(request.getPaymentId())) {
+        if (paymentId != null && !checkPayment(paymentId)) {
             final String errorMessage = String.format("Error Fulfilling Single Recharge Request %s, Payment has not been made for User %s", request.getId(), ProviderSecurity.getUserName());
             log.error(errorMessage);
+
+            Map<String, String> resultsMap = new HashMap<>();
+
+            resultsMap.put("id", request.getId());
+            resultsMap.put("results", "PAYMENT NOT MADE");
+            resultsMap.put("failedMessage", "Payment has not been made");
+
+            singleRechargeMapper.closeAndFailRequest(resultsMap);
 
             return RechargeStatus.builder()
                     .message(errorMessage)

@@ -150,13 +150,16 @@
         {call sp_factory(#{id, jdbcType = INTEGER, mode = IN})}
     </select>
 
+    <update id="saveResults" parameterType="java.util.Map">
+        update recharge_requests set results = #{results} where id = #{id}
+    </update>
 
     <update id="closeRequest" parameterType="java.util.Map">
         update recharge_requests
         <set>
             closed = true,
+            results = #{results},
             <if test="provider != null">recharge_provider_id=#{provider},</if>
-            <if test="results != null">results=#{results},</if>
         </set>
         where id = #{id}
     </update>

@@ -67,7 +67,8 @@ public class RingoMobileDataRecharge implements Recharge, DataEnquiry, Parameter
                     restTemplate.postForObject(ringoProperties.getAirtimeUrl(), entity, RingoDataResponse.class);
 
             if (response != null && response.getMessage() != null && response.getMessage().equalsIgnoreCase("Successful")) {
-                log.info(String.format("Ringo data Recharge for (%s) Successful Plan (%s)", request.getRecipient(), request.getProductId()));
+                log.info(String.format("Successful Ringo Data Recharge for %s Plan %s cost %.2f",
+                        request.getRecipient(), request.getProductId(), request.getServiceCost()));
                 return RechargeStatus.builder()
                         .status(HttpStatus.OK)
                         .message("Ringo Data Recharge Successful")

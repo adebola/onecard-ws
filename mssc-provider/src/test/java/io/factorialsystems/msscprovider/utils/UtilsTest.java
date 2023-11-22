@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
@@ -214,6 +215,49 @@ public class UtilsTest {
 //        byte[] decryptedData = cipher.doFinal(encryptedData);
 //        return new String(decryptedData, StandardCharsets.UTF_8);
 //    }
+
+
+    @Test
+    public void calPoints() {
+//        final String[] ops = {"5","2","C","D","+"};
+        final String[] ops = {"5","-2","4","C","D","9","+","+"};
+        int[] points = new int[ops.length];
+
+        int j = 0;
+        for (int i=0; i<ops.length; i++) {
+
+            if (i == 0) {
+                points[i] = Integer.parseInt(ops[i]);
+                j++;
+                continue;
+            }
+
+            switch (ops[i]) {
+                case "C":
+                    points[j-1] = 0;
+                    j=j-2;
+                    break;
+                case "D":
+                    points[j] = points[j - 1] * 2;
+                    break;
+                case "+":
+                    points[j] = points[j - 1] + points[j - 2];
+                    break;
+                default:
+                    points[j] = Integer.parseInt(ops[i]);
+                    break;
+            }
+
+            j++;
+        }
+
+        int sum = Arrays.stream(points).sum();
+        log.info("Sum is");
+        log.info(sum);
+    }
+
+
+
 
     private  SecretKey generateKey() throws NoSuchAlgorithmException {
         KeyGenerator keygenerator = KeyGenerator.getInstance("AES");

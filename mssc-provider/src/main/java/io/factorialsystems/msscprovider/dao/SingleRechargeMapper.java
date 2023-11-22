@@ -64,4 +64,6 @@ public interface SingleRechargeMapper {
     List<SingleRechargeRequest> findSingleByUserIdAndDateRange(CombinedRequestDto dto);
 
     List<SingleRechargeRequest> findSingleRechargeByCriteria(RechargeReportRequest request);
+
+    int saveResults(Map<String, String> parameters);
 }
